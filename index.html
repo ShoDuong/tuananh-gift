@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>VLetter</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Confetti Library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Aldrich&family=Pixelify+Sans:wght@400..700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Preload sticker PNG previews -->
+  <link rel="preload" as="image" href="Assets/tuananh_sticker/tuananh_sticker_1.png" />
+  <link rel="preload" as="image" href="Assets/tuananh_sticker/tuananh_sticker_2.png" />
+  <link rel="preload" as="image" href="Assets/tuananh_sticker/tuananh_sticker_3.png" />
+  <link rel="preload" as="image" href="Assets/tuananh_sticker/tuananh_sticker_4.png" />
+
+  <style>
+    body {
+      overflow-x: hidden;
+    }
+
+    #envelope-container {
+      cursor: pointer;
+      text-align: center;
+    }
+
+    #letter-container {
+      width: 100%;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .letter-window {
+      position: relative;
+      box-sizing: border-box;
+    }
+
+    #final-text {
+      display: block;
+      font-family: "Pixelify Sans", sans-serif;
+      color: #d35f74;
+      font-size: 1.25rem;
+      text-align: center;
+      margin: 6px 0 14px 0;
+      min-height: 34px;
+      line-height: 1.3;
+      text-shadow: 1px 1px 4px rgba(255, 105, 180, 0.2);
+      z-index: 3;
+      position: relative;
+    }
+
+    #cute-popup {
+      display: none;
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff0f5;
+      border: 3px solid #ff69b4;
+      border-radius: 20px;
+      padding: 20px 30px;
+      font-family: "Pixelify Sans", sans-serif;
+      font-size: 1.4rem;
+      color: #d35f74;
+      z-index: 99999;
+      box-shadow: 0 10px 30px rgba(255, 105, 180, 0.3);
+      text-align: center;
+    }
+
+    .secondary-btn {
+      margin-top: 15px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 999px;
+      background: #fff0f5;
+      color: #d35f74;
+      font-family: "Pixelify Sans", sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 105, 180, 0.2);
+      transition: transform 0.2s ease;
+      z-index: 5;
+      position: relative;
+    }
+
+    .secondary-btn:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 600px) {
+      body {
+        overflow-x: hidden;
+      }
+
+      .flower-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #letter-container {
+        min-height: 100vh;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 20px 0;
+        box-sizing: border-box;
+      }
+
+      .letter-window {
+        width: 90% !important;
+        max-width: 360px !important;
+        min-height: 460px !important;
+        aspect-ratio: auto !important;
+        padding: 72px 22px 26px 22px !important;
+        margin: 0 auto !important;
+        box-sizing: border-box;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+      }
+
+      img#envelope {
+        width: 80% !important;
+        max-width: 220px !important;
+        height: auto !important;
+      }
+
+      img.cat {
+        width: 58% !important;
+        max-width: 155px !important;
+        height: auto !important;
+        display: block !important;
+        position: relative !important;
+        margin-top: 90px !important;
+        margin-bottom: 34px !important;
+        z-index: 4 !important;
+      }
+
+      #final-text {
+        font-size: 1.05rem !important;
+        min-height: 42px !important;
+        margin: 4px 0 0 0 !important;
+        line-height: 1.35 !important;
+        z-index: 5 !important;
+      }
+
+      .buttons {
+        gap: 30px !important;
+        margin-top: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 6 !important;
+        position: relative !important;
+      }
+
+      .btn {
+        width: 70px !important;
+        height: auto !important;
+      }
+
+      .secondary-btn {
+        margin-top: 26px !important;
+        padding: 10px 22px !important;
+        font-size: 1rem !important;
+        min-width: 150px;
+      }
+
+      #cute-popup {
+        width: 80%;
+        font-size: 1.1rem !important;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .letter-window {
+        min-height: 470px !important;
+        padding-top: 76px !important;
+      }
+
+      img.cat {
+        margin-top: 48px !important;
+        margin-bottom: 34px !important;
+        max-width: 160px !important;
+      }
+
+      .secondary-btn {
+        margin-top: 28px !important;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .letter-window {
+        min-height: 440px !important;
+        padding-top: 66px !important;
+      }
+
+      img.cat {
+        max-width: 145px !important;
+        margin-top: 38px !important;
+        margin-bottom: 28px !important;
+      }
+
+      .btn {
+        width: 64px !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="flower-container">
+
+    <!-- Envelope Screen -->
+    <div id="envelope-container">
+      <img src="envelope.png" alt="Envelope" id="envelope" />
+
+      <p
+        style="
+          font-family: sans-serif, cursive !important;
+          font-weight: 800 !important;
+          font-size: 3rem;
+          color: #d35f74;
+          margin: 10px 0 0 0;
+          text-shadow: 2px 2px 5px rgba(255, 105, 180, 0.3);
+        "
+      >
+        ♡ Mở Thư Nhá ♡
+      </p>
+
+      <p
+        style="
+          font-family: 'Pixelify Sans', sans-serif;
+          font-size: 2rem;
+          color: #000000;
+          margin-top: 15px;
+          font-style: italic;
+        "
+      >
+        (Nhớ chỉnh âm lượng chút xíu nha ~ 🎵)
+      </p>
+    </div>
+
+    <!-- Letter Screen -->
+    <div id="letter-container">
+      <div class="letter-window">
+
+        <img
+          src="otter_heart.gif"
+          class="cat"
+          id="letter-cat"
+          alt="Cute otter"
+        />
+
+        <!-- Easter Egg Text -->
+        <div id="easter-egg-bubble">
+  <span>click here for easter egg ✨</span>
+</div>
+
+        <p id="final-text"></p>
+
+        <div class="buttons" id="letter-buttons">
+          <img src="yes.png" class="btn yes-btn" alt="Yes" />
+
+          <div class="no-wrapper">
+            <img src="no.png" class="btn no-btn" alt="No" />
+          </div>
+        </div>
+
+        <button id="musicToggleBtn" class="secondary-btn">🎵 Tắt Nhạc</button>
+      </div>
+    </div>
+
+    <!-- Cute Popup -->
+    <div id="cute-popup">
+      Yayyyy, bạn chọn đúng rồi đó 💖
+    </div>
+
+    <!-- Messenger / Instagram Warning -->
+    <div
+      id="messenger-warning"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #fff0f5;
+        z-index: 999999;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-family: 'Pixelify Sans', sans-serif;
+        padding: 20px;
+        box-sizing: border-box;
+      "
+    >
+      <h2 style="color: #333; font-size: 2rem;">
+        ⚠️ Mở Bằng Trình Duyệt Nhá! ⚠️
+      </h2>
+
+      <p style="font-size: 1.2rem; color: #555; max-width: 400px;">
+        Messenger/Instagram có thể chặn một số tính năng như nhạc, camera hoặc micro.
+        Nhấn vào dấu 3 chấm <b>(•••)</b> rồi chọn
+        <b>"Open in Browser"</b> hoặc <b>"Open in System Browser"</b> nha! 💕
+      </p>
+    </div>
+
+    <!-- Background Music -->
+    <audio id="bg-music" loop>
+      <source src="Assets/So Many Cute Things In The World.mp3" type="audio/mpeg" />
+    </audio>
+
+  </div>
+
+  <!-- Main Script -->
+  <script src="script.js"></script>
+
+  <!-- Messenger / Instagram Browser Detection -->
+  <script>
+    const ua = navigator.userAgent || navigator.vendor || window.opera;
+
+    const isInAppBrowser =
+      ua.includes("FBAN") ||
+      ua.includes("FBAV") ||
+      ua.includes("Instagram") ||
+      ua.includes("Messenger");
+
+    if (isInAppBrowser) {
+      const warning = document.getElementById("messenger-warning");
+
+      if (warning) {
+        warning.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+    }
+  </script>
+
+  <!-- Music Logic -->
+  <script>
+    const music = document.getElementById("bg-music");
+    const musicToggleBtn = document.getElementById("musicToggleBtn");
+    const envelopeContainer = document.getElementById("envelope-container");
+
+    let isMusicPlaying = false;
+
+    function playMusic() {
+      if (!music || isMusicPlaying) return;
+
+      const savedTime = localStorage.getItem("musicTime");
+      music.currentTime = savedTime ? parseFloat(savedTime) : 57;
+
+      music
+        .play()
+        .then(() => {
+          isMusicPlaying = true;
+
+          if (musicToggleBtn) {
+            musicToggleBtn.textContent = "🎵 Tắt Nhạc";
+          }
+        })
+        .catch((error) => {
+          console.log("Music play was blocked by browser:", error);
+        });
+    }
+
+    if (envelopeContainer) {
+      envelopeContainer.addEventListener("click", playMusic);
+    }
+
+    if (musicToggleBtn) {
+      musicToggleBtn.addEventListener("click", () => {
+        if (!music) return;
+
+        if (isMusicPlaying) {
+          music.pause();
+          musicToggleBtn.textContent = "🔇 Bật Nhạc";
+          isMusicPlaying = false;
+        } else {
+          music
+            .play()
+            .then(() => {
+              musicToggleBtn.textContent = "🎵 Tắt Nhạc";
+              isMusicPlaying = true;
+            })
+            .catch((error) => {
+              console.log("Music play was blocked by browser:", error);
+            });
+        }
+      });
+    }
+
+    setInterval(() => {
+      if (music && isMusicPlaying) {
+        localStorage.setItem("musicTime", music.currentTime);
+      }
+    }, 1000);
+
+    window.addEventListener("beforeunload", () => {
+      if (music) {
+        localStorage.setItem("musicTime", music.currentTime);
+      }
+    });
+  </script>
+</body>
+</html>

