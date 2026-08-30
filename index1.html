@@ -487,29 +487,29 @@
     }
 
     .wish-btn {
-  margin-top: 14px;
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #c9895f, #8b4a35) !important;
-  border: 2px solid rgba(139, 74, 53, 0.25) !important;
-  box-shadow:
-    0 10px 24px rgba(139, 74, 53, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
-}
+      margin-top: 14px;
+      color: #ffffff !important;
+      background: linear-gradient(135deg, #c9895f, #8b4a35) !important;
+      border: 2px solid rgba(139, 74, 53, 0.25) !important;
+      box-shadow:
+        0 10px 24px rgba(139, 74, 53, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
+    }
 
-.wish-btn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow:
-    0 14px 30px rgba(139, 74, 53, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-}
+    .wish-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow:
+        0 14px 30px rgba(139, 74, 53, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
 
-.wish-btn:disabled {
-  opacity: 1 !important;
-  cursor: default;
-  color: #ffffff !important;
-  filter: none !important;
-}
+    .wish-btn:disabled {
+      opacity: 1 !important;
+      cursor: default;
+      color: #ffffff !important;
+      filter: none !important;
+    }
 
     .wish-result {
       display: none;
@@ -649,6 +649,257 @@
     .wish-box.mood-strawberry .meter-fill {
       background: linear-gradient(90deg, #ff9fbd, #ff5f91);
     }
+
+    /* =========================================================
+       Royal Disney Tiramisu Birthday Note Popup & Aura Animations
+       ========================================================= */
+
+    .birthday-note-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 10, 20, 0.78);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      z-index: 100005;
+      overflow: hidden;
+    }
+
+    /* Thẻ Note Công Chúa/Hoàng Tử Disney */
+    .birthday-note-box {
+      position: relative;
+      width: min(92vw, 450px);
+      border-radius: 32px;
+      padding: 32px 26px 28px;
+      text-align: center;
+      font-family: "Pixelify Sans", sans-serif;
+      box-sizing: border-box;
+      overflow: hidden;
+      
+      /* Hiệu ứng Xuất Hiện Royal PopIn + Hào quang Aura Pulse */
+      animation: royalPopIn 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                 auraPulse 3.2s ease-in-out infinite alternate;
+      transition: background 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .birthday-note-box h2 {
+      margin: 0 0 14px 0;
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: 0.5px;
+    }
+
+    .note-content p {
+      font-size: 1.08rem;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    /* Button action sắc nét, tương phản chuẩn Disney */
+    .note-action-btn {
+      font-family: "Pixelify Sans", sans-serif;
+      margin-top: 16px;
+      padding: 14px 32px;
+      border: none;
+      border-radius: 999px;
+      color: #ffffff !important; /* Chữ trắng rõ nét */
+      font-size: 1.12rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: inline-block;
+      outline: none;
+    }
+
+    .note-action-btn:hover {
+      transform: translateY(-3px) scale(1.06);
+    }
+
+    .note-action-btn:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    /* DYNAMIC THEMES DỰA TRÊN VỊ BÁNH TIRAMISU ĐƯỢC CHỌN */
+
+    /* ☕ 1. Classic Coffee Tiramisu (Hoàng Tử Vàng Đồng & Espresso) */
+    .birthday-note-box.mood-classic {
+      background: linear-gradient(145deg, #4a2f22 0%, #2c1a12 100%);
+      border: 3.5px solid #c9895f;
+      color: #ffffff;
+      box-shadow: 
+        0 0 25px rgba(201, 137, 95, 0.6),
+        0 0 50px rgba(139, 74, 53, 0.35),
+        inset 0 0 20px rgba(255, 255, 255, 0.9);
+    }
+    .birthday-note-box.mood-classic h2 {
+      color: #8b4a35;
+      text-shadow: 0 2px 8px rgba(139, 74, 53, 0.15);
+    }
+    .birthday-note-box.mood-classic .note-action-btn {
+      background: linear-gradient(135deg, #d8966c, #8b4a35);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 25px rgba(139, 74, 53, 0.45);
+    }
+    .birthday-note-box.mood-classic .note-action-btn:hover {
+      box-shadow: 0 12px 30px rgba(139, 74, 53, 0.65);
+    }
+
+    /* 🍵 2. Matcha Tiramisu (Tiên Nữ Rừng Xanh Fairy Princess) */
+    .birthday-note-box.mood-matcha {
+      background: linear-gradient(145deg, #1f3d16 0%, #12250d 100%);
+      border: 3.5px solid #8eb96f;
+      color: #ffffff;
+      box-shadow: 
+        0 0 25px rgba(142, 185, 111, 0.6),
+        0 0 50px rgba(92, 145, 70, 0.35),
+        inset 0 0 20px rgba(255, 255, 255, 0.9);
+    }
+    .birthday-note-box.mood-matcha h2 {
+      color: #4f7f3b;
+      text-shadow: 0 2px 8px rgba(79, 127, 59, 0.15);
+    }
+    .birthday-note-box.mood-matcha .note-action-btn {
+      background: linear-gradient(135deg, #9bc77b, #4f7f3b);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 25px rgba(79, 127, 59, 0.45);
+    }
+    .birthday-note-box.mood-matcha .note-action-btn:hover {
+      box-shadow: 0 12px 30px rgba(79, 127, 59, 0.65);
+    }
+
+    /* 🍓 3. Strawberry Tiramisu (Công Chúa Thần Tiên Rose Gold) */
+    .birthday-note-box.mood-strawberry {
+      background: linear-gradient(145deg, #5c1530 0%, #380c1e 100%);
+      border: 3.5px solid #ff75a0;
+      color: #ffffff;
+      box-shadow: 
+        0 0 28px rgba(255, 117, 160, 0.65),
+        0 0 55px rgba(255, 182, 193, 0.5),
+        inset 0 0 20px rgba(255, 255, 255, 0.9);
+    }
+    .birthday-note-box.mood-strawberry h2 {
+      color: #d34e70;
+      text-shadow: 0 2px 8px rgba(211, 78, 112, 0.15);
+    }
+    .birthday-note-box.mood-strawberry .note-action-btn {
+      background: linear-gradient(135deg, #ff8dae, #d34e70);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 25px rgba(211, 78, 112, 0.45);
+    }
+    .birthday-note-box.mood-strawberry .note-action-btn:hover {
+      box-shadow: 0 12px 30px rgba(211, 78, 112, 0.65);
+    }
+
+    /* ============================================================
+       Text glow/sparkle + 3D starfield (no emoji icons, clearer text)
+       ============================================================ */
+
+    .birthday-note-box h2 {
+      font-size: 1.9rem;
+      letter-spacing: 0.6px;
+      color: #ffffff;
+      animation: textGlowPulse 2.4s ease-in-out infinite alternate;
+    }
+
+    .note-content p {
+      font-weight: 600;
+      letter-spacing: 0.15px;
+      color: #ffffff;
+    }
+
+    .birthday-note-box.mood-classic h2,
+    .birthday-note-box.mood-matcha h2,
+    .birthday-note-box.mood-strawberry h2 {
+      color: #ffffff;
+      text-shadow:
+        0 0 8px rgba(255, 255, 255, 0.95),
+        0 0 18px rgba(255, 255, 255, 0.75),
+        0 0 34px rgba(255, 214, 150, 0.6);
+    }
+
+    .birthday-note-box.mood-classic .note-content p,
+    .birthday-note-box.mood-matcha .note-content p,
+    .birthday-note-box.mood-strawberry .note-content p {
+      color: #ffffff;
+      text-shadow:
+        0 0 5px rgba(255, 255, 255, 0.7),
+        0 0 12px rgba(255, 255, 255, 0.4);
+    }
+
+    @keyframes textGlowPulse {
+      0% {
+        filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
+      }
+      100% {
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.9));
+      }
+    }
+
+    /* Small 3D twinkling star strip above the title (replaces emoji header) */
+    .note-stars-3d {
+      width: 100%;
+      height: 64px;
+      display: block;
+      margin: 0 auto 2px auto;
+      pointer-events: none;
+    }
+
+    /* Full-overlay 3D starfield sitting behind the note card */
+    .birthday-stars-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .birthday-note-box {
+      z-index: 2;
+    }
+
+    /* --- Keyframe Animations Disney & Aura --- */
+    @keyframes royalPopIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(40px) rotate(-3deg);
+      }
+      70% {
+        transform: scale(1.04) translateY(-4px) rotate(1deg);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0deg);
+      }
+    }
+
+    @keyframes auraPulse {
+      0% {
+        filter: drop-shadow(0 0 8px rgba(255, 223, 186, 0.4));
+      }
+      50% {
+        filter: drop-shadow(0 0 22px rgba(255, 255, 255, 0.85));
+      }
+      100% {
+        filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+      }
+    }
+
+    @keyframes sparkleFloat {
+      0% {
+        transform: translateY(0) scale(1) rotate(-3deg);
+      }
+      100% {
+        transform: translateY(-8px) scale(1.15) rotate(3deg);
+      }
+    }
+
+
 
     .tiramisu-piece {
       position: fixed;
@@ -1007,6 +1258,30 @@
         Ready to layer your tiramisu wish 🍰
       </div>
     </div>
+  </div>
+
+  <!-- Birthday Note Modal (Disney Tiramisu Royal Theme) -->
+  <div id="birthdayNoteOverlay" class="birthday-note-overlay">
+
+    <!-- Nền sao 3D lấp lánh (Three.js), thay cho icon sao -->
+    <canvas id="birthdayStarsCanvas" class="birthday-stars-canvas"></canvas>
+
+    <div id="birthdayNoteBox" class="birthday-note-box mood-classic">
+      <canvas class="note-stars-3d" id="noteStars3D"></canvas>
+      <h2>Happy Birthday!</h2>
+
+      <div class="note-content">
+        <p>Chúc Tuấn Anh một sinh nhật thật nhiều niềm vui và hạnh phúc!</p>
+        <p>Dù cả hai đang ở rất xa nhau và cũng chưa có quen biết gì lunnnnn, nhưng tớ luôn muốn Tuấn Anh biết rằng trên thế 
+          giới này luôn có một đứa mê trai vẫn luôn theo dõi, ủng hộ và yêu quý ông rất nhiều.</p>
+
+      </div>
+
+      <button id="goToPhotoboothBtn" class="note-action-btn" type="button">
+        Đi đến Photobooth thôi
+      </button>
+    </div>
+
   </div>
 
   <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
@@ -1660,7 +1935,7 @@
 
       if (wishResult) {
         wishResult.style.display = "block";
-        wishResult.textContent = "Achievement unlocked. Đang mở photobooth... 📸";
+        wishResult.textContent = "Achievement unlocked. Đang mở birthday note... 💌";
       }
 
       launchMiniMoodRain(selectedTiramisuMood);
@@ -1741,9 +2016,27 @@
           sendWishBtn.textContent = "Wish fully layered 💖";
 
           setTimeout(() => {
-            window.location.href = "photobooth.html";
-          }, 3200);
+            if (wishOverlay) wishOverlay.style.display = "none";
+
+            const noteBox = document.getElementById("birthdayNoteBox");
+            if (noteBox) {
+              noteBox.classList.remove("mood-classic", "mood-matcha", "mood-strawberry");
+              noteBox.classList.add(`mood-${selectedTiramisuMood}`);
+            }
+
+            const noteOverlay = document.getElementById("birthdayNoteOverlay");
+            if (noteOverlay) {
+              noteOverlay.style.display = "flex";
+            }
+          }, 2200);
         });
+      });
+    }
+
+    const goToPhotoboothBtn = document.getElementById("goToPhotoboothBtn");
+    if (goToPhotoboothBtn) {
+      goToPhotoboothBtn.addEventListener("click", () => {
+        window.location.href = "photobooth.html";
       });
     }
 
@@ -1853,6 +2146,106 @@
         isMusicPlaying = !isMusicPlaying;
       });
     }
+  </script>
+
+  <!-- =========================================================
+       3D scenes (Three.js) for: sparkling starfield, flying plane,
+       swimming otter + waves — no emoji icons used for these.
+       Requires the page to be served over http/https (e.g. your
+       Netlify site) since it uses native ES modules + import maps.
+       ========================================================= -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+
+    /* ---------- 1) Twinkling 3D starfield ---------- */
+    function makeStarfield(canvas, starCount) {
+      if (!canvas) return;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+      camera.position.z = 12;
+
+      function resize() {
+        const w = canvas.clientWidth || canvas.parentElement.clientWidth || 200;
+        const h = canvas.clientHeight || canvas.parentElement.clientHeight || 200;
+        renderer.setSize(w, h, false);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+
+      const positions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount; i++) {
+        positions[i * 3 + 0] = (Math.random() - 0.5) * 24;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 16;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 14;
+      }
+
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+      const material = new THREE.PointsMaterial({
+        color: 0xfff6e0,
+        size: 0.14,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      const points = new THREE.Points(geometry, material);
+      scene.add(points);
+
+      const sparkleGroup = new THREE.Group();
+      const sparkleCount = Math.max(4, Math.floor(starCount / 12));
+      for (let i = 0; i < sparkleCount; i++) {
+        const s = new THREE.Mesh(
+          new THREE.OctahedronGeometry(0.13, 0),
+          new THREE.MeshBasicMaterial({ color: 0xffe9b8, transparent: true, opacity: 0.9 })
+        );
+        s.position.set((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 10);
+        s.userData.twinkleOffset = Math.random() * Math.PI * 2;
+        sparkleGroup.add(s);
+      }
+      scene.add(sparkleGroup);
+
+      resize();
+      window.addEventListener("resize", resize);
+
+      const clock = new THREE.Clock();
+      (function animate() {
+        requestAnimationFrame(animate);
+        const t = clock.getElapsedTime();
+
+        points.rotation.y = t * 0.02;
+        points.rotation.x = Math.sin(t * 0.05) * 0.05;
+        material.size = 0.12 + Math.sin(t * 2.2) * 0.04;
+
+        sparkleGroup.children.forEach((s) => {
+          const tw = 0.8 + Math.sin(t * 3 + s.userData.twinkleOffset) * 0.5;
+          s.scale.setScalar(tw);
+          s.rotation.x += 0.01;
+          s.rotation.y += 0.015;
+        });
+
+        renderer.render(scene, camera);
+      })();
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      makeStarfield(document.getElementById("birthdayStarsCanvas"), 140);
+      makeStarfield(document.getElementById("noteStars3D"), 40);
+    });
   </script>
 </body>
 </html>
