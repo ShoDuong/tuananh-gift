@@ -379,17 +379,44 @@ style.textContent = `
     }
 
     .sticker-card {
+        --tilt-x: 0deg;
+        --tilt-y: 0deg;
+        --foil-x: 50%;
+        --foil-y: 50%;
+        position: relative;
+        overflow: hidden;
         border: 2px solid #ffc0cb;
         background: #fff7fb;
         border-radius: 20px;
         padding: 12px;
         cursor: pointer;
+        transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+        transform-style: preserve-3d;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        will-change: transform;
+    }
+
+    .sticker-card::before {
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background:
+            radial-gradient(circle at var(--foil-x) var(--foil-y), rgba(255, 255, 255, .85), transparent 22%),
+            linear-gradient(120deg, transparent 20%, rgba(255, 133, 193, .35), rgba(147, 221, 255, .35), rgba(255, 223, 138, .4), transparent 80%);
+        content: "";
+        mix-blend-mode: screen;
+        opacity: .72;
+        pointer-events: none;
+        transform: translateZ(24px);
     }
 
     .sticker-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 8px 18px rgba(255, 105, 180, 0.25);
+        box-shadow: 0 16px 28px rgba(255, 105, 180, 0.35), 0 0 22px rgba(137, 220, 255, .38);
+    }
+
+    .sticker-card:focus-visible {
+        outline: 3px solid #7bdff2;
+        outline-offset: 3px;
     }
 
     .sticker-card img {
@@ -564,6 +591,8 @@ if (skipStickerBtn) {
 tuanAnhStickers.forEach((sticker, index) => {
     const card = document.createElement("div");
     card.className = "sticker-card";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
 
     card.innerHTML = `
         <img 
@@ -590,6 +619,30 @@ tuanAnhStickers.forEach((sticker, index) => {
         setTimeout(() => {
             startLoveLoading();
         }, 600);
+    });
+
+    card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            card.click();
+        }
+    });
+
+    card.addEventListener("pointermove", (event) => {
+        const bounds = card.getBoundingClientRect();
+        const x = (event.clientX - bounds.left) / bounds.width;
+        const y = (event.clientY - bounds.top) / bounds.height;
+        card.style.setProperty("--tilt-x", `${(0.5 - y) * 14}deg`);
+        card.style.setProperty("--tilt-y", `${(x - 0.5) * 16}deg`);
+        card.style.setProperty("--foil-x", `${x * 100}%`);
+        card.style.setProperty("--foil-y", `${y * 100}%`);
+    });
+
+    card.addEventListener("pointerleave", () => {
+        card.style.setProperty("--tilt-x", "0deg");
+        card.style.setProperty("--tilt-y", "0deg");
+        card.style.setProperty("--foil-x", "50%");
+        card.style.setProperty("--foil-y", "50%");
     });
 
     stickerGrid.appendChild(card);

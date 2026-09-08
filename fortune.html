@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gieo Quẻ Rái Cá May Mắn</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+  <style>
+    :root { --ink: #3e2945; --pink: #ff78ad; --gold: #f3c873; --cream: #fff8e9; }
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh; margin: 0; overflow-x: hidden; color: var(--ink);
+      font-family: "Nunito", system-ui, sans-serif;
+      background: radial-gradient(circle at 18% 15%, #ffd7e8, transparent 32%),
+        radial-gradient(circle at 84% 80%, #c9eef0, transparent 34%), var(--cream);
+    }
+    .page { width: min(100% - 32px, 940px); margin: auto; padding: 28px 0 56px; }
+    .topbar, .fortune-panel, .result-card {
+      border: 2px solid rgba(181, 142, 98, .6); background: rgba(255, 252, 239, .8);
+      box-shadow: 8px 10px 0 rgba(85, 64, 50, .12); backdrop-filter: blur(10px);
+    }
+    .topbar { display: flex; justify-content: space-between; gap: 12px; padding: 14px 18px; border-radius: 8px 20px 8px 20px; }
+    .topbar a { color: #7d5a44; font-weight: 700; }
+    .hero { padding: 45px 12px 24px; text-align: center; }
+    .eyebrow { color: #567d6b; letter-spacing: .14em; text-transform: uppercase; font-size: .82rem; }
+    h1 { margin: 10px 0; font-family: "Quicksand", sans-serif; font-size: clamp(2.2rem, 8vw, 4.8rem); line-height: .95; font-weight: 700; }
+    .hero p:last-child { color: #715b50; font-size: 1.08rem; }
+    .fortune-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: center; padding: clamp(24px, 5vw, 58px); border-radius: 28px 10px 28px 10px; }
+    .oracle { display: grid; place-items: center; min-height: 330px; perspective: 900px; }
+    .tube { width: min(100%, 380px); height: 330px; cursor: pointer; }
+    .tube canvas { display: block; width: 100%; height: 100%; }
+    .tube.is-shaking canvas { filter: drop-shadow(0 0 18px rgba(255, 121, 173, .8)); }
+    .oracle button, .radio-button { border: 0; border-radius: 999px; padding: 13px 20px; color: white; background: #ef86aa; box-shadow: 0 5px 0 #c85e84; cursor: pointer; font: inherit; font-weight: 800; transition: transform .2s ease, filter .2s ease; }
+    .oracle button:hover, .oracle button:focus-visible { transform: translateY(-3px) scale(1.04); filter: saturate(1.1); }
+    .oracle button { margin-top: 26px; }
+    .hint { margin: 20px 0 0; color: #806b60; text-align: center; }
+    .result-card { display: none; position: relative; margin-top: 28px; padding: 30px; overflow: hidden; border-radius: 12px 28px 12px 28px; text-align: center; transform-style: preserve-3d; transition: transform .15s ease; }
+    .result-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 18%, rgba(255, 121, 173, .35), rgba(125, 223, 242, .42), rgba(255, 215, 128, .45), transparent 80%); mix-blend-mode: screen; pointer-events: none; }
+    #meltingOtter { position: fixed; inset: 50% auto auto 50%; z-index: 20; display: none; width: 150px; margin: 0; transform: translate(-50%, -50%); pointer-events: none; }
+    #meltingOtter.show { display: block; animation: melt-in 1.3s ease both; }
+    @keyframes melt-in { 0% { opacity: 0; transform: translate(-50%, -35%) scale(.45, .35); } 45% { opacity: 1; transform: translate(-50%, -50%) scale(1, 1); } 100% { opacity: 0; transform: translate(-50%, -45%) scale(1.15, .16); } }
+    .sparkle { position: fixed; z-index: 21; width: 10px; height: 10px; border-radius: 50%; background: #ffd700; box-shadow: 0 0 12px #fff, 0 0 24px #ff78ad; pointer-events: none; animation: sparkle-burst .8s ease-out forwards; }
+    @keyframes sparkle-burst { to { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(.2); } }
+    .result-card.show { display: block; animation: card-in .55s ease both; }
+    @keyframes card-in { from { opacity: 0; transform: scale(.8) rotate(-4deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+    .result-card h2, .result-card p { position: relative; z-index: 1; }
+    .result-card h2 { color: #9b5c75; font-size: 1.15rem; letter-spacing: .1em; text-transform: uppercase; }
+    .result-card p { margin: 18px auto 22px; max-width: 620px; font-family: "Quicksand", sans-serif; font-size: clamp(1.35rem, 3vw, 2rem); line-height: 1.3; font-weight: 700; }
+    .radio-button { display: inline-block; text-decoration: none; background: #c47770; box-shadow: 0 5px 0 #92564f; }
+    @media (max-width: 700px) { .fortune-panel { grid-template-columns: 1fr; gap: 8px; } .topbar { flex-direction: column; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+    body, button, a, input, textarea, select { font-family: "Nunito", system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar"><strong>🦦 Gieo Quẻ Rái Cá May Mắn</strong><a href="index1.html">← Về trang bánh</a></header>
+    <section class="hero">
+      <div class="eyebrow">A tiny lucky ritual</div>
+      <h1>Hôm nay vũ trụ nói gì?</h1>
+      <p>Chạm vào chiếc ly quẻ pastel để nhận một lời chúc may mắn hologram.</p>
+    </section>
+    <section class="fortune-panel" aria-label="Gieo quẻ may mắn">
+      <div class="oracle">
+        <div class="tube" id="fortuneTube" role="button" tabindex="0" aria-label="Lắc ly quẻ"></div>
+        <button id="drawButton" type="button">Lắc ly quẻ ✨</button>
+      </div>
+      <div>
+        <h2>Quẻ rái cá hôm nay</h2>
+        <p class="hint">Một cú lắc nhẹ, một chiếc ôm từ vũ trụ. Dấu tiếng Việt được chuẩn hoá để hiển thị tròn nét.</p>
+        <article class="result-card" id="resultCard" aria-live="polite">
+          <img id="meltingOtter" src="assets/fish-photobooth/camerapage/stickers/otter_melting.gif" alt="Rái cá tan chảy">
+          <h2>Lucky otter card · 3D hologram</h2>
+          <p id="fortuneText"></p>
+          <a class="radio-button" href="radio.html" id="radioLink">Nghe Radio Thanh Xuân 📻</a>
+        </article>
+      </div>
+    </section>
+  </main>
+  <script>
+    const tube = document.getElementById("fortuneTube");
+    const drawButton = document.getElementById("drawButton");
+    const resultCard = document.getElementById("resultCard");
+    const fortuneText = document.getElementById("fortuneText");
+    const radioLink = document.getElementById("radioLink");
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    camera.position.set(0, 2.8, 5.4);
+    camera.lookAt(0, 1, 0);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.getElementById("fortuneTube").appendChild(renderer.domElement);
+    const cupGroup = new THREE.Group();
+    scene.add(cupGroup);
+    scene.add(new THREE.AmbientLight(0xfff0f5, 1.25));
+    const keyLight = new THREE.DirectionalLight(0xfffaed, 1.6);
+    keyLight.position.set(5, 8, 4);
+    scene.add(keyLight);
+    const goldLight = new THREE.PointLight(0xffb7c5, 1.8, 10);
+    goldLight.position.set(-3, 3, 2);
+    scene.add(goldLight);
+    const cupCanvas = document.createElement("canvas");
+    cupCanvas.width = 1024;
+    cupCanvas.height = 1024;
+    const cupContext = cupCanvas.getContext("2d");
+    const cupGradient = cupContext.createLinearGradient(0, 0, 0, 1024);
+    cupGradient.addColorStop(0, "#ffe5ec");
+    cupGradient.addColorStop(.32, "#fff0f3");
+    cupGradient.addColorStop(.72, "#ffccd5");
+    cupGradient.addColorStop(1, "#ffb3c1");
+    cupContext.fillStyle = cupGradient;
+    cupContext.fillRect(0, 0, 1024, 1024);
+    cupContext.strokeStyle = "rgba(255, 143, 163, .35)";
+    cupContext.lineWidth = 4;
+    for (let index = 0; index < 1024; index += 120) {
+      cupContext.beginPath();
+      cupContext.arc(index + 60, 200, 45, 0, Math.PI);
+      cupContext.stroke();
+      cupContext.beginPath();
+      cupContext.arc(index + 60, 850, 45, Math.PI, 0);
+      cupContext.stroke();
+    }
+    const centerX = 512;
+    const centerY = 520;
+    cupContext.fillStyle = "#fff9f0";
+    cupContext.beginPath();
+    cupContext.arc(centerX, centerY, 195, 0, Math.PI * 2);
+    cupContext.fill();
+    cupContext.lineWidth = 10;
+    cupContext.strokeStyle = "#e0a96d";
+    cupContext.stroke();
+    cupContext.fillStyle = "#d4a373";
+    cupContext.beginPath();
+    cupContext.ellipse(centerX, centerY - 10, 130, 110, 0, 0, Math.PI * 2);
+    cupContext.fill();
+    cupContext.fillStyle = "#b07d50";
+    cupContext.beginPath();
+    cupContext.arc(centerX - 105, centerY - 85, 38, 0, Math.PI * 2);
+    cupContext.arc(centerX + 105, centerY - 85, 38, 0, Math.PI * 2);
+    cupContext.fill();
+    cupContext.fillStyle = "#ffccd5";
+    cupContext.beginPath();
+    cupContext.arc(centerX - 105, centerY - 85, 20, 0, Math.PI * 2);
+    cupContext.arc(centerX + 105, centerY - 85, 20, 0, Math.PI * 2);
+    cupContext.fill();
+    cupContext.fillStyle = "#fffdf7";
+    cupContext.beginPath();
+    cupContext.ellipse(centerX, centerY + 25, 68, 50, 0, 0, Math.PI * 2);
+    cupContext.fill();
+    cupContext.fillStyle = "#2b1e1a";
+    cupContext.beginPath();
+    cupContext.arc(centerX - 50, centerY - 25, 14, 0, Math.PI * 2);
+    cupContext.arc(centerX + 50, centerY - 25, 14, 0, Math.PI * 2);
+    cupContext.fill();
+    cupContext.fillStyle = "#fff";
+    cupContext.beginPath();
+    cupContext.arc(centerX - 46, centerY - 29, 5, 0, Math.PI * 2);
+    cupContext.arc(centerX + 54, centerY - 29, 5, 0, Math.PI * 2);
+    cupContext.fill();
+    cupContext.fillStyle = "#e63946";
+    cupContext.font = "bold 36px sans-serif";
+    cupContext.textAlign = "center";
+    cupContext.fillText("★ BÌNH AN ★", centerX, centerY + 130);
+    const cupTexture = new THREE.CanvasTexture(cupCanvas);
+    const cupPoints = [
+      new THREE.Vector2(0, .35), new THREE.Vector2(.88, .38),
+      new THREE.Vector2(.96, 1.1), new THREE.Vector2(1.08, 2.05),
+      new THREE.Vector2(1.15, 2.15), new THREE.Vector2(1.24, 2.12),
+      new THREE.Vector2(1.26, 2), new THREE.Vector2(1.22, 1.4),
+      new THREE.Vector2(1.12, .7), new THREE.Vector2(.98, .12),
+      new THREE.Vector2(1.05, .04), new THREE.Vector2(1.05, 0),
+      new THREE.Vector2(0, 0)
+    ];
+    const cupMaterial = new THREE.MeshStandardMaterial({
+      map: cupTexture, roughness: .22, metalness: .06
+    });
+    const cup = new THREE.Mesh(new THREE.LatheGeometry(cupPoints, 48), cupMaterial);
+    cupGroup.add(cup);
+    const champagne = new THREE.MeshStandardMaterial({ color: 0xf3c068, roughness: .25, metalness: .75 });
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(1.22, .032, 16, 64), champagne);
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 2.12;
+    cupGroup.add(rim);
+    const redBelt = new THREE.Mesh(
+      new THREE.TorusGeometry(1.21, .038, 12, 64),
+      new THREE.MeshStandardMaterial({ color: 0xd90429, roughness: .4 })
+    );
+    redBelt.rotation.x = Math.PI / 2;
+    redBelt.position.y = 1.45;
+    cupGroup.add(redBelt);
+    cupGroup.add(new THREE.Mesh(
+      new THREE.CylinderGeometry(.85, .85, .1, 24),
+      new THREE.MeshStandardMaterial({ color: 0x3d2b1f })
+    )).position.y = .4;
+    const bamboo = new THREE.MeshStandardMaterial({ color: 0xf7d9a8, roughness: .38 });
+    const redTip = new THREE.MeshStandardMaterial({ color: 0xd90429, roughness: .3 });
+    const sticks = [];
+    const sticksGroup = new THREE.Group();
+    cupGroup.add(sticksGroup);
+    for (let index = 0; index < 18; index += 1) {
+      const length = 2.1 + (Math.random() - .5) * .35;
+      const stick = new THREE.Mesh(new THREE.BoxGeometry(.21, length, .042), bamboo);
+      const group = new THREE.Group();
+      group.add(stick);
+      stick.position.y = length / 2;
+      const angle = (index / 18) * Math.PI * 2 + Math.random() * .3;
+      group.position.set(Math.cos(angle) * (.12 + Math.random() * .42), .45, Math.sin(angle) * (.12 + Math.random() * .42));
+      group.rotation.x = Math.sin(angle) * .18;
+      group.rotation.z = -Math.cos(angle) * .18;
+      const tip = new THREE.Mesh(new THREE.BoxGeometry(.21, .32, .045), redTip);
+      tip.position.y = length - .16;
+      group.add(tip);
+      sticksGroup.add(group);
+      sticks.push({ group, y: group.position.y, speed: 15 + Math.random() * 10 });
+    }
+    const winningStick = new THREE.Group();
+    const winLength = 2.45;
+    const winBody = new THREE.Mesh(new THREE.BoxGeometry(.24, winLength, .048), bamboo);
+    winBody.position.y = winLength / 2;
+    winningStick.add(winBody);
+    const winTip = new THREE.Mesh(new THREE.BoxGeometry(.24, .45, .05), new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: .6 }));
+    winTip.position.y = winLength - .22;
+    winningStick.add(winTip);
+    winningStick.position.set(0, .6, .15);
+    sticksGroup.add(winningStick);
+    let shaking = false;
+    let winning = false;
+    let sceneTime = 0;
+    function resizeScene() {
+      const box = document.getElementById("fortuneTube").getBoundingClientRect();
+      renderer.setSize(box.width, box.height, false);
+      camera.aspect = box.width / box.height;
+      camera.updateProjectionMatrix();
+    }
+    function animateScene() {
+      requestAnimationFrame(animateScene);
+      sceneTime += .016;
+      if (shaking) {
+        cupGroup.rotation.z = Math.sin(sceneTime * 26) * .28;
+        cupGroup.rotation.x = Math.cos(sceneTime * 31) * .16;
+        sticks.forEach((item, index) => { item.group.position.y = item.y + Math.abs(Math.sin(sceneTime * item.speed + index)) * .25; });
+      } else if (!winning) {
+        cupGroup.position.y = Math.sin(sceneTime * 2) * .06;
+        cupGroup.rotation.y = Math.sin(sceneTime * .8) * .12;
+      }
+      if (winning) winningStick.position.y = Math.min(1.95, winningStick.position.y + .055);
+      renderer.render(scene, camera);
+    }
+    resizeScene();
+    window.addEventListener("resize", resizeScene);
+    animateScene();
+    const fortunes = [
+      "Quẻ hôm nay: Tránh xa âu lo, nhận 100% may mắn và 1 cái ôm từ xa 🫂",
+      "Mức độ đẹp trai hôm nay: 999% vượt chỉ số vũ trụ ⚠️",
+      "Chỉ số may mắn: 1000/10 - Hôm nay làm gì cũng thuận lợi và đáng yêu!",
+      "Thông điệp vũ trụ: Nhớ mỉm cười thật nhiều nha 🐾",
+      "Hôm nay vận may gõ cửa bằng một chiếc đuôi rái cá ✨",
+      "Mọi kế hoạch đều nở hoa, cứ tự tin tiến lên nhé 🌸",
+      "Có người đang âm thầm gửi bạn thật nhiều năng lượng tốt 💌",
+      "Quẻ biển xanh: bình yên sẽ đến sau một hơi thở sâu 🌊",
+      "Bạn sẽ gặp một điều dễ thương hoàn toàn bất ngờ 🦦",
+      "Điểm chill hôm nay: 10/10, không âu lo, chỉ vui thôi 🎧",
+      "Một tin nhắn ngọt ngào đang bơi về phía bạn 💬",
+      "Hôm nay rất hợp để cười thật to và ăn món mình thích 🍰",
+      "Rái cá tiên tri bảo rằng bạn luôn đủ giỏi rồi đó 🌟",
+      "May mắn nằm trong những điều nhỏ xíu quanh bạn 🍀",
+      "Vũ trụ bật đèn xanh cho mọi dự định đáng yêu 💚",
+      "Bạn có quyền nghỉ ngơi và được yêu thương thật nhiều 🫶",
+      "Năng lượng hôm nay lấp lánh như nắng trên mặt nước ✨",
+      "Một ngày tuyệt vời đang chờ bạn mở khóa 🔓",
+      "Hãy tin trực giác, nó đang dẫn bạn tới điều tốt lành 🔮",
+      "Quẻ kẹo ngọt: chuyện khó rồi cũng sẽ nhẹ nhàng hơn 🍬",
+      "Bạn sắp nhận được một lời khen làm tim vui cả ngày 💖",
+      "Không cần hoàn hảo, chỉ cần là chính mình là đủ 🌷",
+      "Hôm nay bạn tỏa sáng theo cách rất riêng của mình ☀️",
+      "Một cơ hội mới đang lặng lẽ xuất hiện trước mắt 🚪",
+      "Rái cá nói: nhớ dịu dàng với bản thân nhé 🐾",
+      "Bình an là món quà lớn nhất hôm nay của bạn 🎁",
+      "Bạn đang đi đúng hướng, cứ bước tiếp thật chậm mà chắc 🧭",
+      "Quẻ cầu vồng: sau mưa luôn có một điều đáng mong chờ 🌈",
+      "Một cuộc gặp vui vẻ sẽ làm ngày hôm nay sáng hơn 😊",
+      "Hôm nay hợp để bắt đầu một thói quen thật xinh xắn 🌱",
+      "Bạn có sức mạnh biến ngày bình thường thành ngày đáng nhớ 📸",
+      "Nhịp tim vui vẻ đang đến gần, hãy mở cửa đón nha 💗",
+      "Mọi điều tử tế bạn trao đi sẽ quay về gấp đôi 🤍",
+      "Quẻ mặt trời: đừng quên uống nước và mỉm cười ☀️",
+      "Bạn được vũ trụ cấp phép để vui hết cỡ hôm nay 🎉",
+      "Một giấc mơ nhỏ đang tìm đường thành hiện thực 🌙",
+      "May mắn sẽ tìm thấy bạn dù bạn đang ở đâu 🗺️",
+      "Rái cá nói: bạn đáng được nhận điều tốt đẹp nhất 🦦",
+      "Hôm nay trái tim bạn sẽ nhẹ hơn một chút 💞",
+      "Có một niềm vui bé xinh đang núp sau góc nhỏ kia 🎀",
+      "Kết quả cuối ngày: đáng yêu, may mắn và rất nhiều yêu thương 💐"
+    ].map((fortune) => fortune.normalize("NFC"));
+    radioLink.addEventListener("click", () => {
+      localStorage.setItem("radioUnlocked", "true");
+    });
+    const meltingOtter = document.getElementById("meltingOtter");
+    const sparkleColors = ["#ffd700", "#ff78ad", "#fff2a8"];
+    let audioContext;
+    function playTing() {
+      audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.frequency.value = 880;
+      gain.gain.setValueAtTime(.16, audioContext.currentTime);
+      gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + .6);
+      oscillator.connect(gain).connect(audioContext.destination);
+      oscillator.start();
+      oscillator.stop(audioContext.currentTime + .6);
+    }
+    function playShakeSound() {
+      audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioContext.currentTime;
+      [0, .12, .24].forEach((offset, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = "triangle";
+        oscillator.frequency.value = 180 + index * 35;
+        gain.gain.setValueAtTime(.0001, now + offset);
+        gain.gain.exponentialRampToValueAtTime(.08, now + offset + .02);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + offset + .11);
+        oscillator.connect(gain).connect(audioContext.destination);
+        oscillator.start(now + offset);
+        oscillator.stop(now + offset + .12);
+      });
+    }
+    function drawFortune() {
+      shaking = true;
+      winning = false;
+      winningStick.position.y = .6;
+      tube.classList.add("is-shaking");
+      playShakeSound();
+      meltingOtter.classList.add("show");
+      resultCard.classList.remove("show");
+      drawButton.disabled = true;
+      window.setTimeout(() => {
+        shaking = false;
+        winning = true;
+        fortuneText.textContent = fortunes[Math.floor(Math.random() * fortunes.length)];
+        playTing();
+        resultCard.classList.add("show");
+        meltingOtter.classList.remove("show");
+        drawButton.disabled = false;
+        tube.classList.remove("is-shaking");
+        for (let index = 0; index < 22; index += 1) {
+          const sparkle = document.createElement("i");
+          sparkle.className = "sparkle";
+          sparkle.style.left = "50%";
+          sparkle.style.top = "50%";
+          sparkle.style.background = sparkleColors[index % sparkleColors.length];
+          sparkle.style.setProperty("--spark-x", `${(Math.random() - .5) * 300}px`);
+          sparkle.style.setProperty("--spark-y", `${(Math.random() - .5) * 220}px`);
+          document.body.appendChild(sparkle);
+          sparkle.addEventListener("animationend", () => sparkle.remove(), { once: true });
+        }
+      }, 1300);
+    }
+    drawButton.addEventListener("click", drawFortune);
+    tube.addEventListener("click", drawFortune);
+    tube.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); drawFortune(); }
+    });
+    resultCard.addEventListener("pointermove", (event) => {
+      const box = resultCard.getBoundingClientRect();
+      resultCard.style.transform = `perspective(800px) rotateX(${(0.5 - (event.clientY - box.top) / box.height) * 8}deg) rotateY(${(((event.clientX - box.left) / box.width) - 0.5) * 10}deg)`;
+    });
+    resultCard.addEventListener("pointerleave", () => { resultCard.style.transform = ""; });
+    document.querySelectorAll("body *").forEach((element) => {
+      element.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE) node.nodeValue = node.nodeValue.normalize("NFC");
+      });
+    });
+  </script>
+</body>
+</html>

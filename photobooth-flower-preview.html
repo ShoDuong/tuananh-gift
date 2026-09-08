@@ -600,6 +600,31 @@
             }
         }
 
+        #flowerMeltingOtter {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            z-index: 500005;
+            width: clamp(150px, 24vw, 250px);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            filter: drop-shadow(0 14px 18px rgba(111, 57, 91, .25));
+        }
+
+        #flowerMeltingOtter.show {
+            visibility: visible;
+            animation: flowerOtterMelt 1.8s ease-in-out forwards;
+        }
+
+        @keyframes flowerOtterMelt {
+            0% { opacity: 0; transform: translate(-50%, -58%) scale(.55, .45); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1, 1); }
+            65% { opacity: .95; transform: translate(-50%, -48%) scale(1.08, .82); }
+            100% { opacity: 0; transform: translate(-50%, -42%) scale(1.2, .18); }
+        }
+
         body.night-mode {
             background-color: #5e5e9c !important;
             background-image: radial-gradient(circle at 50% 50%, #16213e 0%, #1a1a2e 100%) !important;
@@ -749,6 +774,7 @@
 
     <img id="bouncingOtter" src="Assets/fish-photobooth/camerapage/stickers/otter_wink.gif" alt="Otter Bouncing">
     <img id="swimmingOtter" src="assets/fish-photobooth/camerapage/stickers/otter_leave.gif" alt="" aria-hidden="true">
+    <img id="flowerMeltingOtter" src="assets/fish-photobooth/camerapage/stickers/otter_melting.gif" alt="" aria-hidden="true">
     <div id="otterMessage">🫣Đồ đáng yêu🫣</div>
 
     <div id="mainBooth">
@@ -980,8 +1006,17 @@
     <script>
         // --- HIỆU ỨNG HOA NỞ KHẮP MỌI NƠI (ALL OVER THE PLACE) ---
         const flowerEmojis = ['🌸', '🌺', '🌹', '🌷', '💮', '🌻', '🌼', '🪷', '💐', '💮', '🌹', '🌷', '🌸', '🦦'];
+        const flowerMeltingOtter = document.getElementById('flowerMeltingOtter');
+
+        function showFlowerMeltingOtter() {
+            flowerMeltingOtter.classList.remove('show');
+            void flowerMeltingOtter.offsetWidth;
+            flowerMeltingOtter.classList.add('show');
+            window.setTimeout(() => flowerMeltingOtter.classList.remove('show'), 1900);
+        }
 
         function triggerBloomingFlowers() {
+            showFlowerMeltingOtter();
             // Tạo 60 bông hoa nở rộ ngẫu nhiên phủ kín toàn màn hình
             for (let i = 0; i < 60; i++) {
                 setTimeout(() => {
@@ -2422,10 +2457,8 @@
 
             if (isNightMode) {
                 otter.src = 'Assets/fish-photobooth/camerapage/stickers/otter_astronaut.gif';
-                swimmingOtter.src = 'assets/fish-photobooth/camerapage/stickers/otter_melting.gif';
             } else {
                 otter.src = 'Assets/fish-photobooth/camerapage/stickers/otter_wink.gif';
-                swimmingOtter.src = 'assets/fish-photobooth/camerapage/stickers/otter_leave.gif';
             }
 
             nightModeToggle.textContent = isNightMode ? "☀️ Day Mode: ON" : "🌙 Night Mode: OFF";
