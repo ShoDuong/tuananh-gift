@@ -1513,6 +1513,59 @@
             }
         }
     </style>
+        <style id="mode-picker-popup">
+            #modePickerModal {
+                position: fixed;
+                inset: 0;
+                z-index: 210000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                box-sizing: border-box;
+                background: rgba(1, 10, 26, .68);
+                backdrop-filter: blur(12px);
+            }
+            #modePickerModal[hidden] { display: none; }
+            .mode-picker-card {
+                width: min(92vw, 440px);
+                padding: clamp(24px, 5vw, 38px);
+                border: 1px solid rgba(160, 239, 255, .58);
+                border-radius: 28px;
+                background: linear-gradient(145deg, rgba(10, 40, 77, .96), rgba(36, 24, 86, .94));
+                color: #effcff;
+                text-align: center;
+                box-shadow: 0 24px 70px rgba(0, 0, 0, .52), 0 0 38px rgba(74, 218, 255, .22);
+                animation: modePickerIn .42s cubic-bezier(.2, .9, .25, 1) both;
+            }
+            .mode-picker-card h2 { margin: 0 0 8px; font-size: clamp(1.55rem, 4vw, 2rem); }
+            .mode-picker-card p { margin: 0 0 22px; color: #c9ebff; line-height: 1.55; }
+            .mode-picker-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+            .mode-choice-btn {
+                min-height: 112px;
+                border: 1px solid rgba(255, 255, 255, .3);
+                border-radius: 20px;
+                padding: 14px 10px;
+                color: #fff;
+                font: 700 1rem 'Nunito', system-ui, sans-serif;
+                cursor: pointer;
+                transition: transform .18s ease, filter .18s ease;
+            }
+            .mode-choice-btn:hover, .mode-choice-btn:focus-visible { transform: translateY(-4px) scale(1.02); filter: brightness(1.08); }
+            .mode-choice-btn:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+            .mode-choice-day { background: linear-gradient(145deg, #ffb44e, #f06b84); }
+            .mode-choice-night { background: linear-gradient(145deg, #314a9a, #6d3fa8); }
+            .mode-choice-icon { display: block; margin-bottom: 6px; font-size: 2.1rem; }
+            @keyframes modePickerIn {
+                from { opacity: 0; transform: translateY(18px) scale(.95); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @media (max-width: 800px) {
+                .mode-picker-actions { grid-template-columns: 1fr; }
+                .mode-choice-btn { min-height: 76px; }
+                .mode-choice-icon { display: inline; margin-right: 8px; font-size: 1.35rem; }
+            }
+        </style>
     </head>
     <body>
         <canvas id="oceanScene" aria-hidden="true"></canvas>
@@ -1549,6 +1602,17 @@
                 </svg>
             </div>
             <div id="otterSpeech"><span id="otterSpeechContent">Chiếp! Bánh mì bơ ấm quá~ 🍞🦦</span></div>
+        </div>
+        <div id="modePickerModal" role="dialog" aria-modal="true" aria-labelledby="modePickerTitle" aria-describedby="modePickerDescription" hidden>
+            <div class="mode-picker-card">
+                <div aria-hidden="true" style="font-size: 3rem; margin-bottom: 8px;">🦦✨</div>
+                <h2 id="modePickerTitle">Hé lô, mình đi ngắm nước nha!</h2>
+                <p id="modePickerDescription">Chọn bầu trời cho OtterBooth trước khi bắt đầu chụp ảnh nhé.</p>
+                <div class="mode-picker-actions">
+                    <button class="mode-choice-btn mode-choice-day" id="chooseDayMode" type="button"><span class="mode-choice-icon">☀️</span>Sunshine Mode<br><small>Ấm áp &amp; rực rỡ</small></button>
+                    <button class="mode-choice-btn mode-choice-night" id="chooseNightMode" type="button"><span class="mode-choice-icon">🌙</span>Night Mode<br><small>Sao rơi &amp; otter glow</small></button>
+                </div>
+            </div>
         </div>
         <div id="tutorialModal" style="display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200000; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: white; padding: 30px; border-radius: 24px; max-width: 500px; text-align: center; border: 5px solid var(--primary-color);">
@@ -3877,6 +3941,37 @@
             if (target instanceof Element && target.closest('#otterBread, button, a, input, video, canvas, .modal, [role="dialog"]')) return;
             handlePondClick(event);
         }, { passive: true });
+    })();
+    </script>
+    <script id="initial-mode-picker">
+    (() => {
+        const modal = document.getElementById('modePickerModal');
+        const dayButton = document.getElementById('chooseDayMode');
+        const nightButton = document.getElementById('chooseNightMode');
+        const tutorial = document.getElementById('tutorialModal');
+        const tutorialDoneButton = tutorial && tutorial.querySelector('button[onclick*="tutorialModal"]');
+        const toggle = document.getElementById('nightModeToggle');
+        if (!modal || !dayButton || !nightButton) return;
+
+        function chooseMode(mode) {
+            const wantsNight = mode === 'night';
+            const isNight = toggle
+                ? toggle.textContent.includes('Day Mode: ON')
+                : document.body.classList.contains('night-mode');
+            // Reuse the existing Night Mode listener to preserve all effects.
+            if (toggle && wantsNight !== isNight) toggle.click();
+            else if (!toggle) document.body.classList.toggle('night-mode', wantsNight);
+            modal.hidden = true;
+        }
+
+        dayButton.addEventListener('click', () => chooseMode('day'));
+        nightButton.addEventListener('click', () => chooseMode('night'));
+        if (tutorialDoneButton) {
+            tutorialDoneButton.addEventListener('click', () => {
+                modal.hidden = false;
+                dayButton.focus();
+            });
+        }
     })();
     </script>
     <script>
