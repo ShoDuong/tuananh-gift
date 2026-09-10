@@ -296,6 +296,92 @@
       mix-blend-mode: multiply;
     }
   </style>
+<style id="sunshine-light-radio-overrides">
+  body {
+    color: #3f2927;
+    background:
+      radial-gradient(circle at 12% 10%, rgba(255, 214, 112, .3), transparent 30%),
+      radial-gradient(circle at 88% 28%, rgba(255, 158, 187, .28), transparent 34%),
+      linear-gradient(180deg, #fffdf5 0%, #fff4d6 52%, #ffe7ee 100%);
+  }
+  #playerCard,
+  .birthday-message-card,
+  .paper-texture {
+    border-color: #df617c !important;
+    box-shadow: 0 16px 38px rgba(223, 97, 124, .2), 0 0 0 2px rgba(255, 190, 11, .24), inset 0 1px 0 #fff !important;
+  }
+  #playerCard::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: 0 0 26px rgba(223, 97, 124, .22);
+    animation: radioSunshineGlow 3.6s ease-in-out infinite;
+  }
+  @keyframes radioSunshineGlow {
+    0%, 100% { opacity: .5; }
+    50% { opacity: 1; }
+  }
+  #current-song-title,
+  h1 {
+    color: #713044 !important;
+    text-shadow: 0 2px 0 #fff, 0 0 14px rgba(223, 97, 124, .25);
+  }
+  #current-artist,
+  .birthday-message-copy {
+    color: #684c45 !important;
+  }
+  button,
+  .birthday-message-action,
+  .photobooth-cta {
+    border-color: #d94f76 !important;
+    box-shadow: 0 5px 0 #b63e5d, 0 0 18px rgba(223, 97, 124, .3) !important;
+  }
+  button:hover,
+  .birthday-message-action:hover,
+  .photobooth-cta:hover {
+    box-shadow: 0 6px 0 #b63e5d, 0 0 28px rgba(255, 190, 11, .45) !important;
+  }
+  #progress-bar-bg {
+    background: #f0cda9 !important;
+  }
+  #progress-bar-fill {
+    background: linear-gradient(90deg, #e85d75, #f59e0b, #ffbe0b) !important;
+  }
+  .radio-sakura-petal {
+    position: fixed;
+    top: -40px;
+    z-index: 10;
+    pointer-events: none;
+    font-size: 16px;
+    filter: drop-shadow(0 2px 3px rgba(184, 95, 120, .2));
+    animation: radioPetalFall linear forwards;
+  }
+  @keyframes radioPetalFall {
+    0% { transform: translate3d(0, -8vh, 0) rotate(0); opacity: 0; }
+    12% { opacity: .86; }
+    50% { transform: translate3d(var(--radio-drift), 52vh, 0) rotate(180deg); }
+    100% { transform: translate3d(calc(var(--radio-drift) * -.7), 116vh, 0) rotate(390deg); opacity: 0; }
+  }
+</style>
+<script>
+  (() => {
+    const spawnRadioPetal = () => {
+      const petal = document.createElement('span');
+      petal.className = 'radio-sakura-petal';
+      petal.textContent = Math.random() > .2 ? '🌸' : '🍃';
+      petal.style.left = `${Math.random() * 100}vw`;
+      petal.style.fontSize = `${12 + Math.random() * 14}px`;
+      petal.style.setProperty('--radio-drift', `${-100 + Math.random() * 200}px`);
+      const duration = 7 + Math.random() * 7;
+      petal.style.animationDuration = `${duration}s`;
+      document.body.appendChild(petal);
+      window.setTimeout(() => petal.remove(), (duration + 1) * 1000);
+    };
+    window.setInterval(spawnRadioPetal, 850);
+  })();
+</script>
 </head>
 <body class="min-h-screen relative flex flex-col justify-between p-4 sm:p-6 md:p-10 selection:bg-rose-100">
 <!-- Fullscreen 3D Sakura Petals Canvas Background -->
