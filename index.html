@@ -34,11 +34,73 @@
   <style>
     body {
       overflow-x: hidden;
+      background: radial-gradient(circle at top, #fffafc 0%, #ffeaf6 22%, #ffdbe9 48%, #f7bfd7 100%);
     }
 
     #envelope-container {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      display: block;
       cursor: pointer;
       text-align: center;
+      overflow: hidden;
+      background: transparent;
+      z-index: 0;
+    }
+
+    #threejs-container-ANIMATION_SAKURA_LETTER {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      background: transparent;
+      cursor: grab;
+      user-select: none;
+      pointer-events: auto;
+      z-index: -10;
+    }
+
+    #threejs-container-ANIMATION_SAKURA_LETTER:active {
+      cursor: grabbing;
+    }
+
+    #threejs-container-ANIMATION_SAKURA_LETTER canvas {
+      display: block;
+      width: 100vw !important;
+      height: 100vh !important;
+      pointer-events: auto;
+    }
+
+    .envelope-prompt {
+      position: fixed;
+      left: 50%;
+      bottom: clamp(24px, 7vh, 64px);
+      z-index: 2;
+      transform: translateX(-50%);
+      padding: 11px 24px;
+      border: 1px solid rgba(255, 213, 114, .9);
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(90deg, rgba(211, 95, 116, .94), rgba(255, 105, 180, .9), rgba(211, 95, 116, .94));
+      box-shadow: 0 8px 22px rgba(211, 95, 116, .28), 0 0 18px rgba(255, 213, 114, .28);
+      font: 700 .95rem "Nunito", sans-serif;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .envelope-prompt:hover {
+      transform: translateX(-50%) scale(1.05);
+      box-shadow: 0 10px 28px rgba(211, 95, 116, .35), 0 0 24px rgba(255, 213, 114, .36);
+    }
+
+    .envelope-prompt:active {
+      transform: translateX(-50%) scale(.96);
     }
 
     #letter-container {
@@ -230,44 +292,115 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <style>body, button, a, input, textarea, select { font-family: "Nunito", system-ui, sans-serif !important; }</style>
+<style>
+  #dialogueCard.letter-window {
+    width: min(90vw, 540px);
+    height: min(760px, 85vh);
+    max-height: 85vh;
+    min-height: 0 !important;
+  }
+
+  #dialogueCard .window-content {
+    min-height: 0 !important;
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding-bottom: 74px;
+  }
+
+  #dialogueCard #letter-cat {
+    width: 180px;
+    max-width: 48%;
+    height: auto;
+    margin: 4px 0 8px;
+  }
+
+  #dialogueCard #easter-egg-bubble {
+    top: 96px;
+    right: 18px;
+    max-width: 135px;
+  }
+
+  #dialogueCard #musicToggleBtn {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    z-index: 30;
+    display: block;
+    flex: 0 0 auto;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 600px) {
+    #dialogueCard.letter-window {
+      width: 90vw;
+      height: 92vh;
+      max-height: 92vh;
+    }
+
+    #dialogueCard #letter-cat {
+      width: 145px;
+      max-width: 55%;
+      margin-top: 8px;
+      margin-bottom: 10px;
+    }
+  }
+</style>
 </head>
 
 <body>
+  <!-- Ambient Magical Background -->
+  <div class="ambient-magical-background" data-purpose="background-ambiance" aria-hidden="true">
+    <div class="magic-array magic-array-large"></div>
+    <div class="magic-array magic-array-medium"></div>
+    <div class="magic-array magic-array-small"></div>
+  </div>
+
   <div class="flower-container">
 
     <!-- Envelope Screen -->
-    <div id="envelope-container">
-      <img src="envelope.png" alt="Envelope" id="envelope" />
-
-      <p
-        style="
-          font-family: sans-serif, cursive !important;
-          font-weight: 800 !important;
-          font-size: 3rem;
-          color: #d35f74;
-          margin: 10px 0 0 0;
-          text-shadow: 2px 2px 5px rgba(255, 105, 180, 0.3);
-        "
-      >
-        ♡ Mở Thư Nhá ♡
-      </p>
-
-      <p
-        style="
-          font-family: 'Pixelify Sans', sans-serif;
-          font-size: 2rem;
-          color: #000000;
-          margin-top: 15px;
-          font-style: italic;
-        "
-      >
-        (Nhớ chỉnh âm lượng chút xíu nha ~ 🎵)
-      </p>
+    <div id="envelope-container" aria-label="Open the letter">
+      <div id="threejs-container-ANIMATION_SAKURA_LETTER" aria-hidden="true"></div>
+      <button class="envelope-prompt" type="button">
+        ✨ Nhớ nhấn vô thư nha ✨
+      </button>
     </div>
 
     <!-- Letter Screen -->
-    <div id="letter-container">
-      <div class="letter-window">
+    <main id="letter-container">
+      <section class="letter-window sakura-glass dialogue-aura" id="dialogueCard">
+        <div class="window-corner window-corner-left">⚜</div>
+        <div class="window-corner window-corner-right">⚜</div>
+        <span class="window-spark window-spark-left">✦</span>
+        <span class="window-spark window-spark-right">✦</span>
+
+        <div class="window-header">
+          <div class="window-title-mark">★</div>
+          <h1>
+            <span>🌸 BoyFriend Request</span>
+            <span class="window-badge">BIRTHDAY APP</span>
+          </h1>
+        </div>
+
+        <div class="window-content">
+          <div class="window-inner-border" aria-hidden="true"></div>
+          <div class="special-hint">
+            <span>🪄</span>
+            <span>Nhấn vào đây để thấy điều đặc biệt ✨</span>
+            <span>💖</span>
+          </div>
+
+          <div class="invitation-card">
+            <div class="invitation-ribbon">SPECIAL INVITATION</div>
+            <div class="invitation-copy">
+              <h2>
+                <span>Dẫn tui đi ăn nha !</span>
+                <span class="invitation-emoji">🍰✨</span>
+              </h2>
+              <p>🌸 Bấm NO để hủy kèo ;) 🌸</p>
+            </div>
+          </div>
 
         <img
           src="otter_heart.gif"
@@ -279,8 +412,7 @@
         <!-- Easter Egg Text -->
         <div id="easter-egg-bubble">
   <span>click here for easter egg ✨</span>
-</div>
-
+        </div>
         <p id="final-text"></p>
 
         <div class="buttons" id="letter-buttons">
@@ -293,7 +425,8 @@
 
         <button id="musicToggleBtn" class="secondary-btn">🎵 Tắt Nhạc</button>
       </div>
-    </div>
+      </section>
+    </main>
 
     <!-- Cute Popup -->
     <div id="cute-popup">
@@ -341,6 +474,563 @@
 
   <!-- Main Script -->
   <script src="script.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
+  <script>
+    (function () {
+      const container = document.getElementById('threejs-container-ANIMATION_SAKURA_LETTER');
+      if (!container) return;
+
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+      camera.position.set(0, 0, 15.5);
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      container.appendChild(renderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0xfff0f5, 1.6);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+      dirLight.position.set(5, 9, 8);
+      dirLight.castShadow = true;
+      scene.add(dirLight);
+
+      const pinkMagicLight = new THREE.PointLight(0xff4081, 3.2, 30);
+      pinkMagicLight.position.set(0, 0.8, 4.0);
+      scene.add(pinkMagicLight);
+
+      const goldSunLight = new THREE.PointLight(0xffd700, 2.5, 25);
+      goldSunLight.position.set(-3.5, 3.5, 2.5);
+      scene.add(goldSunLight);
+
+      const etherealLight = new THREE.PointLight(0x80deea, 1.8, 20);
+      etherealLight.position.set(4, -2.5, 2.5);
+      scene.add(etherealLight);
+
+      const envelopeGroup = new THREE.Group();
+      envelopeGroup.scale.set(0.7, 0.7, 0.7);
+      scene.add(envelopeGroup);
+
+      const envelopeVelvetMat = new THREE.MeshStandardMaterial({ color: 0xfcaec0, roughness: 0.35, metalness: 0.08 });
+      const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xffd54f, roughness: 0.22, metalness: 0.85, emissive: 0x6e5207, emissiveIntensity: 0.28 });
+      const waxSealMat = new THREE.MeshStandardMaterial({ color: 0xff1493, roughness: 0.18, metalness: 0.2, emissive: 0xff0066, emissiveIntensity: 0.85 });
+      const wingMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.25,
+        metalness: 0.05,
+        emissive: 0xffedf3,
+        emissiveIntensity: 0.32,
+        side: THREE.DoubleSide
+      });
+
+      const backMesh = new THREE.Mesh(new THREE.BoxGeometry(5.2, 3.6, 0.08), envelopeVelvetMat);
+      backMesh.castShadow = true;
+      backMesh.receiveShadow = true;
+      envelopeGroup.add(backMesh);
+
+      const frameThick = 0.08;
+      const topBorder = new THREE.Mesh(new THREE.BoxGeometry(5.2, frameThick, 0.1), goldTrimMat);
+      topBorder.position.set(0, 1.8, 0.02);
+      envelopeGroup.add(topBorder);
+
+      const bottomBorder = new THREE.Mesh(new THREE.BoxGeometry(5.2, frameThick, 0.1), goldTrimMat);
+      bottomBorder.position.set(0, -1.8, 0.02);
+      envelopeGroup.add(bottomBorder);
+
+      const leftBorder = new THREE.Mesh(new THREE.BoxGeometry(frameThick, 3.6, 0.1), goldTrimMat);
+      leftBorder.position.set(-2.6, 0, 0.02);
+      envelopeGroup.add(leftBorder);
+
+      const rightBorder = new THREE.Mesh(new THREE.BoxGeometry(frameThick, 3.6, 0.1), goldTrimMat);
+      rightBorder.position.set(2.6, 0, 0.02);
+      envelopeGroup.add(rightBorder);
+
+      const flapPivot = new THREE.Group();
+      flapPivot.position.set(0, 1.8, 0.06);
+      envelopeGroup.add(flapPivot);
+
+      const flapShape = new THREE.Shape();
+      flapShape.moveTo(-2.6, 0);
+      flapShape.lineTo(2.6, 0);
+      flapShape.lineTo(0, -1.88);
+      flapShape.closePath();
+      const flapGeo = new THREE.ExtrudeGeometry(flapShape, { depth: 0.06, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.03, bevelThickness: 0.03 });
+      const flapMesh = new THREE.Mesh(flapGeo, envelopeVelvetMat);
+      flapMesh.castShadow = true;
+      flapPivot.add(flapMesh);
+
+      const flapPipingPoints = [
+        new THREE.Vector3(-2.6, 0, 0.08),
+        new THREE.Vector3(0, -1.88, 0.08),
+        new THREE.Vector3(2.6, 0, 0.08)
+      ];
+      const flapTubeMesh = new THREE.Mesh(
+        new THREE.TubeGeometry(new THREE.CatmullRomCurve3(flapPipingPoints), 24, 0.035, 8, false),
+        goldTrimMat
+      );
+      flapPivot.add(flapTubeMesh);
+
+      const frontShape = new THREE.Shape();
+      frontShape.moveTo(-2.6, -1.8);
+      frontShape.lineTo(2.6, -1.8);
+      frontShape.lineTo(2.6, 0.25);
+      frontShape.lineTo(0, -0.65);
+      frontShape.lineTo(-2.6, 0.25);
+      frontShape.closePath();
+      const frontGeo = new THREE.ExtrudeGeometry(frontShape, { depth: 0.06, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.03, bevelThickness: 0.03 });
+      const frontMesh = new THREE.Mesh(frontGeo, envelopeVelvetMat);
+      frontMesh.position.set(0, 0, 0.18);
+      frontMesh.castShadow = true;
+      envelopeGroup.add(frontMesh);
+
+      const frontGoldPoints = [
+        new THREE.Vector3(-2.6, 0.25, 0.25),
+        new THREE.Vector3(0, -0.65, 0.25),
+        new THREE.Vector3(2.6, 0.25, 0.25)
+      ];
+      const frontGoldMesh = new THREE.Mesh(
+        new THREE.TubeGeometry(new THREE.CatmullRomCurve3(frontGoldPoints), 20, 0.035, 8, false),
+        goldTrimMat
+      );
+      envelopeGroup.add(frontGoldMesh);
+
+      const sealGroup = new THREE.Group();
+      sealGroup.position.set(0, -1.6, 0.32);
+      flapPivot.add(sealGroup);
+
+      const waxRing = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.08, 32), waxSealMat);
+      waxRing.rotation.x = Math.PI * 0.5;
+      sealGroup.add(waxRing);
+
+      const sealGoldRing = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.035, 12, 32), goldTrimMat);
+      sealGoldRing.position.set(0, 0, 0.05);
+      sealGroup.add(sealGoldRing);
+
+      const starShape = new THREE.Shape();
+      for (let i = 0; i < 16; i++) {
+        const r = (i % 2 === 0) ? 0.36 : 0.20;
+        const a = (i * Math.PI) / 8;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        if (i === 0) starShape.moveTo(x, y);
+        else starShape.lineTo(x, y);
+      }
+      starShape.closePath();
+      const sealStar = new THREE.Mesh(new THREE.ExtrudeGeometry(starShape, { depth: 0.03, bevelEnabled: false }), goldTrimMat);
+      sealStar.position.set(0, 0, 0.04);
+      sealGroup.add(sealStar);
+
+      const heartShape = new THREE.Shape();
+      heartShape.moveTo(0, -0.16);
+      heartShape.bezierCurveTo(-0.25, 0, -0.28, 0.25, 0, 0.40);
+      heartShape.bezierCurveTo(0.28, 0.25, 0.25, 0, 0, -0.16);
+      const centerRubyHeart = new THREE.Mesh(
+        new THREE.ExtrudeGeometry(heartShape, { depth: 0.06, bevelEnabled: true, bevelSegments: 3, bevelSize: 0.02, bevelThickness: 0.02 }),
+        waxSealMat
+      );
+      centerRubyHeart.rotation.z = Math.PI;
+      centerRubyHeart.scale.set(0.65, 0.65, 0.65);
+      centerRubyHeart.position.set(0, 0.08, 0.07);
+      sealGroup.add(centerRubyHeart);
+
+      function buildMagicalWing(isLeft) {
+        const wingRoot = new THREE.Group();
+        const featherDefs = [
+          { length: 2.4, width: 0.5, angle: 0.12, x: 1.0, y: 0.25 },
+          { length: 2.8, width: 0.55, angle: 0.3, x: 1.55, y: 0.05 },
+          { length: 3.0, width: 0.58, angle: 0.48, x: 2.05, y: -0.25 },
+          { length: 2.5, width: 0.5, angle: 0.68, x: 2.35, y: -0.65 },
+          { length: 1.7, width: 0.44, angle: 0.25, x: 0.65, y: 0.0 },
+          { length: 1.5, width: 0.4, angle: 0.5, x: 1.1, y: -0.3 }
+        ];
+
+        featherDefs.forEach((feather) => {
+          const shape = new THREE.Shape();
+          shape.moveTo(0, 0);
+          shape.bezierCurveTo(feather.width * 0.5, feather.length * 0.3, feather.width * 0.6, feather.length * 0.75, 0, feather.length);
+          shape.bezierCurveTo(-feather.width * 0.6, feather.length * 0.75, -feather.width * 0.5, feather.length * 0.3, 0, 0);
+          const mesh = new THREE.Mesh(
+            new THREE.ExtrudeGeometry(shape, { depth: 0.04, bevelEnabled: true, bevelSegments: 2, bevelSize: 0.02, bevelThickness: 0.02 }),
+            wingMat
+          );
+          mesh.position.set(feather.x, feather.y, -0.08);
+          mesh.rotation.z = -feather.angle;
+          mesh.rotation.y = 0.08;
+          mesh.castShadow = true;
+          wingRoot.add(mesh);
+        });
+
+        const wrapper = new THREE.Group();
+        if (isLeft) wingRoot.scale.x = -1;
+        wrapper.add(wingRoot);
+        return wrapper;
+      }
+
+      const sealLeftWing = buildMagicalWing(true);
+      sealLeftWing.position.set(-0.38, 0, 0.05);
+      sealLeftWing.scale.setScalar(0.22);
+      sealGroup.add(sealLeftWing);
+
+      const sealRightWing = buildMagicalWing(false);
+      sealRightWing.position.set(0.38, 0, 0.05);
+      sealRightWing.scale.setScalar(0.22);
+      sealGroup.add(sealRightWing);
+
+      sealLeftWing.rotation.set(0, 0.1, 0.28);
+      sealRightWing.rotation.set(0, -0.1, -0.28);
+
+      function createSakuraMagicCircleCanvas() {
+        const c = document.createElement('canvas');
+        c.width = 1024; c.height = 1024;
+        const ctx = c.getContext('2d');
+        ctx.clearRect(0, 0, 1024, 1024);
+        ctx.shadowColor = 'rgba(255, 105, 180, 0.85)';
+        ctx.shadowBlur = 24;
+
+        ctx.strokeStyle = '#ffd86b';
+        ctx.lineWidth = 14;
+        ctx.beginPath();
+        ctx.arc(512, 512, 480, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#ff6da7';
+        ctx.beginPath();
+        ctx.arc(512, 512, 452, 0, Math.PI * 2);
+        ctx.stroke();
+
+        for (let i = 0; i < 12; i++) {
+          const a = (i * Math.PI) / 6;
+          const ox = 512 + Math.cos(a) * 415;
+          const oy = 512 + Math.sin(a) * 415;
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = (i % 2 === 0) ? '#ffe58f' : '#ff7aa2';
+          ctx.fillStyle = (i % 3 === 0) ? 'rgba(255, 230, 150, 0.5)' : 'rgba(255, 130, 170, 0.4)';
+          ctx.beginPath();
+          ctx.arc(ox, oy, 32, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.beginPath();
+          ctx.arc(ox, oy, 10, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = '#ffb3d1';
+        for (let i = 0; i < 12; i++) {
+          const a1 = (i * Math.PI) / 6;
+          const a2 = ((i + 5) * Math.PI) / 6;
+          ctx.beginPath();
+          ctx.moveTo(512 + Math.cos(a1) * 360, 512 + Math.sin(a1) * 360);
+          ctx.lineTo(512 + Math.cos(a2) * 360, 512 + Math.sin(a2) * 360);
+          ctx.stroke();
+        }
+
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = '#ffd86b';
+        ctx.beginPath();
+        ctx.arc(512, 512, 140, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255, 220, 100, 0.85)';
+        ctx.beginPath();
+        ctx.arc(512, 512, 60, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ff3366';
+        ctx.beginPath();
+        ctx.arc(512, 512, 25, 0, Math.PI * 2);
+        ctx.fill();
+        return c;
+      }
+
+      const magicCircleTex = new THREE.CanvasTexture(createSakuraMagicCircleCanvas());
+      const magicCircleMat = new THREE.MeshBasicMaterial({
+        map: magicCircleTex,
+        transparent: true,
+        opacity: 0.9,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      });
+
+      const bgCircleMesh = new THREE.Mesh(new THREE.PlaneGeometry(12.2, 12.2), magicCircleMat);
+      bgCircleMesh.position.set(0, 0, -2.8);
+      scene.add(bgCircleMesh);
+
+      const floorCircleMesh = new THREE.Mesh(new THREE.PlaneGeometry(12.2, 12.2), magicCircleMat);
+      floorCircleMesh.rotation.x = Math.PI * 0.5;
+      floorCircleMesh.position.set(0, -3.4, 0);
+      floorCircleMesh.scale.set(0.88, 0.88, 0.88);
+      scene.add(floorCircleMesh);
+
+      const halo1 = new THREE.Mesh(
+        new THREE.TorusGeometry(3.9, 0.045, 16, 120),
+        new THREE.MeshBasicMaterial({ color: 0xffd54f, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false })
+      );
+      halo1.rotation.x = Math.PI * 0.42;
+      envelopeGroup.add(halo1);
+
+      const halo2 = new THREE.Mesh(
+        new THREE.TorusGeometry(4.6, 0.03, 16, 120),
+        new THREE.MeshBasicMaterial({ color: 0xff6699, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false })
+      );
+      halo2.rotation.x = -Math.PI * 0.35;
+      envelopeGroup.add(halo2);
+
+      const sakuraPetalCount = 65;
+      const sakuraPetals = [];
+      const petalShape = new THREE.Shape();
+      petalShape.moveTo(0, 0);
+      petalShape.bezierCurveTo(0.14, 0.16, 0.24, 0.46, 0.09, 0.68);
+      petalShape.bezierCurveTo(0.04, 0.71, -0.04, 0.71, -0.09, 0.68);
+      petalShape.bezierCurveTo(-0.24, 0.46, -0.14, 0.16, 0, 0);
+      const petalGeo = new THREE.ExtrudeGeometry(petalShape, { depth: 0.015, bevelEnabled: false });
+      const petalMatPink = new THREE.MeshStandardMaterial({ color: 0xffb3cb, emissive: 0xff528f, emissiveIntensity: 0.4, roughness: 0.3, side: THREE.DoubleSide });
+      const petalMatGold = new THREE.MeshStandardMaterial({ color: 0xffe070, emissive: 0xffbe3b, emissiveIntensity: 0.7, roughness: 0.2, side: THREE.DoubleSide });
+
+      for (let i = 0; i < sakuraPetalCount; i++) {
+        const mat = (i % 4 === 0) ? petalMatGold : petalMatPink;
+        const petalMesh = new THREE.Mesh(petalGeo, mat);
+        const sc = 0.5 + Math.random() * 0.9;
+        petalMesh.scale.set(sc, sc, sc);
+        const radius = 2.0 + Math.random() * 5.5;
+        const angle = Math.random() * Math.PI * 2;
+        const y = (Math.random() - 0.5) * 9.0;
+        const z = (Math.random() - 0.5) * 5;
+        petalMesh.position.set(Math.cos(angle) * radius, y, z);
+        petalMesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+        scene.add(petalMesh);
+        sakuraPetals.push({
+          mesh: petalMesh,
+          speedY: 0.014 + Math.random() * 0.02,
+          speedRotX: (Math.random() - 0.5) * 0.04,
+          speedRotY: (Math.random() - 0.5) * 0.04,
+          speedRotZ: (Math.random() - 0.5) * 0.04,
+          orbitRadius: radius,
+          phase: Math.random() * Math.PI * 2,
+          orbitSpeed: (0.35 + Math.random() * 0.6) * (Math.random() > 0.5 ? 1 : -1)
+        });
+      }
+
+      let targetScale = 0.7;
+      let mouseX = 0;
+      let mouseY = 0;
+      let targetRotX = 0.05;
+      let targetRotY = -0.1;
+      let isEnvelopeOpening = false;
+      let animationProgress = 0;
+      const raycaster = new THREE.Raycaster();
+      const mouseVec = new THREE.Vector2();
+
+      function openEnvelopeByLegacyLogic() {
+        const envelopeNode = document.getElementById('envelope-container');
+        const letterNode = document.getElementById('letter-container');
+        const letterWindowNode = document.querySelector('.letter-window');
+
+        if (typeof window.handleToggleEnvelope === 'function') {
+          window.handleToggleEnvelope();
+          return;
+        }
+
+        if (typeof window.toggleLetterModal === 'function') {
+          window.toggleLetterModal(true);
+          return;
+        }
+
+        if (envelopeNode && letterNode && letterWindowNode) {
+          envelopeNode.style.display = 'none';
+          letterNode.style.display = 'flex';
+          setTimeout(() => {
+            letterWindowNode.classList.add('open');
+          }, 50);
+
+          if (typeof window.startFloatingHearts === 'function') {
+            window.startFloatingHearts();
+          }
+        }
+
+        if (typeof window.playMusic === 'function') {
+          window.playMusic();
+        }
+      }
+
+      function onPointerMove(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        mouseX = x;
+        mouseY = y;
+        targetRotY = mouseX * 0.45;
+        targetRotX = -mouseY * 0.35 + 0.05;
+        mouseVec.set(x, y);
+        raycaster.setFromCamera(mouseVec, camera);
+        const intersects = raycaster.intersectObjects([envelopeGroup], true);
+        if (intersects.length > 0) {
+          container.style.cursor = 'pointer';
+          targetScale = 0.72;
+        } else {
+          container.style.cursor = 'default';
+          targetScale = 0.7;
+        }
+      }
+
+      function onPointerDown(event) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        mouseVec.set(x, y);
+        raycaster.setFromCamera(mouseVec, camera);
+        const intersects = raycaster.intersectObjects([envelopeGroup], true);
+
+        if (intersects.length > 0) {
+          event.preventDefault();
+          event.stopPropagation();
+          isEnvelopeOpening = true;
+          setTimeout(openEnvelopeByLegacyLogic, 650);
+          if (typeof window.spawnHearts === 'function') {
+            window.spawnHearts(event, '🌸');
+            window.spawnHearts(event, '✨');
+          }
+        }
+      }
+
+      renderer.domElement.addEventListener('pointermove', onPointerMove);
+      renderer.domElement.addEventListener('pointerdown', onPointerDown);
+      renderer.domElement.addEventListener('click', (event) => event.stopPropagation(), true);
+
+      function onResize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        camera.aspect = w / h;
+        camera.position.set(0, 0, 15.5);
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+        renderer.domElement.style.width = `${w}px`;
+        renderer.domElement.style.height = `${h}px`;
+      }
+
+      window.addEventListener('resize', onResize);
+
+      let clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const elapsedTime = clock.getElapsedTime();
+
+        envelopeGroup.position.y = Math.sin(elapsedTime * 1.6) * 0.16;
+        envelopeGroup.rotation.y += (targetRotY - envelopeGroup.rotation.y) * 0.06;
+        envelopeGroup.rotation.x += (targetRotX - envelopeGroup.rotation.x) * 0.06;
+        envelopeGroup.rotation.z = Math.sin(elapsedTime * 1.1) * 0.025;
+
+        const curScale = envelopeGroup.scale.x;
+        const s = curScale + (targetScale - curScale) * 0.08;
+        envelopeGroup.scale.set(s, s, s);
+
+        const progressTarget = isEnvelopeOpening ? 1 : 0;
+        animationProgress += (progressTarget - animationProgress) * 0.08;
+        flapPivot.rotation.x += (-Math.PI * 0.88 * animationProgress - flapPivot.rotation.x) * 0.08;
+        const wingBreath = Math.sin(elapsedTime * 2.2) * 0.04;
+        const leftWingTargetY = 0.1 + (-0.35 - 0.1) * animationProgress;
+        const rightWingTargetY = -0.1 + (0.35 + 0.1) * animationProgress;
+        sealLeftWing.rotation.y += (leftWingTargetY + wingBreath - sealLeftWing.rotation.y) * 0.07;
+        sealRightWing.rotation.y += (rightWingTargetY - wingBreath - sealRightWing.rotation.y) * 0.07;
+        sealLeftWing.rotation.z += (0.28 - sealLeftWing.rotation.z) * 0.07;
+        sealRightWing.rotation.z += (-0.28 - sealRightWing.rotation.z) * 0.07;
+
+        centerRubyHeart.material.emissiveIntensity = 0.7 + Math.sin(elapsedTime * 3.8) * 0.35;
+
+        bgCircleMesh.rotation.z += 0.0035;
+        floorCircleMesh.rotation.z -= 0.0045;
+        halo1.rotation.z += 0.008;
+        halo2.rotation.z -= 0.007;
+
+        sakuraPetals.forEach((p) => {
+          p.mesh.position.y += p.speedY;
+          p.mesh.rotation.x += p.speedRotX;
+          p.mesh.rotation.y += p.speedRotY;
+          p.mesh.rotation.z += p.speedRotZ;
+          const currentAngle = elapsedTime * 0.2 * p.orbitSpeed + p.phase;
+          p.mesh.position.x = Math.cos(currentAngle) * p.orbitRadius;
+          p.mesh.position.z = Math.sin(currentAngle) * (p.orbitRadius * 0.8);
+          if (p.mesh.position.y > 5.5) p.mesh.position.y = -5.0;
+        });
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    })();
+  </script>
+
+  <script>
+    (function () {
+      const letterContainer = document.getElementById("letter-container");
+      const dialogueCard = document.getElementById("dialogueCard");
+      if (!letterContainer || !dialogueCard) return;
+
+      const magicalSymbols = ["🌸", "🍓", "🍰", "🪄"];
+
+      window.spawnMagicalPetals = function () {
+        for (let i = 0; i < 16; i += 1) {
+          const petal = document.createElement("span");
+          petal.className = "magical-petal";
+          petal.textContent = magicalSymbols[i % magicalSymbols.length];
+          petal.style.left = `${Math.random() * 100}vw`;
+          petal.style.top = `${20 + Math.random() * 45}vh`;
+          petal.style.setProperty("--drift", `${(Math.random() - 0.5) * 180}px`);
+          petal.style.animationDelay = `${Math.random() * 700}ms`;
+          petal.style.fontSize = `${16 + Math.random() * 12}px`;
+          document.body.appendChild(petal);
+          setTimeout(() => petal.remove(), 3800);
+        }
+      };
+
+      window.createSparkleBurst = function (event) {
+        const originX = event && typeof event.clientX === "number" ? event.clientX : window.innerWidth / 2;
+        const originY = event && typeof event.clientY === "number" ? event.clientY : window.innerHeight / 2;
+        for (let i = 0; i < 10; i += 1) {
+          const sparkle = document.createElement("span");
+          const angle = (Math.PI * 2 * i) / 10;
+          const distance = 35 + Math.random() * 55;
+          sparkle.className = "sparkle-burst";
+          sparkle.textContent = i % 2 === 0 ? "✦" : "✨";
+          sparkle.style.left = `${originX}px`;
+          sparkle.style.top = `${originY}px`;
+          sparkle.style.setProperty("--burst-x", `${Math.cos(angle) * distance}px`);
+          sparkle.style.setProperty("--burst-y", `${Math.sin(angle) * distance}px`);
+          sparkle.style.animationDelay = `${i * 18}ms`;
+          document.body.appendChild(sparkle);
+          setTimeout(() => sparkle.remove(), 900);
+        }
+      };
+
+      let petalsStarted = false;
+      const startPostOpenEffects = () => {
+        if (petalsStarted) return;
+        petalsStarted = true;
+        window.spawnMagicalPetals();
+        setInterval(window.spawnMagicalPetals, 5200);
+      };
+
+      const observer = new MutationObserver(() => {
+        if (letterContainer.style.display === "flex" && dialogueCard.classList.contains("open")) {
+          startPostOpenEffects();
+        }
+      });
+      observer.observe(letterContainer, { attributes: true, attributeFilter: ["style", "class"] });
+      observer.observe(dialogueCard, { attributes: true, attributeFilter: ["class"] });
+
+      dialogueCard.addEventListener("pointerdown", (event) => {
+        window.createSparkleBurst(event);
+      });
+    })();
+  </script>
 
   <!-- Messenger / Instagram Browser Detection -->
   <script>
