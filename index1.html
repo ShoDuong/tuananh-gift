@@ -2123,10 +2123,6 @@ animate();
       if (!response.ok || responseBody.ok !== true) {
         throw new Error(responseBody.error || `Wish delivery failed: ${response.status}`);
       }
-      if (result) {
-        result.style.display = "block";
-        result.textContent = "Đã gửi điều ước thành công tới Discord 💌";
-      }
       setTimeout(() => {
         close();
         if (typeof confetti === "function") confetti({ particleCount: 160, spread: 100, origin: { x: .5, y: .6 } });
