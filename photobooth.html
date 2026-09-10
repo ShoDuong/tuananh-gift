@@ -26,7 +26,7 @@
                 background-image: radial-gradient(circle at 50% 50%, #ffffff 0%, #e0f0ff 100%);
                 display: flex; flex-direction: column; align-items: center;
                 min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box;
-                overflow-x: hidden;
+                overflow-x: hidden; zoom: 0.67;
             }
 
             h1 {
@@ -1127,6 +1127,316 @@
         }
         body.night-mode #oceanScene { opacity: .9; mix-blend-mode: normal; }
 
+        /* Night Lumina background layers: visual-only and kept below the booth UI. */
+        body::before {
+            z-index: -2;
+            background:
+                radial-gradient(circle at 20% 12%, rgba(0, 240, 255, .08), transparent 34%),
+                radial-gradient(circle at 82% 78%, rgba(192, 132, 252, .12), transparent 38%);
+            pointer-events: none;
+        }
+        #luminaCanvas,
+        #butterflyStage {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        #luminaCanvas {
+            z-index: -1;
+            opacity: .42;
+            mix-blend-mode: screen;
+        }
+        #butterflyStage {
+            z-index: 0;
+            perspective: 1200px;
+        }
+        #butterflyStage .lumina-butterfly {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 72px;
+            height: 60px;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+        .lumina-butterfly-glow {
+            position: absolute;
+            inset: -16px;
+            border-radius: 50%;
+            filter: blur(18px);
+            opacity: .72;
+        }
+        .lumina-butterfly svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+        .lumina-wing {
+            position: absolute;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            transform-style: preserve-3d;
+            will-change: transform;
+        }
+        .lumina-wing-left {
+            left: 0;
+            transform-origin: 100% 50%;
+        }
+        .lumina-wing-right {
+            right: 0;
+            transform-origin: 0 50%;
+        }
+        body.night-mode #luminaCanvas { opacity: .8; }
+        body.night-mode #butterflyStage { opacity: 1; }
+        @media (prefers-reduced-motion: reduce) {
+            #luminaCanvas { display: none; }
+            #butterflyStage { opacity: .35; }
+        }
+
+        /* Night-mode otter bread and water glow overlays. */
+        #otterGlowBackdrop,
+        #interactivePond {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        #otterGlowBackdrop {
+            z-index: -1;
+            opacity: 0;
+            background:
+                radial-gradient(ellipse at 18% 20%, rgba(0, 240, 255, .18), transparent 38%),
+                radial-gradient(circle at 82% 78%, rgba(125, 92, 255, .2), transparent 42%),
+                linear-gradient(180deg, rgba(14, 23, 38, .12), rgba(2, 20, 38, .3));
+            mix-blend-mode: screen;
+            transition: opacity .8s ease;
+        }
+        #otterGlowBackdrop::after {
+            content: "";
+            position: absolute;
+            inset: -25%;
+            background:
+                radial-gradient(ellipse at 30% 25%, rgba(125, 244, 255, .18), transparent 30%),
+                radial-gradient(ellipse at 70% 70%, rgba(221, 183, 255, .13), transparent 34%);
+            filter: blur(42px);
+            animation: otterAuroraShift 18s ease-in-out infinite alternate;
+        }
+        body.night-mode #otterGlowBackdrop { opacity: 1; }
+        #interactivePond { z-index: 4; }
+        #otterBread {
+            position: fixed;
+            left: 70vw;
+            top: 75vh;
+            width: min(260px, 30vw);
+            cursor: pointer;
+            pointer-events: auto;
+            filter: drop-shadow(0 20px 35px rgba(0, 0, 0, .5));
+            opacity: 0;
+            transform: translateY(18px) scale(.94);
+            transition: opacity .8s ease, transform .8s ease;
+        }
+        body.night-mode #otterBread {
+            opacity: .96;
+            transform: translateY(0) scale(1);
+        }
+        #otterBread svg { display: block; width: 100%; height: auto; }
+        #otterBread .floating-group { animation: floatOtter 4.5s ease-in-out infinite; transform-origin: 250px 250px; }
+        #otterBread .ripple { animation: waterRipple 5s ease-in-out infinite; transform-origin: 250px 260px; }
+        #otterBread .belly-breathe { animation: breatheOtter 3s ease-in-out infinite; transform-origin: 250px 270px; }
+        #otterBread .paw-left { animation: pawWiggle 3.5s ease-in-out infinite; transform-origin: 200px 240px; }
+        #otterBread .paw-right { animation: pawWiggle 3.5s ease-in-out infinite reverse; transform-origin: 300px 240px; }
+        #otterBread .tail { animation: tailWag 3.8s ease-in-out infinite; transform-origin: 280px 380px; }
+        #otterSpeech {
+            position: fixed;
+            left: 63vw;
+            top: 61vh;
+            max-width: 220px;
+            padding: 8px 14px;
+            border: 1px solid rgba(125, 244, 255, .7);
+            border-radius: 999px;
+            background: rgba(4, 29, 55, .82);
+            color: #d9fbff;
+            box-shadow: 0 0 18px rgba(0, 240, 255, .35);
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity .25s ease, transform .25s ease;
+            pointer-events: none;
+        }
+        #otterSpeech.is-visible { opacity: 1; transform: translateY(0); }
+        .otter-water-ripple {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid rgba(0, 240, 255, .7);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: otterRipple .95s cubic-bezier(.1, .8, .3, 1) forwards;
+        }
+        .otter-heart-particle {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            animation: otterHeartBurst 1s ease-out forwards;
+        }
+        @keyframes otterAuroraShift {
+            from { transform: translate3d(-2%, -1%, 0) rotate(-2deg) scale(1); }
+            to { transform: translate3d(3%, 2%, 0) rotate(3deg) scale(1.12); }
+        }
+        @keyframes floatOtter {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-16px) rotate(1.5deg); }
+        }
+        @keyframes waterRipple {
+            0%, 100% { transform: scale(.92); opacity: .7; }
+            50% { transform: scale(1.05); opacity: .3; }
+        }
+        @keyframes breatheOtter {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        @keyframes pawWiggle {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(3deg); }
+        }
+        @keyframes tailWag {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(-6deg); }
+        }
+        @keyframes otterRipple {
+            to { width: 170px; height: 170px; opacity: 0; }
+        }
+        @keyframes otterHeartBurst {
+            to { opacity: 0; transform: translate(-50%, -90px) scale(1.35); }
+        }
+        @media (max-width: 800px) {
+            #otterBread { left: 68vw; top: 76vh; width: 150px; }
+            #otterSpeech { left: 55vw; top: 66vh; font-size: .75rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #otterBread .floating-group,
+            #otterBread .ripple,
+            #otterBread .belly-breathe,
+            #otterBread .paw-left,
+            #otterBread .paw-right,
+            #otterBread .tail,
+            #otterGlowBackdrop::after { animation: none; }
+        }
+
+        /* Additive caustics and bubble-burst details for the otter pond. */
+        #otterGlowBackdrop::before {
+            content: "";
+            position: absolute;
+            inset: -18%;
+            opacity: 0;
+            pointer-events: none;
+            background:
+                repeating-radial-gradient(ellipse at 17% 22%, rgba(183, 247, 255, .13) 0 1px, transparent 2px 26px),
+                repeating-radial-gradient(ellipse at 75% 70%, rgba(158, 218, 255, .09) 0 1px, transparent 2px 34px);
+            background-size: 180px 130px, 240px 180px;
+            filter: blur(1.2px);
+            mix-blend-mode: screen;
+            transition: opacity .8s ease;
+            animation: otterCausticsDrift 15s linear infinite;
+        }
+        body.night-mode #otterGlowBackdrop::before { opacity: .78; }
+        .otter-bubble-particle {
+            position: absolute;
+            width: var(--bubble-size, 13px);
+            height: var(--bubble-size, 13px);
+            border: 1px solid rgba(210, 252, 255, .82);
+            border-radius: 50%;
+            background: radial-gradient(circle at 32% 27%, rgba(255, 255, 255, .9) 0 10%, rgba(166, 243, 255, .2) 32%, rgba(29, 152, 205, .08) 68%, transparent 70%);
+            box-shadow: inset -2px -3px 5px rgba(0, 147, 203, .25), 0 0 12px rgba(101, 239, 255, .48);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: otterBubbleBurst 1.15s cubic-bezier(.1, .8, .3, 1) forwards;
+        }
+        @keyframes otterCausticsDrift {
+            from { transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1.04); }
+            to { transform: translate3d(3%, 2%, 0) rotate(4deg) scale(1.12); }
+        }
+        @keyframes otterBubbleBurst {
+            to {
+                opacity: 0;
+                transform: translate(calc(-50% + var(--bubble-x)), calc(-50% + var(--bubble-y))) scale(.45);
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #otterGlowBackdrop::before,
+            .otter-bubble-particle { animation: none; }
+        }
+
+        /* Otter bread visibility + long-range swim path.
+           The outer wrapper owns the full-screen movement; SVG parts retain
+           their own float/breathe/paw/tail transforms without collisions. */
+        body.night-mode #interactivePond {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 12000 !important;
+            isolation: isolate;
+        }
+        #otterBreadCruise {
+            position: fixed;
+            inset: 0;
+            z-index: 12001;
+            pointer-events: none;
+            visibility: hidden;
+            opacity: 0;
+        }
+        body.night-mode #otterBreadCruise {
+            visibility: visible !important;
+            opacity: 1 !important;
+            animation: otterBreadCruise 31s cubic-bezier(.45, .05, .2, 1) infinite;
+            will-change: transform;
+        }
+        #otterBreadCruise #otterBread {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: clamp(160px, 19vw, 270px) !important;
+            z-index: 1 !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            transform: translate3d(0, 0, 0) scale(1) !important;
+        }
+        #otterBreadCruise #otterSpeech {
+            position: absolute !important;
+            top: -50px !important;
+            left: 8px !important;
+            z-index: 2 !important;
+        }
+        @keyframes otterBreadCruise {
+            0%, 100% { transform: translate3d(4vw, 14vh, 0) rotate(-2deg); }
+            15% { transform: translate3d(38vw, 7vh, 0) rotate(2deg); }
+            31% { transform: translate3d(calc(100vw - min(310px, 32vw)), 21vh, 0) rotate(-3deg); }
+            48% { transform: translate3d(calc(100vw - min(320px, 32vw)), calc(100vh - 305px), 0) rotate(2deg); }
+            66% { transform: translate3d(45vw, calc(100vh - 245px), 0) rotate(-2deg); }
+            84% { transform: translate3d(7vw, calc(100vh - 300px), 0) rotate(3deg); }
+        }
+        @media (max-width: 800px) {
+            #otterBreadCruise #otterBread { width: clamp(130px, 42vw, 185px) !important; }
+            #otterBreadCruise #otterSpeech { top: -42px !important; max-width: 180px; font-size: .72rem; }
+            @keyframes otterBreadCruise {
+                0%, 100% { transform: translate3d(3vw, 12vh, 0) rotate(-2deg); }
+                24% { transform: translate3d(calc(100vw - 175px), 20vh, 0) rotate(2deg); }
+                52% { transform: translate3d(calc(100vw - 180px), calc(100vh - 230px), 0) rotate(-2deg); }
+                76% { transform: translate3d(4vw, calc(100vh - 215px), 0) rotate(2deg); }
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body.night-mode #otterBreadCruise { animation: none; transform: translate3d(68vw, 70vh, 0); }
+        }
+
         /* Requested two-column booth layout with the original mobile breakpoint. */
         #mainBooth { max-width: 1120px; }
         .booth-frame {
@@ -1206,6 +1516,40 @@
     </head>
     <body>
         <canvas id="oceanScene" aria-hidden="true"></canvas>
+        <canvas id="luminaCanvas" aria-hidden="true"></canvas>
+        <div id="butterflyStage" aria-hidden="true"></div>
+        <div id="otterGlowBackdrop" aria-hidden="true"></div>
+        <div id="interactivePond" aria-hidden="true">
+            <div id="otterBread" role="button" tabindex="0" aria-label="Tương tác với rái cá bánh mì">
+                <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <radialGradient id="otterWaterGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#fff" stop-opacity=".6"/>
+                            <stop offset="60%" stop-color="#b6e3f4" stop-opacity=".3"/>
+                            <stop offset="100%" stop-color="#7fc7e8" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse class="ripple" cx="250" cy="270" fill="url(#otterWaterGlow)" rx="195" ry="175"/>
+                    <g class="floating-group">
+                        <g class="tail"><path d="M260 360 C270 390 285 435 305 442 C320 445 328 425 312 390 C300 365 290 355 275 352Z" fill="#8f5b40"/></g>
+                        <path d="M135 115C165 72 220 78 250 86C280 78 335 72 365 115C395 158 410 215 395 320C382 400 340 415 250 415C160 415 118 400 105 320C90 215 105 158 135 115Z" fill="#f39d38" stroke="#e08622" stroke-width="4"/>
+                        <path d="M142 125C170 88 220 92 250 100C280 92 330 88 358 125C385 165 395 215 382 315C370 388 332 400 250 400C168 400 130 388 118 315C105 215 115 165 142 125Z" fill="#fcf3d7"/>
+                        <ellipse cx="165" cy="180" fill="#8d5b40" rx="14" ry="18" transform="rotate(-25 165 180)"/>
+                        <ellipse cx="335" cy="180" fill="#8d5b40" rx="14" ry="18" transform="rotate(25 335 180)"/>
+                        <path d="M180 160C210 135 290 135 320 160C355 190 360 250 345 320C335 365 310 385 250 385C190 385 165 365 155 320C140 250 145 190 180 160Z" fill="#b38262"/>
+                        <g class="belly-breathe"><ellipse cx="250" cy="285" fill="#fceed0" rx="72" ry="76"/></g>
+                        <path d="M210 205C210 175 290 175 290 205C290 228 250 234 250 234C250 234 210 228 210 205Z" fill="#fceed0"/>
+                        <path d="M250 190C246 182 236 182 236 191C236 199 250 206 250 206C250 206 264 199 264 191C264 182 254 182 250 190Z" fill="#522f1c"/>
+                        <path d="M195 186C203 178 215 178 222 185M278 185C285 178 297 178 305 186" fill="none" stroke="#522f1c" stroke-linecap="round" stroke-width="4.5"/>
+                        <ellipse cx="170" cy="216" fill="#fca8b6" opacity=".9" rx="14" ry="17"/>
+                        <ellipse cx="330" cy="216" fill="#fca8b6" opacity=".9" rx="14" ry="17"/>
+                        <g class="paw-left"><ellipse cx="218" cy="275" fill="#9b6c4e" rx="17" ry="24" transform="rotate(35 218 275)"/></g>
+                        <g class="paw-right"><ellipse cx="282" cy="275" fill="#9b6c4e" rx="17" ry="24" transform="rotate(-35 282 275)"/></g>
+                    </g>
+                </svg>
+            </div>
+            <div id="otterSpeech"><span id="otterSpeechContent">Chiếp! Bánh mì bơ ấm quá~ 🍞🦦</span></div>
+        </div>
         <div id="tutorialModal" style="display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200000; justify-content: center; align-items: center; padding: 20px;">
         <div style="background: white; padding: 30px; border-radius: 24px; max-width: 500px; text-align: center; border: 5px solid var(--primary-color);">
             <h2 style="color: var(--dark-text);">🦦 Hé Lô Anh bảnh zai đến với OtterBooth! 🦦</h2>
@@ -3163,6 +3507,378 @@
                 });
             }());
         </script>
+    <script>
+    /*
+    (() => {
+        const canvas = document.getElementById('luminaCanvas');
+        const stage = document.getElementById('butterflyStage');
+        if (!canvas || !stage) return;
+
+        const context = canvas.getContext('2d');
+        const palette = {
+            wings: ['#00f0ff', '#38bdf8', '#818cf8', '#c084fc'],
+            dust: ['rgba(0, 240, 255, .85)', 'rgba(125, 244, 255, .65)', 'rgba(221, 183, 255, .6)'],
+            glow: '#00f0ff'
+        };
+        let width = 0;
+        let height = 0;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        class LuminaParticle {
+            constructor(x, y, burst) {
+                this.reset(x, y, burst);
+            }
+
+            reset(x = Math.random() * width, y = Math.random() * height, burst = false) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 2.5 + .8;
+                const angle = burst
+                    ? Math.random() * Math.PI * 2
+                    : Math.PI * 1.5 + (Math.random() - .5) * .8;
+                const speed = burst ? Math.random() * 4 + 1 : Math.random() * .5 + .15;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.alpha = burst ? 1 : Math.random() * .7 + .2;
+                this.decay = burst ? Math.random() * .02 + .012 : 0;
+                this.pulse = Math.random() * Math.PI;
+                this.color = palette.dust[Math.floor(Math.random() * palette.dust.length)];
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.pulse += .02;
+                if (this.decay) {
+                    this.alpha -= this.decay;
+                    if (this.alpha <= 0) this.reset();
+                } else {
+                    if (this.y < -10) this.y = height + 10;
+                    if (this.x < -10) this.x = width + 10;
+                    if (this.x > width + 10) this.x = -10;
+                }
+            }
+
+            draw() {
+                context.save();
+                context.globalAlpha = Math.max(0, this.alpha * (.65 + Math.sin(this.pulse) * .35));
+                context.fillStyle = this.color;
+                context.shadowBlur = this.size * 6;
+                context.shadowColor = palette.glow;
+                context.beginPath();
+                context.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                context.fill();
+                context.restore();
+            }
+        }
+
+        for (let i = 0; i < 90; i += 1) particles.push(new LuminaParticle());
+
+        class LuminaButterfly {
+            constructor(id) {
+                this.x = Math.random() * Math.max(1, width - 100) + 50;
+                this.y = Math.random() * Math.max(1, height - 150) + 75;
+                this.z = Math.random() * 200 - 100;
+                this.scale = Math.random() * .4 + .5;
+                this.speed = Math.random() * 1.5 + 1.2;
+                this.wingAngle = Math.random() * Math.PI;
+                this.noiseX = Math.random() * 1000;
+                this.noiseY = Math.random() * 1000;
+                const index = Math.floor(Math.random() * palette.wings.length);
+                const c1 = palette.wings[index];
+                const c2 = palette.wings[(index + 1) % palette.wings.length];
+                this.el = document.createElement('div');
+                this.el.className = 'lumina-butterfly';
+                this.el.innerHTML = `
+                    <div class="lumina-butterfly-glow" style="background:radial-gradient(circle, ${c1}66 0%, transparent 70%)"><\/div>
+                    <svg viewBox="0 0 72 60" aria-hidden="true">
+                        <ellipse cx="36" cy="30" rx="2.4" ry="14" fill="#fff" filter="drop-shadow(0 0 6px ${c1})"/>
+                    </svg>
+                    <div class="lumina-wing lumina-wing-left">
+                        <svg viewBox="0 0 36 60" aria-hidden="true">
+                            <path d="M36 28C28 10 8 2 2 12c-5 8 4 24 20 26-12 4-16 14-8 20 10 4 20-12 22-24Z" fill="${c1}" fill-opacity=".7" stroke="${c2}" stroke-width=".8"/>
+                        </svg>
+                    <\/div>
+                    <div class="lumina-wing lumina-wing-right">
+                        <svg viewBox="0 0 36 60" aria-hidden="true">
+                            <path d="M0 28C8 10 28 2 34 12c5 8-4 24-20 26 12 4 16 14 8 20-10 4-20-12-22-24Z" fill="${c1}" fill-opacity=".7" stroke="${c2}" stroke-width=".8"/>
+                        </svg>
+                    <\/div>`;
+                stage.appendChild(this.el);
+                this.left = this.el.querySelector('.lumina-wing-left');
+                this.right = this.el.querySelector('.lumina-wing-right');
+            }
+
+            update(time) {
+                this.noiseX += .005;
+                this.noiseY += .005;
+                const previousX = this.x;
+                const previousY = this.y;
+                this.x += Math.sin(time * .001 * this.speed) * 2.2
+                    + (Math.sin(this.noiseX) * 120 + Math.cos(this.noiseY * 1.5) * 80) * .02;
+                this.y += Math.cos(time * .0012 * this.speed) * 1.8
+                    + (Math.cos(this.noiseY) * 80 + Math.sin(this.noiseX * 1.2) * 60) * .015 - .4;
+                if (this.x < -80) this.x = width + 40;
+                if (this.x > width + 80) this.x = -40;
+                if (this.y < -80) this.y = height + 40;
+                if (this.y > height + 80) this.y = -40;
+                const heading = Math.atan2(this.y - previousY, this.x - previousX) * 180 / Math.PI + 90;
+                this.wingAngle += .14;
+                const flap = Math.sin(this.wingAngle) * 62;
+                this.left.style.transform = `rotateY(${-flap}deg)`;
+                this.right.style.transform = `rotateY(${flap}deg)`;
+                this.el.style.transform = `translate3d(${this.x}px, ${this.y}px, ${this.z}px) rotateZ(${heading}deg) scale(${this.scale})`;
+                if (Math.random() < .11) particles.push(new LuminaParticle(this.x + 36, this.y + 30, true));
+            }
+        }
+
+        const butterflies = Array.from({ length: 6 }, (_, index) => new LuminaButterfly(index));
+        function animate(time) {
+            context.clearRect(0, 0, width, height);
+            particles.forEach((particle) => {
+                particle.update();
+                particle.draw();
+            });
+            if (particles.length > 180) particles = particles.filter((particle) => particle.alpha > .05);
+            butterflies.forEach((butterfly) => butterfly.update(time));
+            requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate);
+    }());
+    */
+    </script>
+    <script>
+    (() => {
+        const canvas = document.getElementById('luminaCanvas');
+        const stage = document.getElementById('butterflyStage');
+        if (!canvas || !stage) return;
+
+        const context = canvas.getContext('2d');
+        const colors = ['#00f0ff', '#38bdf8', '#818cf8', '#c084fc'];
+        let width = 0;
+        let height = 0;
+        let particles = [];
+        const resize = () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        function createParticle(x, y, burst) {
+            const angle = burst ? Math.random() * Math.PI * 2 : Math.PI * 1.5 + (Math.random() - .5) * .8;
+            const speed = burst ? Math.random() * 4 + 1 : Math.random() * .5 + .15;
+            return {
+                x: x === undefined ? Math.random() * width : x,
+                y: y === undefined ? Math.random() * height : y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: Math.random() * 2.5 + .8,
+                alpha: burst ? 1 : Math.random() * .7 + .2,
+                decay: burst ? Math.random() * .02 + .012 : 0,
+                pulse: Math.random() * Math.PI,
+                color: colors[Math.floor(Math.random() * colors.length)]
+            };
+        }
+        function resetParticle(particle) {
+            const next = createParticle();
+            Object.assign(particle, next);
+        }
+        for (let i = 0; i < 90; i += 1) particles.push(createParticle());
+
+        function createButterfly(index) {
+            const color = colors[index % colors.length];
+            const accent = colors[(index + 1) % colors.length];
+            const element = document.createElement('div');
+            element.className = 'lumina-butterfly';
+            element.innerHTML =
+                '<div class="lumina-butterfly-glow" style="background:radial-gradient(circle,' + color + '66 0%,transparent 70%)"></div>' +
+                '<svg viewBox="0 0 72 60" aria-hidden="true"><ellipse cx="36" cy="30" rx="2.4" ry="14" fill="#fff"></ellipse></svg>' +
+                '<div class="lumina-wing lumina-wing-left"><svg viewBox="0 0 36 60" aria-hidden="true"><path d="M36 28C28 10 8 2 2 12c-5 8 4 24 20 26-12 4-16 14-8 20 10 4 20-12 22-24Z" fill="' + color + '" fill-opacity=".7" stroke="' + accent + '" stroke-width=".8"></path></svg></div>' +
+                '<div class="lumina-wing lumina-wing-right"><svg viewBox="0 0 36 60" aria-hidden="true"><path d="M0 28C8 10 28 2 34 12c5 8-4 24-20 26 12 4 16 14 8 20-10 4-20-12-22-24Z" fill="' + color + '" fill-opacity=".7" stroke="' + accent + '" stroke-width=".8"></path></svg></div>';
+            stage.appendChild(element);
+            return {
+                element,
+                left: element.querySelector('.lumina-wing-left'),
+                right: element.querySelector('.lumina-wing-right'),
+                x: Math.random() * Math.max(1, width - 100) + 50,
+                y: Math.random() * Math.max(1, height - 150) + 75,
+                z: Math.random() * 200 - 100,
+                scale: Math.random() * .4 + .5,
+                speed: Math.random() * 1.5 + 1.2,
+                wing: Math.random() * Math.PI,
+                noiseX: Math.random() * 1000,
+                noiseY: Math.random() * 1000
+            };
+        }
+        const butterflies = Array.from({ length: 6 }, (_, index) => createButterfly(index));
+
+        function animate(time) {
+            context.clearRect(0, 0, width, height);
+            particles.forEach((particle) => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.pulse += .02;
+                if (particle.decay) {
+                    particle.alpha -= particle.decay;
+                    if (particle.alpha <= 0) resetParticle(particle);
+                } else {
+                    if (particle.y < -10) particle.y = height + 10;
+                    if (particle.x < -10) particle.x = width + 10;
+                    if (particle.x > width + 10) particle.x = -10;
+                }
+                context.save();
+                context.globalAlpha = Math.max(0, particle.alpha * (.65 + Math.sin(particle.pulse) * .35));
+                context.fillStyle = particle.color;
+                context.shadowBlur = particle.size * 6;
+                context.shadowColor = '#00f0ff';
+                context.beginPath();
+                context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                context.fill();
+                context.restore();
+            });
+            if (particles.length > 180) particles = particles.filter((particle) => particle.alpha > .05);
+
+            butterflies.forEach((butterfly) => {
+                butterfly.noiseX += .005;
+                butterfly.noiseY += .005;
+                butterfly.x += Math.sin(time * .001 * butterfly.speed) * 2.2
+                    + (Math.sin(butterfly.noiseX) * 120 + Math.cos(butterfly.noiseY * 1.5) * 80) * .02;
+                butterfly.y += Math.cos(time * .0012 * butterfly.speed) * 1.8
+                    + (Math.cos(butterfly.noiseY) * 80 + Math.sin(butterfly.noiseX * 1.2) * 60) * .015 - .4;
+                if (butterfly.x < -80) butterfly.x = width + 40;
+                if (butterfly.x > width + 80) butterfly.x = -40;
+                if (butterfly.y < -80) butterfly.y = height + 40;
+                if (butterfly.y > height + 80) butterfly.y = -40;
+                butterfly.wing += .14;
+                const flap = Math.sin(butterfly.wing) * 62;
+                butterfly.left.style.transform = 'rotateY(' + (-flap) + 'deg)';
+                butterfly.right.style.transform = 'rotateY(' + flap + 'deg)';
+                butterfly.element.style.transform = 'translate3d(' + butterfly.x + 'px,' + butterfly.y + 'px,' + butterfly.z + 'px) scale(' + butterfly.scale + ')';
+                if (Math.random() < .11) particles.push(createParticle(butterfly.x + 36, butterfly.y + 30, true));
+            });
+            requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate);
+    })();
+    </script>
+    <script>
+    (() => {
+        // Added wrapper: it isolates the long swim transform from the SVG's
+        // internal float, breathing, paw and tail animations.
+        const pond = document.getElementById('interactivePond');
+        const otter = document.getElementById('otterBread');
+        const speech = document.getElementById('otterSpeech');
+        if (!pond || !otter || !speech || document.getElementById('otterBreadCruise')) return;
+
+        const cruise = document.createElement('div');
+        cruise.id = 'otterBreadCruise';
+        pond.appendChild(cruise);
+        cruise.append(otter, speech);
+        speech.setAttribute('aria-live', 'polite');
+    })();
+    </script>
+    <script>
+    (() => {
+        const pond = document.getElementById('interactivePond');
+        const otter = document.getElementById('otterBread');
+        const speech = document.getElementById('otterSpeech');
+        const speechContent = document.getElementById('otterSpeechContent');
+        if (!pond || !otter || !speech || !speechContent) return;
+
+        const speechLines = [
+            'Chiếp! Bánh mì bơ ấm quá~ 🍞🦦',
+            'Thả thêm vài viên bơ nữa đii! ✨',
+            'Sóng vỗ êm ru, thư thái quá nè~ 🌊'
+        ];
+
+        function createRippleAt(x, y) {
+            if (!document.body.classList.contains('night-mode')) return;
+            const ripple = document.createElement('span');
+            ripple.className = 'otter-water-ripple';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            pond.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 1000);
+        }
+
+        function spawnBubbleBurst(x, y, count = 8) {
+            if (!document.body.classList.contains('night-mode')) return;
+            for (let index = 0; index < count; index += 1) {
+                const bubble = document.createElement('span');
+                const angle = (Math.PI * 2 / count) * index + (Math.random() - .5) * .5;
+                const distance = 34 + Math.random() * 58;
+                bubble.className = 'otter-bubble-particle';
+                bubble.style.left = x + 'px';
+                bubble.style.top = y + 'px';
+                bubble.style.setProperty('--bubble-size', (8 + Math.random() * 16) + 'px');
+                bubble.style.setProperty('--bubble-x', (Math.cos(angle) * distance) + 'px');
+                bubble.style.setProperty('--bubble-y', (Math.sin(angle) * distance - 26) + 'px');
+                bubble.style.animationDelay = (index * 32) + 'ms';
+                pond.appendChild(bubble);
+                setTimeout(() => bubble.remove(), 1250 + index * 32);
+            }
+        }
+
+        function createHeartBurst(x, y) {
+            const emojis = ['💖', '🍞', '✨', '🫧'];
+            for (let i = 0; i < 6; i += 1) {
+                const particle = document.createElement('span');
+                particle.className = 'otter-heart-particle';
+                particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.animationDelay = (i * 35) + 'ms';
+                pond.appendChild(particle);
+                setTimeout(() => particle.remove(), 1100);
+            }
+        }
+
+        function interactOtter(event) {
+            event.stopPropagation();
+            speechContent.textContent = speechLines[Math.floor(Math.random() * speechLines.length)];
+            speech.classList.add('is-visible');
+            const bounds = otter.getBoundingClientRect();
+            const x = event.clientX || bounds.left + bounds.width / 2;
+            const y = event.clientY || bounds.top + bounds.height / 2;
+            createHeartBurst(x, y);
+            spawnBubbleBurst(x, y);
+            createRippleAt(x, y);
+            clearTimeout(interactOtter.hideTimer);
+            interactOtter.hideTimer = setTimeout(() => speech.classList.remove('is-visible'), 2800);
+        }
+
+        function handlePondClick(event) {
+            if (!event) return;
+            createRippleAt(event.clientX, event.clientY);
+        }
+
+        window.interactOtter = interactOtter;
+        window.createRippleAt = createRippleAt;
+        window.spawnBubbleBurst = spawnBubbleBurst;
+        window.createHeartBurst = createHeartBurst;
+        window.handlePondClick = handlePondClick;
+        otter.onclick = interactOtter;
+        otter.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                interactOtter(event);
+            }
+        });
+        window.addEventListener('pointerdown', (event) => {
+            const target = event.target;
+            if (target instanceof Element && target.closest('#otterBread, button, a, input, video, canvas, .modal, [role="dialog"]')) return;
+            handlePondClick(event);
+        }, { passive: true });
+    })();
+    </script>
     <script>
     document.querySelectorAll("body *").forEach((element) => {
         element.childNodes.forEach((node) => {
