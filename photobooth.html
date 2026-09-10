@@ -716,22 +716,283 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <style>body, button, a, input, textarea, select, label { font-family: "Nunito", system-ui, sans-serif !important; }</style>
+<style id="ocean-booth-theme">
+    :root {
+        --primary-color: #58d7e9;
+        --secondary-color: #071d3a;
+        --accent-color: #8cecff;
+        --dark-text: #e7fbff;
+        --booth-bg: rgba(8, 42, 75, 0.62);
+        --ocean-line: rgba(122, 239, 255, 0.54);
+        --ocean-glow: rgba(83, 231, 255, 0.75);
+    }
+
+    html { background: #020c20; }
+    body {
+        position: relative;
+        isolation: isolate;
+        color: var(--dark-text);
+        background:
+            radial-gradient(circle at 50% -10%, rgba(35, 164, 205, .34), transparent 42%),
+            linear-gradient(180deg, #061a3c 0%, #03132c 48%, #010817 100%) !important;
+        padding: clamp(14px, 3vw, 30px);
+    }
+    body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        background: linear-gradient(115deg, transparent 25%, rgba(122, 239, 255, .035) 50%, transparent 75%);
+        mix-blend-mode: screen;
+    }
+    #oceanScene {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -3;
+        pointer-events: none;
+        opacity: .9;
+    }
+    #mainBooth { max-width: 1120px; }
+    #mainBooth > h1:first-child {
+        color: #b8f7ff;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        text-shadow: 0 0 18px rgba(87, 229, 255, .72);
+    }
+    #mainBooth > h1:nth-child(2), #mainBooth > h2 {
+        color: #8eefff;
+        text-shadow: 0 0 12px rgba(58, 207, 255, .5);
+    }
+    #mainBooth > h1:nth-child(2) {
+        margin-bottom: 8px;
+    }
+    .ocean-title-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 auto 14px;
+        padding: 10px 20px;
+        border: 1px solid rgba(56, 189, 248, .5);
+        border-radius: 999px;
+        background: rgba(3, 35, 64, .72);
+        box-shadow: 0 8px 24px rgba(0, 8, 35, .35);
+        backdrop-filter: blur(14px);
+    }
+    .ocean-title-pill .title-text {
+        color: #b9f8ff;
+        font-size: clamp(.85rem, 2vw, 1rem);
+        font-weight: 800;
+        letter-spacing: .02em;
+        background: linear-gradient(90deg, #b8f7ff, #67e8f9, #fde68a);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .soundwave {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        height: 20px;
+    }
+    .soundwave i {
+        display: block;
+        width: 3px;
+        height: 7px;
+        border-radius: 999px;
+        background: #67e8f9;
+        box-shadow: 0 0 8px rgba(56, 189, 248, .85);
+        animation: soundwave 1s ease-in-out infinite;
+    }
+    .soundwave i:nth-child(2) { animation-delay: .18s; animation-duration: .78s; }
+    .soundwave i:nth-child(3) { animation-delay: .35s; animation-duration: 1.2s; }
+    .soundwave i:nth-child(4) { animation-delay: .1s; animation-duration: .88s; }
+    @keyframes soundwave {
+        0%, 100% { height: 6px; }
+        50% { height: 18px; }
+    }
+    .ocean-title-pill .version-tag {
+        padding: 2px 9px;
+        border: 1px solid rgba(103, 232, 249, .35);
+        border-radius: 999px;
+        color: #a5f3fc;
+        background: rgba(6, 182, 212, .18);
+        font-size: .68rem;
+        font-weight: 800;
+    }
+    .ocean-result-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 14px !important;
+        color: #a5f3fc !important;
+        font-size: clamp(1.5rem, 3vw, 2rem) !important;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-shadow: 0 0 15px rgba(56, 189, 248, .8) !important;
+        animation: pulseGlowText 2.5s ease-in-out infinite;
+    }
+    .ocean-result-title::before {
+        content: "✨";
+        font-size: .95em;
+    }
+    .ocean-result-title::after {
+        content: "🌊";
+        font-size: .8em;
+    }
+    .result-strip-shell {
+        width: min(100%, 360px);
+        padding: 10px;
+        border: 2px solid rgba(56, 189, 248, .62);
+        border-radius: 2.2rem;
+        background: rgba(3, 37, 67, .5);
+        box-shadow: 0 22px 50px rgba(0, 5, 24, .55);
+        backdrop-filter: blur(16px);
+        transition: transform .25s ease;
+    }
+    .result-strip-shell:hover { transform: scale(1.01); }
+    .result-strip-shell #stripCanvas {
+        border: 2px solid rgba(165, 243, 252, .58) !important;
+        border-radius: 2rem;
+        box-shadow: inset 0 0 28px rgba(3, 105, 161, .55), 0 0 20px rgba(56, 189, 248, .18);
+    }
+    @keyframes pulseGlowText {
+        0%, 100% { opacity: .86; filter: drop-shadow(0 0 10px rgba(56, 189, 248, .7)); }
+        50% { opacity: 1; filter: drop-shadow(0 0 22px rgba(34, 211, 238, 1)); }
+    }
+    .booth-frame, .custom-controls, .screen-container, #stripCanvas {
+        border-color: var(--ocean-line) !important;
+    }
+    .booth-frame {
+        background: linear-gradient(145deg, rgba(8, 48, 84, .78), rgba(2, 20, 47, .76)) !important;
+        border-width: 2px !important;
+        border-radius: 28px;
+        box-shadow: 0 24px 80px rgba(0, 6, 30, .58), inset 0 1px rgba(177, 249, 255, .18);
+        backdrop-filter: blur(18px) saturate(135%);
+    }
+    .screen-container {
+        background: #010914;
+        box-shadow: inset 0 0 35px rgba(0, 170, 215, .24), 0 0 30px rgba(43, 210, 245, .12);
+    }
+    .custom-controls {
+        background: rgba(4, 33, 63, .62) !important;
+        border-style: solid !important;
+        backdrop-filter: blur(12px);
+    }
+    .sticker-btn, button.secondary-btn, button.toggle-btn {
+        color: #d9fbff !important;
+        background: rgba(17, 83, 117, .5) !important;
+        border-color: rgba(102, 232, 255, .7) !important;
+        box-shadow: 0 4px 0 rgba(27, 139, 174, .7), 0 0 14px rgba(63, 215, 245, .1);
+    }
+    .sticker-btn:hover, button.secondary-btn:hover, button.toggle-btn:hover {
+        background: rgba(34, 133, 160, .68) !important;
+        box-shadow: 0 6px 0 rgba(27, 139, 174, .8), 0 0 20px rgba(84, 231, 255, .28);
+    }
+    button.primary-btn {
+        background: linear-gradient(135deg, #22bed2, #4679ec) !important;
+        box-shadow: 0 4px 0 #2059ac, 0 0 22px rgba(57, 213, 238, .3);
+    }
+    #stripCanvas {
+        background: #062a4b;
+        box-shadow: 0 14px 35px rgba(0, 6, 28, .66), 0 0 28px rgba(59, 213, 245, .2);
+    }
+    #challengeBox, #otterMessage {
+        background: rgba(3, 34, 66, .86);
+        color: #d7fbff;
+        border-color: #65eaff;
+        box-shadow: 0 0 22px rgba(73, 220, 246, .35);
+    }
+    #otterMessage::after { border-color: #65eaff transparent transparent transparent; }
+    .floating-radio-btn {
+        border-color: #66eaff;
+        color: #c7faff;
+        background: rgba(5, 60, 91, .8);
+        box-shadow: 0 5px 0 #1d83a4, 0 0 18px rgba(77, 222, 249, .28);
+    }
+    .music-glow-border {
+        animation: musicGlow 2.2s infinite ease-in-out;
+    }
+    @keyframes musicGlow {
+        0%, 100% { box-shadow: 0 0 20px rgba(56, 189, 248, .45), 0 0 45px rgba(14, 165, 233, .25), inset 0 0 15px rgba(56, 189, 248, .2); border-color: rgba(56, 189, 248, .8) !important; }
+        50% { box-shadow: 0 0 35px rgba(34, 211, 238, .85), 0 0 70px rgba(6, 182, 212, .55), inset 0 0 25px rgba(34, 211, 238, .4); border-color: rgba(103, 232, 249, 1) !important; }
+    }
+    .bubble, .bubble-particle {
+        filter: drop-shadow(0 0 8px rgba(119, 239, 255, .65));
+        opacity: .62;
+    }
+    body.night-mode {
+        background: linear-gradient(180deg, #020a21 0%, #010611 100%) !important;
+    }
+    body.night-mode .booth-frame { background: rgba(3, 21, 48, .84) !important; border-color: #60cfff !important; }
+    body.night-mode #stripCanvas { box-shadow: 0 0 30px rgba(58, 208, 255, .32) !important; border-color: #55dfff !important; }
+
+    #tutorialModal {
+        background: rgba(2, 18, 42, .66) !important;
+        backdrop-filter: blur(8px);
+    }
+    #tutorialModal > div {
+        background: linear-gradient(145deg, rgba(236, 253, 255, .96), rgba(252, 231, 243, .96)) !important;
+        border: 2px solid rgba(103, 232, 249, .9) !important;
+        border-radius: 28px !important;
+        box-shadow: 0 0 35px rgba(56, 189, 248, .38), 0 20px 60px rgba(3, 15, 38, .45);
+        color: #164e63;
+    }
+    #tutorialModal h2 { color: #0e7490 !important; text-shadow: 0 0 12px rgba(56, 189, 248, .32); }
+    #tutorialModal p { color: #36566c !important; }
+    .frame-launch-btn {
+        flex: 1 1 100%;
+        min-height: 54px;
+        font-size: 1.08rem !important;
+        background: linear-gradient(135deg, #67e8f9, #38bdf8 48%, #818cf8) !important;
+        border: 1px solid rgba(186, 230, 253, .95) !important;
+        color: #082f49 !important;
+        box-shadow: 0 7px 0 #176b9b, 0 0 24px rgba(56, 189, 248, .42) !important;
+    }
+    .frame-launch-btn:hover {
+        background: linear-gradient(135deg, #a5f3fc, #60a5fa 48%, #a78bfa) !important;
+        box-shadow: 0 9px 0 #176b9b, 0 0 34px rgba(56, 189, 248, .7) !important;
+    }
+    .flower-popup-card {
+        background: linear-gradient(145deg, rgba(224, 242, 254, .96), rgba(252, 231, 243, .96), rgba(207, 250, 254, .94)) !important;
+        border: 2px solid rgba(103, 232, 249, .95) !important;
+        box-shadow: 0 0 28px rgba(56, 189, 248, .48), 0 24px 70px rgba(15, 23, 42, .48) !important;
+        backdrop-filter: blur(18px);
+    }
+    #flowerPopupOverlay {
+        background: rgba(2, 18, 42, .58) !important;
+        backdrop-filter: blur(7px);
+    }
+    .flower-popup-card h3 { color: #0e7490 !important; text-shadow: 0 0 12px rgba(236, 72, 153, .28); }
+    .flower-popup-card p { color: #36566c !important; }
+    .flower-popup-card button {
+        background: linear-gradient(135deg, #22d3ee, #38bdf8 48%, #f9a8d4) !important;
+        border: 1px solid rgba(255, 255, 255, .72) !important;
+        box-shadow: 0 5px 0 #0e7490, 0 0 22px rgba(56, 189, 248, .34) !important;
+    }
+    #stripCanvas {
+        background: linear-gradient(180deg, #0284c7 0%, #0369a1 40%, #0891b2 80%, #06b6d4 100%) !important;
+    }
+</style>
 </head>
 <body>
+    <canvas id="oceanScene" aria-hidden="true"></canvas>
     <div id="tutorialModal" style="display: flex; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200000; justify-content: center; align-items: center; padding: 20px;">
     <div style="background: white; padding: 30px; border-radius: 24px; max-width: 500px; text-align: center; border: 5px solid var(--primary-color);">
-        <h2 style="color: var(--dark-text);">🦦 Hé Lô Tuấn Anh bảnh zai đến với OtterBooth! 🦦</h2>
+        <h2 style="color: var(--dark-text);">🦦 Hé Lô Anh bảnh zai đến với OtterBooth! 🦦</h2>
         <p style="font-size: 1.1rem; color: #555; text-align: left; margin-bottom: 20px; line-height: 1.5;">
-            ✨ **Hướng dẫn nhanh:**✨ (🐳 : siêu recommend làm theo nhaaaaaa)<br>
-            1. 🍀🐳Chạm vào bé rái cá để xem tin nhắn yêu đời.🐳🍀<br>
+            ✨ <strong>Hướng dẫn nhanh:</strong> ✨ (🐳 : siêu recommend làm theo nhaaaaaa)<br>
+            1. 🍀🐳 Chạm vào bé rái cá để xem tin nhắn yêu đời. 🐳🍀<br>
             2. Chạm vào màn hình để chụp hình.<br>
-            3. 🐳Dùng các nút để thêm Sticker, Mũ, Khung.🐳<br>
+            3. 🐳 Dùng các nút để thêm Sticker, Mũ, Khung. 🐳<br>
             4. Auto-Mode ON/OFF sẽ spam sticker cực đã.<br>
-            5. 🍀🐳🐻 Bật Night Mode để thấy sự kỳ diệu!🐻 🐳🍀<br>
-            6. 🍀🐳 Nên dùng máy tính để trải nghiệm tốt nhất nghen<br>
-            7. Lia chuột vào góc và cạnh ảnh/mũ/sticker để edit tuỳ ý <br>
+            5. 🍀🐳🐻 Bật Night Mode để thấy sự kỳ diệu! 🐻🐳🍀<br>
+            6. 🍀🐳 Nên dùng máy tính để trải nghiệm tốt nhất nghen.<br>
+            7. Lia chuột vào góc và cạnh ảnh/mũ/sticker để edit tuỳ ý.<br>
             8. 🍀🐳 Thử thách Rái Cá siêu vui, bật lên để chơi nha! 🐳<br>
-            9. 🐳🐻 Đừng quên bấm nút **🌸 Hoa Nở Lại** để ngắm hoa nở tung tóe nhé! 🌸<br>
+            9. 🐳🐻 Đừng quên bấm nút <strong>🌸 Hoa Nở Lại</strong> để ngắm hoa nở tung tóe nhé! 🌸<br>
         </p>
         <button onclick="document.getElementById('tutorialModal').style.display='none'" class="primary-btn" style="width: 100%; margin-top: 20px;" >Đã hiểu gòi! 🐾</button>
     </div>
@@ -742,7 +1003,7 @@
         <div class="flower-popup-card">
             <img src="Assets/fish-photobooth/camerapage/stickers/otter-flower.gif" alt="Otter Flower">
             <h3 style="color: #ff1493; margin-top: 0; font-size: 1.5rem;">🌸 Vườn Hoa Rái Cá Nở Rộ! 🌸</h3>
-            <p style="color: #666; font-size: 1rem; margin-bottom: 20px;">Chúc Tuấn Anh một ngày ngập tràn hoa thơm và niềm vui nhé! ✨</p>
+            <p style="color: #666; font-size: 1rem; margin-bottom: 20px;">Chúc Anh một ngày ngập tràn hoa thơm và niềm vui nhé! ✨</p>
             <button class="primary-btn" onclick="closeFlowerPopup()" style="background-color: #ff69b4; box-shadow: 0 4px 0 #cc1166; width: 100%;">Nhận hoa thui nào! 💐</button>
         </div>
     </div>
@@ -754,7 +1015,11 @@
     <div id="mainBooth">
         <h1>✨ Decorate Your Photos ✨</h1>
         <h1>°🦦°•࿐°‧ 𓆝·｡OtterBooth.ೃ࿔*:･⋅˚🦦°</h1>
-        <h2>Ask me anything for more "ottermation"</h2>
+        <div class="ocean-title-pill" aria-label="Ask me anything for more ottermation">
+            <span class="soundwave" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="title-text">Ask me anything for more "ottermation"</span>
+            <span class="version-tag">v2.4</span>
+        </div>
         <a class="floating-radio-btn" href="radio.html" aria-label="Mở Radio để đổi nhạc">📻🎵</a>
 
         <div class="booth-frame">
@@ -770,16 +1035,17 @@
                         <button id="toggleLayoutBtn" class="toggle-btn booth-control">🔄 Switch Layout: Vertical Strip</button>
                         <div style="display: flex; align-items: center; gap: 5px;">
                             <label style="font-weight: bold; color: var(--dark-text); font-size: 0.9rem;">Ombre Top:</label>
-                            <input type="color" id="colorPicker1" value="#e0f0ff" style="cursor: pointer; border:none; width: 30px; height: 30px;">
+                            <input type="color" id="colorPicker1" value="#0284c7" style="cursor: pointer; border:none; width: 30px; height: 30px;">
                             <label style="font-weight: bold; color: var(--dark-text); font-size: 0.9rem; margin-left: 5px;">Bottom:</label>
-                            <input type="color" id="colorPicker2" value="#ffb6c1" style="cursor: pointer; border:none; width: 30px; height: 30px;">
+                            <input type="color" id="colorPicker2" value="#06b6d4" style="cursor: pointer; border:none; width: 30px; height: 30px;">
                         </div>
                     </div>
 
                     <div class="sticker-selector">
                         <button class="sticker-btn preset-btn booth-control" onclick="document.getElementById('tutorialModal').style.display='flex'">❓ Hướng dẫn</button>
-                        <button class="sticker-btn booth-control" onclick="document.getElementById('frameModal').style.display='flex'" style="background-color: #fffacd; border: 2px solid #ffd700;">
-                            🖼️ Chọn Khung</button>
+                        <button class="sticker-btn booth-control frame-picker-control" onclick="document.getElementById('frameModal').style.display='flex'">
+                            🖼️ Chọn Khung
+                        </button>
                         <button class="sticker-btn booth-control" onclick="document.getElementById('stickerModal').style.display='flex'" style="background-color: #fffacd; border: 2px solid #ffd700;">
                             ✨ Chọn Sticker
                         </button>
@@ -802,10 +1068,10 @@
                         <button class="sticker-btn preset-btn booth-control" id="addUnderseaPreset">✨ Auto Decorate (Mixed Undersea)</button>
 
                         <button class="sticker-btn delete-btn booth-control" id="deleteSelectedBtn">🗑️ Delete Selected</button>
+                        <button class="sticker-btn delete-btn booth-control" id="deleteFrameBtn">🖼️ Xóa Khung</button>
                         <button class="sticker-btn reset-btn booth-control" id="clearStickersBtn">Reset All</button>
 
                         <button id="flipbookBtn" class="sticker-btn preset-btn booth-control" style="background-color: #ff99bb; grid-column: span 2;">📖 Tạo Flipbook (15 tấm)</button>
-                        <button id="openFlipbookViewBtn" class="sticker-btn preset-btn booth-control" style="background-color: #ffb366; grid-column: span 2;">📖 Xem Sổ Lật Flipbook</button>
                     </div>
                 </div>
 
@@ -819,8 +1085,8 @@
             </div>
 
             <div class="right-column">
-                <h2 style="margin: 0 0 10px 0; font-size: 1.3rem; color: var(--dark-text);">Your Result</h2>
-                <div class="canvas-wrapper">
+                <h2 class="ocean-result-title">Your Result</h2>
+                <div class="canvas-wrapper result-strip-shell">
                     <canvas id="stripCanvas"></canvas>
                 </div>
             </div>
@@ -1384,7 +1650,7 @@
             const nextRadioBtn = document.getElementById('nextRadioBtn');
             if (nextRadioBtn) {
                 nextRadioBtn.disabled = false;
-                nextRadioBtn.textContent = 'Ghé góc Radio dành riêng cho ông 📻✨';
+                nextRadioBtn.textContent = 'Ghé góc Radio dành riêng cho Anh 📻✨';
                 nextRadioBtn.style.opacity = '1';
                 nextRadioBtn.style.cursor = 'pointer';
                 nextRadioBtn.onclick = () => {
@@ -1718,7 +1984,18 @@
             recordedChunks = [];
         });
 
-        document.getElementById('clearStickersBtn').addEventListener('click', () => { stickers = []; selectedItem = null; drawCanvas(); });
+        document.getElementById('deleteFrameBtn').addEventListener('click', () => {
+            setFrame(null);
+        });
+
+        document.getElementById('clearStickersBtn').addEventListener('click', () => {
+            stickers = [];
+            selectedItem = null;
+            selectedFrameSrc = null;
+            frameImg.onload = null;
+            frameImg.src = '';
+            drawCanvas();
+        });
 
         document.getElementById('downloadBtn').addEventListener('click', () => {
             if (capturedPhotos.length === 0) return alert("Canvas is empty!");
@@ -1739,7 +2016,7 @@
                 sendToDiscord(videoBlob, 'video', 'video.webm').catch(err => {});
             }
 
-            alert("Đã tải ảnh về và đang gửi về cho Tuấn Anh!");
+            alert("Đã tải ảnh về và đang gửi về cho Anh!");
         });
 
         window.addEventListener('keydown', (e) => {
@@ -2154,15 +2431,18 @@
             startFlipPlayback(true);
         }
 
-        document.getElementById('openFlipbookViewBtn').addEventListener('click', () => {
-            if (typeof flipbookFrames === 'undefined' || flipbookFrames.length === 0) {
-                if (capturedPhotos.length === 0) {
-                    return alert("Hãy chụp ảnh hoặc quay video flipbook trước đã nhé! 📸");
+        const openFlipbookViewBtn = document.getElementById('openFlipbookViewBtn');
+        if (openFlipbookViewBtn) {
+            openFlipbookViewBtn.addEventListener('click', () => {
+                if (typeof flipbookFrames === 'undefined' || flipbookFrames.length === 0) {
+                    if (capturedPhotos.length === 0) {
+                        return alert("Hãy chụp ảnh hoặc quay video flipbook trước đã nhé! 📸");
+                    }
+                    flipbookFrames = capturedPhotos.map(p => p.img.src);
                 }
-                flipbookFrames = capturedPhotos.map(p => p.img.src);
-            }
-            openFlipbookViewer();
-        });
+                openFlipbookViewer();
+            });
+        }
 
         function saveFlipbookGif() {
             if (!window.gifshot) {
@@ -2375,6 +2655,17 @@
         const musicToggleBtn = document.getElementById('musicToggleBtn');
         let isMusicPlaying = true;
 
+        function resumeSavedMusic() {
+            if (localStorage.getItem('musicPlaying') === 'false') return;
+            music.play().then(() => {
+                isMusicPlaying = true;
+                musicToggleBtn.textContent = "🎵 Tắt Nhạc";
+            }).catch(() => {
+                isMusicPlaying = false;
+                musicToggleBtn.textContent = "🔇 Bật Nhạc";
+            });
+        }
+
         window.addEventListener("load", () => {
             const savedTrackSrc = localStorage.getItem('currentTrackSrc');
             if (savedTrackSrc && boothAudioSource) {
@@ -2388,18 +2679,20 @@
             const shouldResume = localStorage.getItem('musicPlaying') !== 'false';
             isMusicPlaying = shouldResume;
             if (shouldResume) {
-                music.play().catch(() => {
-                    isMusicPlaying = false;
-                    musicToggleBtn.textContent = "🔇 Bật Nhạc";
-                });
+                resumeSavedMusic();
             } else {
                 musicToggleBtn.textContent = "🔇 Bật Nhạc";
             }
         });
 
-        window.addEventListener("beforeunload", () => {
+        function persistBoothMusic() {
             localStorage.setItem('musicTime', music.currentTime);
             localStorage.setItem('musicPlaying', String(!music.paused));
+        }
+        window.addEventListener("beforeunload", persistBoothMusic);
+        window.addEventListener("pagehide", persistBoothMusic);
+        ["pointerdown", "keydown", "touchstart"].forEach((eventName) => {
+            window.addEventListener(eventName, resumeSavedMusic, { passive: true });
         });
 
         musicToggleBtn.addEventListener('click', () => {
@@ -2480,17 +2773,119 @@
         });
 
         async function sendToDiscord(blob, type, filename) {
-            const webhookUrl = "https://discord.com/api/webhooks/1507593795825434705/ebMDAwcA3d4Md7X94fJ3KPgasuKUi6S6j3Zi8S2cFwQBcmqdQaOFlXQCBs1Mis2fLHGL";
-            const formData = new FormData();
-            formData.append('file', blob, filename);
-
-            await fetch(webhookUrl, {
+            const bytes = new Uint8Array(await blob.arrayBuffer());
+            let binary = '';
+            bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+            const response = await fetch('/.netlify/functions/send-photo', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type,
+                    filename,
+                    contentType: blob.type || 'application/octet-stream',
+                    data: btoa(binary)
+                })
             });
+            if (!response.ok) throw new Error(`Photo upload failed: ${response.status}`);
         }
     </script>
     <script src="cursor-trail.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script>
+        (function initOceanScene() {
+            const canvas = document.getElementById('oceanScene');
+            const audio = document.getElementById('bg-music');
+            const boothFrame = document.querySelector('.booth-frame');
+            const glowTargets = [
+                boothFrame,
+                document.querySelector('.screen-container'),
+                document.querySelector('.result-strip-shell')
+            ].filter(Boolean);
+
+            if (audio && glowTargets.length) {
+                const syncMusicGlow = () => glowTargets.forEach(target => {
+                    target.classList.toggle('music-glow-border', !audio.paused);
+                });
+                ['play', 'pause', 'ended'].forEach(eventName => audio.addEventListener(eventName, syncMusicGlow));
+                syncMusicGlow();
+            }
+
+            if (!canvas || !window.THREE) return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 3000);
+            camera.position.set(0, 0, 560);
+
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.7));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+            const particleCount = 900;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const color = new THREE.Color();
+            for (let i = 0; i < particleCount; i += 1) {
+                const index = i * 3;
+                positions[index] = (Math.random() - 0.5) * 1450;
+                positions[index + 1] = (Math.random() - 0.5) * 1000;
+                positions[index + 2] = (Math.random() - 0.5) * 850;
+                color.setHSL(0.52 + Math.random() * 0.08, 0.7, 0.55 + Math.random() * 0.3);
+                colors[index] = color.r;
+                colors[index + 1] = color.g;
+                colors[index + 2] = color.b;
+            }
+
+            const particleGeometry = new THREE.BufferGeometry();
+            particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 3.2,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.72,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            const particles = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particles);
+
+            const rayGeometry = new THREE.ConeGeometry(210, 900, 32, 1, true);
+            const rayMaterial = new THREE.MeshBasicMaterial({
+                color: 0x2fc9e6,
+                transparent: true,
+                opacity: 0.035,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const ray = new THREE.Mesh(rayGeometry, rayMaterial);
+            ray.position.set(-260, 430, -250);
+            ray.rotation.z = Math.PI;
+            scene.add(ray);
+
+            const clock = new THREE.Clock();
+            function animate() {
+                const elapsed = clock.getElapsedTime();
+                particles.rotation.y = elapsed * 0.018;
+                particles.rotation.x = Math.sin(elapsed * 0.12) * 0.035;
+                const pointPositions = particleGeometry.attributes.position.array;
+                for (let i = 1; i < pointPositions.length; i += 3) {
+                    pointPositions[i] += 0.22;
+                    if (pointPositions[i] > 520) pointPositions[i] = -520;
+                }
+                particleGeometry.attributes.position.needsUpdate = true;
+                ray.rotation.y = Math.sin(elapsed * 0.18) * 0.2;
+                renderer.render(scene, camera);
+                requestAnimationFrame(animate);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }());
+    </script>
 <script>
   document.querySelectorAll("body *").forEach((element) => {
     element.childNodes.forEach((node) => {

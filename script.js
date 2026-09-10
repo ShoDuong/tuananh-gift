@@ -553,7 +553,7 @@ stickerQuizOverlay.className = "sticker-quiz-overlay";
 
 stickerQuizOverlay.innerHTML = `
     <div class="sticker-quiz-box">
-        <div class="sticker-quiz-title">Chọn 1 GIF sticker Tuấn Anh đi nè 🎁</div>
+        <div class="sticker-quiz-title">Chọn 1 GIF sticker Anh đi nè 🎁</div>
         <div class="sticker-quiz-subtitle">Bấm sticker nào là tải GIF đó về máy nha 💖</div>
         <div class="sticker-grid" id="sticker-grid"></div>
         <button id="skip-sticker-btn" class="skip-sticker-btn">Skip sticker ➜</button>

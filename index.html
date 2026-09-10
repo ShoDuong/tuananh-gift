@@ -380,6 +380,7 @@
         .play()
         .then(() => {
           isMusicPlaying = true;
+          localStorage.setItem("musicPlaying", "true");
 
           if (musicToggleBtn) {
             musicToggleBtn.textContent = "🎵 Tắt Nhạc";
@@ -402,12 +403,14 @@
           music.pause();
           musicToggleBtn.textContent = "🔇 Bật Nhạc";
           isMusicPlaying = false;
+          localStorage.setItem("musicPlaying", "false");
         } else {
           music
             .play()
             .then(() => {
               musicToggleBtn.textContent = "🎵 Tắt Nhạc";
               isMusicPlaying = true;
+              localStorage.setItem("musicPlaying", "true");
             })
             .catch((error) => {
               console.log("Music play was blocked by browser:", error);

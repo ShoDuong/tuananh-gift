@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tiramisù 3D Studio Live</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 45%, #352119 0%, #1c100b 60%, #0d0705 100%);
+      transition: background 900ms ease;
+    }
+    .serif-title {
+      font-family: 'Playfair Display', serif;
+    }
+    #canvas-container {
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      cursor: grab;
+      touch-action: none;
+    }
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+    .glass-panel {
+      background: rgba(28, 17, 13, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 235, 220, 0.12);
+    }
+    header,
+    aside,
+    footer {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="relative w-screen h-screen select-none text-[#f7ede6]">
+
+  <!-- 3D WebGL Canvas Layer -->
+  <div id="canvas-container"></div>
+
+  <!-- Top Header Navigation -->
+  <header class="absolute top-6 left-8 right-8 flex items-center justify-between pointer-events-none z-20">
+    <div class="flex items-center gap-3.5 pointer-events-auto">
+      <div class="w-10 h-10 rounded-full bg-[#f39c12]/20 border border-[#f39c12]/40 flex items-center justify-center shadow-lg text-[#f39c12]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+        </svg>
+      </div>
+      <div>
+        <p class="text-[11px] font-semibold tracking-widest text-[#d4a373] uppercase">Pasticceria Artigianale</p>
+        <h1 class="text-xl font-bold tracking-tight text-white serif-title">Tiramisù Tradizionale 3D</h1>
+      </div>
+    </div>
+
+    <!-- 360 Hint Badge -->
+    <div class="pointer-events-auto flex items-center gap-2.5 px-4 py-2 rounded-full glass-panel text-xs text-[#eedfd5] shadow-xl">
+      <span class="w-2 h-2 rounded-full bg-[#22c55e] animate-ping"></span>
+      <span class="font-medium">Chạm & rê chuột xoay 360°</span>
+    </div>
+  </header>
+
+  <!-- Left Bottom: Layer Anatomy Info -->
+  <aside class="absolute bottom-8 left-8 z-20 pointer-events-auto hidden md:block">
+    <div class="glass-panel p-4 rounded-2xl max-w-xs space-y-2.5 shadow-2xl">
+      <div class="flex items-center gap-2 text-xs font-semibold text-[#f39c12] uppercase tracking-wider">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        <span>Cấu trúc bánh 3 tầng</span>
+      </div>
+      <div class="text-xs space-y-1.5 text-[#d8c3b5]">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#9a5433]"></span>
+          <span>Bột Cacao Valrhona & Puffy Rosette</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#f8ebdb]"></span>
+          <span>Kem Zabaglione Mascarpone tươi</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-[#4a2612]"></span>
+          <span>Bánh Savoiardi nhúng đẫm Espresso</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom Floating Control Center -->
+  <footer class="absolute bottom-8 right-8 z-20 pointer-events-auto flex flex-wrap items-center gap-3">
+    <!-- Flavor Mood Picker -->
+    <div class="glass-panel p-1.5 rounded-2xl flex items-center gap-1 shadow-2xl">
+      <button id="btn-classic" onclick="setFlavor('classic')" class="px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-[#e07a22] text-white shadow-md">
+        Classic ☕
+      </button>
+      <button id="btn-matcha" onclick="setFlavor('matcha')" class="px-4 py-2 rounded-xl text-xs font-medium text-[#d9c4b5] hover:text-white hover:bg-white/10 transition-all">
+        Matcha 🍵
+      </button>
+      <button id="btn-strawberry" onclick="setFlavor('strawberry')" class="px-4 py-2 rounded-xl text-xs font-medium text-[#d9c4b5] hover:text-white hover:bg-white/10 transition-all">
+        Berry 🍓
+      </button>
+    </div>
+
+    <!-- Cream Puffiness Range -->
+    <div class="glass-panel px-4 py-2 rounded-2xl flex items-center gap-3 shadow-2xl text-xs">
+      <span class="text-[#f39c12] font-semibold">Độ phồng kem:</span>
+      <input type="range" id="puff-slider" min="0.75" max="1.5" step="0.05" value="1.1" oninput="changePuff(this.value)" class="w-24 accent-[#e07a22] cursor-pointer"/>
+      <span id="puff-val" class="text-white font-mono text-[11px] w-8">1.1x</span>
+    </div>
+
+    <!-- YES Button -->
+    <button onclick="alert('Đã xác nhận bản dựng 3D hoàn tất!')" class="px-5 py-2.5 rounded-2xl font-bold text-xs bg-white text-[#1c100b] hover:bg-[#fff5ee] transition-all shadow-xl hover:scale-105 active:scale-95 flex items-center gap-1.5">
+      <svg class="w-4 h-4 text-[#e07a22]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+      <span>YES</span>
+    </button>
+  </footer>
+
+  <!-- Three.js 3D Tiramisu Construction Script -->
+  <script>
+    (function() {
+      const container = document.getElementById('canvas-container');
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      // 1. Scene & Renderer Setup
+      const scene = new THREE.Scene();
+
+      // Camera: Carefully positioned so entire cake and plate are comfortably centered and visible
+      const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
+      camera.position.set(0, 3.8, 9.2);
+      camera.lookAt(0, -0.2, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.25;
+      container.appendChild(renderer.domElement);
+
+      // 2. Warm Studio Lighting Setup
+      const ambientLight = new THREE.AmbientLight(0xfff3e6, 2.2);
+      scene.add(ambientLight);
+
+      const keyLight = new THREE.DirectionalLight(0xfffaed, 2.8);
+      keyLight.position.set(5, 8, 5);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 1024;
+      keyLight.shadow.mapSize.height = 1024;
+      scene.add(keyLight);
+
+      const fillLight = new THREE.DirectionalLight(0xffcca8, 1.4);
+      fillLight.position.set(-6, 3, -2);
+      scene.add(fillLight);
+
+      const rimLight = new THREE.PointLight(0xffe6cf, 1.6, 15);
+      rimLight.position.set(0, 4, -4);
+      scene.add(rimLight);
+
+      // 3. Cake Group
+      const cakeGroup = new THREE.Group();
+      cakeGroup.position.set(0, -0.3, 0);
+      cakeGroup.scale.set(0.95, 0.95, 0.95);
+      scene.add(cakeGroup);
+
+      // 4. Flavor Color Profiles
+      const MOODS = {
+        classic: {
+          sponge1: 0x3d2012,
+          sponge2: 0x4f2b17,
+          cream: 0xfbf4e6,
+          plate: 0xf1ebe2,
+          dust: 0x422110,
+          accent: 0xffc46b,
+          background: 'radial-gradient(circle at 50% 42%, #4b2b1e 0%, #21120d 58%, #0b0604 100%)',
+          effect: 'sparkle'
+        },
+        matcha: {
+          sponge1: 0x4d6335,
+          sponge2: 0x5d7740,
+          cream: 0xfafce8,
+          plate: 0xebf0e9,
+          dust: 0x5a7536,
+          accent: 0xb8e58a,
+          background: 'radial-gradient(circle at 50% 42%, #34513b 0%, #14291f 58%, #07110d 100%)',
+          effect: 'firefly'
+        },
+        strawberry: {
+          sponge1: 0xa83850,
+          sponge2: 0xbd4760,
+          cream: 0xffeef1,
+          plate: 0xf8ecef,
+          dust: 0xb53556,
+          accent: 0xff9bb8,
+          background: 'radial-gradient(circle at 50% 42%, #653146 0%, #29121c 58%, #10070c 100%)',
+          effect: 'petal'
+        }
+      };
+
+      // 5. Ceramic Plate Construction
+      const plateMat = new THREE.MeshStandardMaterial({
+        color: MOODS.classic.plate,
+        roughness: 0.2,
+        metalness: 0.05
+      });
+
+      // Plate body
+      const plateGeo = new THREE.CylinderGeometry(2.7, 2.1, 0.25, 48);
+      const plate = new THREE.Mesh(plateGeo, plateMat);
+      plate.position.y = -1.15;
+      plate.receiveShadow = true;
+      cakeGroup.add(plate);
+
+      // Plate Rim Lip
+      const lipGeo = new THREE.TorusGeometry(2.65, 0.09, 16, 48);
+      lipGeo.rotateX(Math.PI / 2);
+      const plateLip = new THREE.Mesh(lipGeo, plateMat);
+      plateLip.position.y = -1.02;
+      cakeGroup.add(plateLip);
+
+      // 6. Cake 3-Tier Base Construction
+      // Layer 1: Bottom Soaked Espresso Sponge
+      const layer1Mat = new THREE.MeshStandardMaterial({ color: MOODS.classic.sponge1, roughness: 0.85 });
+      const layer1 = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.95, 0.5, 36), layer1Mat);
+      layer1.position.y = -0.75;
+      layer1.castShadow = true;
+      layer1.receiveShadow = true;
+      cakeGroup.add(layer1);
+
+      // Layer 2: Cream Mascarpone Layer
+      const layer2Mat = new THREE.MeshStandardMaterial({ color: MOODS.classic.cream, roughness: 0.35 });
+      const layer2 = new THREE.Mesh(new THREE.CylinderGeometry(1.85, 1.9, 0.55, 36), layer2Mat);
+      layer2.position.y = -0.25;
+      layer2.castShadow = true;
+      layer2.receiveShadow = true;
+      cakeGroup.add(layer2);
+
+      // Layer 3: Second Soaked Savoiardi Biscuit Layer
+      const layer3Mat = new THREE.MeshStandardMaterial({ color: MOODS.classic.sponge2, roughness: 0.85 });
+      const layer3 = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.85, 0.4, 36), layer3Mat);
+      layer3.position.y = 0.2;
+      layer3.castShadow = true;
+      layer3.receiveShadow = true;
+      cakeGroup.add(layer3);
+
+      // 7. Top Puffy Mascarpone Cream Swirls (Clusters of spheres)
+      const creamSwirlsGroup = new THREE.Group();
+      cakeGroup.add(creamSwirlsGroup);
+
+      const swirlMat = new THREE.MeshStandardMaterial({
+        color: MOODS.classic.cream,
+        roughness: 0.32,
+        metalness: 0.02
+      });
+
+      const puffPositions = [
+        { x: 0, z: 0, s: 0.46, y: 0.55 },
+        // Inner circle
+        { x: 0.6, z: 0, s: 0.42, y: 0.53 },
+        { x: 0.3, z: 0.52, s: 0.42, y: 0.53 },
+        { x: -0.3, z: 0.52, s: 0.42, y: 0.53 },
+        { x: -0.6, z: 0, s: 0.42, y: 0.53 },
+        { x: -0.3, z: -0.52, s: 0.42, y: 0.53 },
+        { x: 0.3, z: -0.52, s: 0.42, y: 0.53 },
+        // Outer circle
+        { x: 1.2, z: 0, s: 0.4, y: 0.49 },
+        { x: 1.04, z: 0.6, s: 0.4, y: 0.49 },
+        { x: 0.6, z: 1.04, s: 0.4, y: 0.49 },
+        { x: 0, z: 1.2, s: 0.4, y: 0.49 },
+        { x: -0.6, z: 1.04, s: 0.4, y: 0.49 },
+        { x: -1.04, z: 0.6, s: 0.4, y: 0.49 },
+        { x: -1.2, z: 0, s: 0.4, y: 0.49 },
+        { x: -1.04, z: -0.6, s: 0.4, y: 0.49 },
+        { x: -0.6, z: -1.04, s: 0.4, y: 0.49 },
+        { x: 0, z: -1.2, s: 0.4, y: 0.49 },
+        { x: 0.6, z: -1.04, s: 0.4, y: 0.49 },
+        { x: 1.04, z: -0.6, s: 0.4, y: 0.49 }
+      ];
+
+      puffPositions.forEach(p => {
+        const puffGeo = new THREE.SphereGeometry(p.s, 24, 20);
+        puffGeo.scale(1.0, 0.88, 1.0);
+        const puff = new THREE.Mesh(puffGeo, swirlMat);
+        puff.position.set(p.x, p.y, p.z);
+        puff.castShadow = true;
+        puff.receiveShadow = true;
+        creamSwirlsGroup.add(puff);
+
+        // Rosette tip
+        const tipGeo = new THREE.SphereGeometry(p.s * 0.45, 16, 16);
+        tipGeo.scale(0.85, 1.2, 0.85);
+        const tip = new THREE.Mesh(tipGeo, swirlMat);
+        tip.position.set(p.x * 1.02, p.y + p.s * 0.62, p.z * 1.02);
+        creamSwirlsGroup.add(tip);
+      });
+
+      // 8. Soft Volumetric Cacao Powder Particles (THREE.Points)
+      function createDustTex() {
+        const c = document.createElement('canvas');
+        c.width = 64;
+        c.height = 64;
+        const ctx = c.getContext('2d');
+        const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 30);
+        g.addColorStop(0, 'rgba(255,255,255,0.95)');
+        g.addColorStop(0.4, 'rgba(255,255,255,0.5)');
+        g.addColorStop(0.8, 'rgba(255,255,255,0.1)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, 64, 64);
+        return new THREE.CanvasTexture(c);
+      }
+
+      const particleCount = 1000;
+      const dustGeo = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      const basePositions = new Float32Array(particleCount * 3);
+      const offsets = new Float32Array(particleCount);
+
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * 1.68;
+        const x = Math.cos(angle) * r;
+        const z = Math.sin(angle) * r;
+        const y = 0.85 - (r * 0.12) + (Math.random() - 0.5) * 0.14;
+
+        positions[i * 3] = x;
+        positions[i * 3 + 1] = y;
+        positions[i * 3 + 2] = z;
+
+        basePositions[i * 3] = x;
+        basePositions[i * 3 + 1] = y;
+        basePositions[i * 3 + 2] = z;
+
+        offsets[i] = Math.random() * Math.PI * 2;
+      }
+
+      dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const dustMat = new THREE.PointsMaterial({
+        color: MOODS.classic.dust,
+        size: 0.085,
+        map: createDustTex(),
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false,
+        blending: THREE.NormalBlending
+      });
+
+      const dustMesh = new THREE.Points(dustGeo, dustMat);
+      cakeGroup.add(dustMesh);
+
+      // Mood particles: each flavor gets a different motion and color language.
+      const effectCount = 90;
+      const effectGeo = new THREE.BufferGeometry();
+      const effectPositions = new Float32Array(effectCount * 3);
+      const effectBasePositions = new Float32Array(effectCount * 3);
+      const effectOffsets = new Float32Array(effectCount);
+      for (let i = 0; i < effectCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 1.7 + Math.random() * 1.1;
+        const x = Math.cos(angle) * radius;
+        const y = -0.7 + Math.random() * 2.5;
+        const z = Math.sin(angle) * radius;
+        effectPositions.set([x, y, z], i * 3);
+        effectBasePositions.set([x, y, z], i * 3);
+        effectOffsets[i] = Math.random() * Math.PI * 2;
+      }
+      effectGeo.setAttribute('position', new THREE.BufferAttribute(effectPositions, 3));
+      const effectMat = new THREE.PointsMaterial({
+        color: MOODS.classic.accent,
+        size: 0.12,
+        map: createDustTex(),
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+      const effectMesh = new THREE.Points(effectGeo, effectMat);
+      cakeGroup.add(effectMesh);
+
+      // Fresh Green Mint Garnish on Top
+      const mintGroup = new THREE.Group();
+      const leafGeo = new THREE.ConeGeometry(0.18, 0.42, 5);
+      leafGeo.scale(1.2, 0.2, 0.6);
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x487d37, roughness: 0.4 });
+      const leaf1 = new THREE.Mesh(leafGeo, leafMat);
+      leaf1.rotation.set(0.4, 0.6, 0.5);
+      leaf1.position.set(0.08, 1.15, 0.05);
+      mintGroup.add(leaf1);
+      const leaf2 = new THREE.Mesh(leafGeo, leafMat);
+      leaf2.rotation.set(-0.3, -0.4, -0.4);
+      leaf2.position.set(-0.08, 1.12, -0.05);
+      mintGroup.add(leaf2);
+      cakeGroup.add(mintGroup);
+
+      // 9. Interactive Drag Orbit & Auto-Turntable
+      let isDragging = false;
+      let prevX = 0;
+      let prevY = 0;
+      let targetRotY = 0.5;
+      let targetRotX = 0.22;
+      let curRotY = 0.5;
+      let curRotX = 0.22;
+
+      function onDown(e) {
+        isDragging = true;
+        prevX = e.clientX || (e.touches && e.touches[0].clientX);
+        prevY = e.clientY || (e.touches && e.touches[0].clientY);
+      }
+      function onMove(e) {
+        if (!isDragging) return;
+        const cx = e.clientX || (e.touches && e.touches[0].clientX);
+        const cy = e.clientY || (e.touches && e.touches[0].clientY);
+        const dx = cx - prevX;
+        const dy = cy - prevY;
+        prevX = cx;
+        prevY = cy;
+        targetRotY += dx * 0.008;
+        targetRotX += dy * 0.008;
+        targetRotX = Math.max(-0.15, Math.min(0.85, targetRotX));
+      }
+      function onUp() { isDragging = false; }
+
+      container.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+
+      container.addEventListener('touchstart', onDown, { passive: true });
+      window.addEventListener('touchmove', onMove, { passive: true });
+      window.addEventListener('touchend', onUp);
+
+      // 10. External Controls API
+      window.setFlavor = function(flavor) {
+        if (!MOODS[flavor]) return;
+        const m = MOODS[flavor];
+        layer1Mat.color.setHex(m.sponge1);
+        layer3Mat.color.setHex(m.sponge2);
+        layer2Mat.color.setHex(m.cream);
+        swirlMat.color.setHex(m.cream);
+        plateMat.color.setHex(m.plate);
+        dustMat.color.setHex(m.dust);
+        effectMat.color.setHex(m.accent);
+        document.body.style.background = m.background;
+        ambientLight.color.setHex(m.accent);
+        keyLight.color.setHex(m.accent);
+        fillLight.color.setHex(m.cream);
+        rimLight.color.setHex(m.accent);
+        effectMesh.userData.effect = m.effect;
+
+        ['classic', 'matcha', 'strawberry'].forEach(f => {
+          const btn = document.getElementById('btn-' + f);
+          if (btn) {
+            if (f === flavor) {
+              btn.className = 'px-4 py-2 rounded-xl text-xs font-semibold transition-all bg-[#e07a22] text-white shadow-md';
+            } else {
+              btn.className = 'px-4 py-2 rounded-xl text-xs font-medium text-[#d9c4b5] hover:text-white hover:bg-white/10 transition-all';
+            }
+          }
+        });
+      };
+
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data && event.data.type === 'tiramisu-mood') {
+          window.setFlavor(event.data.mood);
+        }
+      });
+
+      window.changePuff = function(val) {
+        const factor = parseFloat(val);
+        document.getElementById('puff-val').innerText = factor.toFixed(2) + 'x';
+        creamSwirlsGroup.scale.set(1.0, factor, 1.0);
+        creamSwirlsGroup.position.y = (factor - 1.0) * 0.25;
+        dustMesh.position.y = (factor - 1.0) * 0.25;
+        mintGroup.position.y = (factor - 1.0) * 0.25;
+      };
+
+      window.addEventListener('resize', () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+
+      // 11. Render Animation Loop
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const time = clock.getElapsedTime();
+
+        if (!isDragging) {
+          targetRotY += 0.0035; // smooth idle drift
+        }
+
+        curRotY += (targetRotY - curRotY) * 0.08;
+        curRotX += (targetRotX - curRotX) * 0.08;
+
+        cakeGroup.rotation.y = curRotY;
+        cakeGroup.rotation.x = curRotX;
+
+        // Subtle breathing levitation
+        cakeGroup.position.y = -0.3 + Math.sin(time * 1.5) * 0.05;
+
+        // Subtle flutter of dust particles
+        const pArr = dustGeo.attributes.position.array;
+        for (let i = 0; i < particleCount; i++) {
+          const idx = i * 3;
+          pArr[idx + 1] = basePositions[idx + 1] + Math.sin(time * 2.0 + offsets[i]) * 0.015;
+        }
+        dustGeo.attributes.position.needsUpdate = true;
+
+        const effectArr = effectGeo.attributes.position.array;
+        const effectType = effectMesh.userData.effect || 'sparkle';
+        for (let i = 0; i < effectCount; i++) {
+          const idx = i * 3;
+          const phase = time * (effectType === 'firefly' ? 0.8 : 1.35) + effectOffsets[i];
+          const baseX = effectBasePositions[idx];
+          const baseY = effectBasePositions[idx + 1];
+          const baseZ = effectBasePositions[idx + 2];
+          if (effectType === 'firefly') {
+            effectArr[idx] = baseX + Math.sin(phase) * 0.18;
+            effectArr[idx + 1] = baseY + Math.sin(phase * 1.7) * 0.22;
+            effectArr[idx + 2] = baseZ + Math.cos(phase) * 0.18;
+          } else if (effectType === 'petal') {
+            effectArr[idx] = baseX + Math.sin(phase) * 0.28;
+            effectArr[idx + 1] = baseY - (time * 0.08 + effectOffsets[i] * 0.02) % 2.4;
+            if (effectArr[idx + 1] < -0.9) effectArr[idx + 1] += 2.4;
+            effectArr[idx + 2] = baseZ + Math.cos(phase) * 0.2;
+          } else {
+            effectArr[idx] = baseX + Math.sin(phase) * 0.08;
+            effectArr[idx + 1] = baseY + Math.sin(phase * 2.2) * 0.08;
+            effectArr[idx + 2] = baseZ + Math.cos(phase) * 0.08;
+          }
+        }
+        effectGeo.attributes.position.needsUpdate = true;
+        effectMat.size = effectType === 'firefly' ? 0.09 + Math.sin(time * 3) * 0.025 : effectType === 'petal' ? 0.14 : 0.11 + Math.sin(time * 4) * 0.02;
+
+        renderer.render(scene, camera);
+      }
+      animate();
+    })();
+  </script>
+</body>
+</html>

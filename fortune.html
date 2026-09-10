@@ -9,13 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/threejs/r125/three.min.js"></script>
   <style>
-    :root { --ink: #3e2945; --pink: #ff78ad; --gold: #f3c873; --cream: #fff8e9; }
+    :root { --ink: #3e2945; --pink: #ff78ad; --gold: #f3c873; --cream: #fff8e9; --brown: #8c6246; }
     * { box-sizing: border-box; }
     body {
       min-height: 100vh; margin: 0; overflow-x: hidden; color: var(--ink);
       font-family: "Nunito", system-ui, sans-serif;
-      background: radial-gradient(circle at 18% 15%, #ffd7e8, transparent 32%),
-        radial-gradient(circle at 84% 80%, #c9eef0, transparent 34%), var(--cream);
+      background: radial-gradient(circle at 18% 15%, #ffe0c5, transparent 32%),
+        radial-gradient(circle at 84% 80%, #f5c6d8, transparent 34%), var(--cream);
     }
     .page { width: min(100% - 32px, 940px); margin: auto; padding: 28px 0 56px; }
     .topbar, .fortune-panel, .result-card {
@@ -28,20 +28,20 @@
     .eyebrow { color: #567d6b; letter-spacing: .14em; text-transform: uppercase; font-size: .82rem; }
     h1 { margin: 10px 0; font-family: "Quicksand", sans-serif; font-size: clamp(2.2rem, 8vw, 4.8rem); line-height: .95; font-weight: 700; }
     .hero p:last-child { color: #715b50; font-size: 1.08rem; }
-    .fortune-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: center; padding: clamp(24px, 5vw, 58px); border-radius: 28px 10px 28px 10px; }
+    .fortune-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: center; padding: clamp(24px, 5vw, 58px); border-radius: 28px 10px 28px 10px; background: rgba(255, 250, 239, .86); }
     .oracle { display: grid; place-items: center; min-height: 330px; perspective: 900px; }
-    .tube { width: min(100%, 380px); height: 330px; cursor: pointer; }
+    .tube { width: min(100%, 430px); height: 380px; cursor: grab; }
+    .tube:active { cursor: grabbing; }
     .tube canvas { display: block; width: 100%; height: 100%; }
     .tube.is-shaking canvas { filter: drop-shadow(0 0 18px rgba(255, 121, 173, .8)); }
     .oracle button, .radio-button { border: 0; border-radius: 999px; padding: 13px 20px; color: white; background: #ef86aa; box-shadow: 0 5px 0 #c85e84; cursor: pointer; font: inherit; font-weight: 800; transition: transform .2s ease, filter .2s ease; }
     .oracle button:hover, .oracle button:focus-visible { transform: translateY(-3px) scale(1.04); filter: saturate(1.1); }
     .oracle button { margin-top: 26px; }
+    .oracle-tools { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .oracle-tools button { margin-top: 0; padding: 10px 15px; color: #6b4c37; background: rgba(255,255,255,.7); box-shadow: 0 4px 0 rgba(140,98,70,.18); }
     .hint { margin: 20px 0 0; color: #806b60; text-align: center; }
     .result-card { display: none; position: relative; margin-top: 28px; padding: 30px; overflow: hidden; border-radius: 12px 28px 12px 28px; text-align: center; transform-style: preserve-3d; transition: transform .15s ease; }
     .result-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 18%, rgba(255, 121, 173, .35), rgba(125, 223, 242, .42), rgba(255, 215, 128, .45), transparent 80%); mix-blend-mode: screen; pointer-events: none; }
-    #meltingOtter { position: fixed; inset: 50% auto auto 50%; z-index: 20; display: none; width: 150px; margin: 0; transform: translate(-50%, -50%); pointer-events: none; }
-    #meltingOtter.show { display: block; animation: melt-in 1.3s ease both; }
-    @keyframes melt-in { 0% { opacity: 0; transform: translate(-50%, -35%) scale(.45, .35); } 45% { opacity: 1; transform: translate(-50%, -50%) scale(1, 1); } 100% { opacity: 0; transform: translate(-50%, -45%) scale(1.15, .16); } }
     .sparkle { position: fixed; z-index: 21; width: 10px; height: 10px; border-radius: 50%; background: #ffd700; box-shadow: 0 0 12px #fff, 0 0 24px #ff78ad; pointer-events: none; animation: sparkle-burst .8s ease-out forwards; }
     @keyframes sparkle-burst { to { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(.2); } }
     .result-card.show { display: block; animation: card-in .55s ease both; }
@@ -50,30 +50,33 @@
     .result-card h2 { color: #9b5c75; font-size: 1.15rem; letter-spacing: .1em; text-transform: uppercase; }
     .result-card p { margin: 18px auto 22px; max-width: 620px; font-family: "Quicksand", sans-serif; font-size: clamp(1.35rem, 3vw, 2rem); line-height: 1.3; font-weight: 700; }
     .radio-button { display: inline-block; text-decoration: none; background: #c47770; box-shadow: 0 5px 0 #92564f; }
-    @media (max-width: 700px) { .fortune-panel { grid-template-columns: 1fr; gap: 8px; } .topbar { flex-direction: column; } }
+    @media (max-width: 700px) { .fortune-panel { grid-template-columns: 1fr; gap: 8px; } .topbar { flex-direction: column; } .tube { height: 320px; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
     body, button, a, input, textarea, select { font-family: "Nunito", system-ui, sans-serif; }
   </style>
 </head>
 <body>
   <main class="page">
-    <header class="topbar"><strong>🦦 Gieo Quẻ Rái Cá May Mắn</strong><a href="index1.html">← Về trang bánh</a></header>
+    <header class="topbar"><strong>✨ Gieo Quẻ May Mắn</strong><a href="index1.html">← Về trang bánh</a></header>
     <section class="hero">
       <div class="eyebrow">A tiny lucky ritual</div>
       <h1>Hôm nay vũ trụ nói gì?</h1>
-      <p>Chạm vào chiếc ly quẻ pastel để nhận một lời chúc may mắn hologram.</p>
+      <p>Chạm vào chiếc ly quẻ để nhận một lời chúc may mắn.</p>
     </section>
     <section class="fortune-panel" aria-label="Gieo quẻ may mắn">
       <div class="oracle">
         <div class="tube" id="fortuneTube" role="button" tabindex="0" aria-label="Lắc ly quẻ"></div>
         <button id="drawButton" type="button">Lắc ly quẻ ✨</button>
+        <div class="oracle-tools" aria-label="Điều khiển mô hình 3D">
+          <button id="btn-reset" type="button" title="Đặt lại vị trí">↺ Đặt lại</button>
+          <button id="btn-spin" type="button" title="Tự động xoay">360° Tự xoay</button>
+        </div>
       </div>
       <div>
-        <h2>Quẻ rái cá hôm nay</h2>
+        <h2>Quẻ hôm nay</h2>
         <p class="hint">Một cú lắc nhẹ, một chiếc ôm từ vũ trụ. Dấu tiếng Việt được chuẩn hoá để hiển thị tròn nét.</p>
         <article class="result-card" id="resultCard" aria-live="polite">
-          <img id="meltingOtter" src="assets/fish-photobooth/camerapage/stickers/otter_melting.gif" alt="Rái cá tan chảy">
-          <h2>Lucky otter card · 3D hologram</h2>
+          <h2>Lucky card · 3D hologram</h2>
           <p id="fortuneText"></p>
           <a class="radio-button" href="radio.html" id="radioLink">Nghe Radio Thanh Xuân 📻</a>
         </article>
@@ -93,8 +96,10 @@
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.getElementById("fortuneTube").appendChild(renderer.domElement);
+    const modelGroup = new THREE.Group();
+    scene.add(modelGroup);
     const cupGroup = new THREE.Group();
-    scene.add(cupGroup);
+    modelGroup.add(cupGroup);
     scene.add(new THREE.AmbientLight(0xfff0f5, 1.25));
     const keyLight = new THREE.DirectionalLight(0xfffaed, 1.6);
     keyLight.position.set(5, 8, 4);
@@ -229,6 +234,33 @@
     let shaking = false;
     let winning = false;
     let sceneTime = 0;
+    let autoRotate = true;
+    let dragging = false;
+    let previousX = 0;
+    let previousY = 0;
+    tube.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      previousX = event.clientX;
+      previousY = event.clientY;
+      tube.setPointerCapture(event.pointerId);
+    });
+    tube.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      modelGroup.rotation.y += (event.clientX - previousX) * .008;
+      modelGroup.rotation.x += (event.clientY - previousY) * .005;
+      previousX = event.clientX;
+      previousY = event.clientY;
+    });
+    tube.addEventListener("pointerup", () => { dragging = false; });
+    tube.addEventListener("pointercancel", () => { dragging = false; });
+    document.getElementById("btn-reset").addEventListener("click", () => {
+      modelGroup.rotation.set(0, 0, 0);
+      modelGroup.position.set(0, 0, 0);
+    });
+    document.getElementById("btn-spin").addEventListener("click", (event) => {
+      autoRotate = !autoRotate;
+      event.currentTarget.textContent = autoRotate ? "360° Tự xoay" : "▶ Xoay lại";
+    });
     function resizeScene() {
       const box = document.getElementById("fortuneTube").getBoundingClientRect();
       renderer.setSize(box.width, box.height, false);
@@ -238,6 +270,7 @@
     function animateScene() {
       requestAnimationFrame(animateScene);
       sceneTime += .016;
+      if (autoRotate && !dragging && !shaking) modelGroup.rotation.y += .0035;
       if (shaking) {
         cupGroup.rotation.z = Math.sin(sceneTime * 26) * .28;
         cupGroup.rotation.x = Math.cos(sceneTime * 31) * .16;
@@ -257,15 +290,15 @@
       "Mức độ đẹp trai hôm nay: 999% vượt chỉ số vũ trụ ⚠️",
       "Chỉ số may mắn: 1000/10 - Hôm nay làm gì cũng thuận lợi và đáng yêu!",
       "Thông điệp vũ trụ: Nhớ mỉm cười thật nhiều nha 🐾",
-      "Hôm nay vận may gõ cửa bằng một chiếc đuôi rái cá ✨",
+      "Hôm nay vận may gõ cửa bằng một điều thật dễ thương ✨",
       "Mọi kế hoạch đều nở hoa, cứ tự tin tiến lên nhé 🌸",
       "Có người đang âm thầm gửi bạn thật nhiều năng lượng tốt 💌",
       "Quẻ biển xanh: bình yên sẽ đến sau một hơi thở sâu 🌊",
-      "Bạn sẽ gặp một điều dễ thương hoàn toàn bất ngờ 🦦",
+      "Bạn sẽ gặp một điều dễ thương hoàn toàn bất ngờ 🎀",
       "Điểm chill hôm nay: 10/10, không âu lo, chỉ vui thôi 🎧",
       "Một tin nhắn ngọt ngào đang bơi về phía bạn 💬",
       "Hôm nay rất hợp để cười thật to và ăn món mình thích 🍰",
-      "Rái cá tiên tri bảo rằng bạn luôn đủ giỏi rồi đó 🌟",
+      "Vũ trụ nhắc rằng bạn luôn đủ giỏi rồi đó 🌟",
       "May mắn nằm trong những điều nhỏ xíu quanh bạn 🍀",
       "Vũ trụ bật đèn xanh cho mọi dự định đáng yêu 💚",
       "Bạn có quyền nghỉ ngơi và được yêu thương thật nhiều 🫶",
@@ -277,7 +310,7 @@
       "Không cần hoàn hảo, chỉ cần là chính mình là đủ 🌷",
       "Hôm nay bạn tỏa sáng theo cách rất riêng của mình ☀️",
       "Một cơ hội mới đang lặng lẽ xuất hiện trước mắt 🚪",
-      "Rái cá nói: nhớ dịu dàng với bản thân nhé 🐾",
+      "Nhớ dịu dàng với bản thân nhé 🐾",
       "Bình an là món quà lớn nhất hôm nay của bạn 🎁",
       "Bạn đang đi đúng hướng, cứ bước tiếp thật chậm mà chắc 🧭",
       "Quẻ cầu vồng: sau mưa luôn có một điều đáng mong chờ 🌈",
@@ -290,7 +323,7 @@
       "Bạn được vũ trụ cấp phép để vui hết cỡ hôm nay 🎉",
       "Một giấc mơ nhỏ đang tìm đường thành hiện thực 🌙",
       "May mắn sẽ tìm thấy bạn dù bạn đang ở đâu 🗺️",
-      "Rái cá nói: bạn đáng được nhận điều tốt đẹp nhất 🦦",
+      "Bạn đáng được nhận điều tốt đẹp nhất 💛",
       "Hôm nay trái tim bạn sẽ nhẹ hơn một chút 💞",
       "Có một niềm vui bé xinh đang núp sau góc nhỏ kia 🎀",
       "Kết quả cuối ngày: đáng yêu, may mắn và rất nhiều yêu thương 💐"
@@ -298,7 +331,6 @@
     radioLink.addEventListener("click", () => {
       localStorage.setItem("radioUnlocked", "true");
     });
-    const meltingOtter = document.getElementById("meltingOtter");
     const sparkleColors = ["#ffd700", "#ff78ad", "#fff2a8"];
     let audioContext;
     function playTing() {
@@ -334,7 +366,6 @@
       winningStick.position.y = .6;
       tube.classList.add("is-shaking");
       playShakeSound();
-      meltingOtter.classList.add("show");
       resultCard.classList.remove("show");
       drawButton.disabled = true;
       window.setTimeout(() => {
@@ -343,7 +374,6 @@
         fortuneText.textContent = fortunes[Math.floor(Math.random() * fortunes.length)];
         playTing();
         resultCard.classList.add("show");
-        meltingOtter.classList.remove("show");
         drawButton.disabled = false;
         tube.classList.remove("is-shaking");
         for (let index = 0; index < 22; index += 1) {

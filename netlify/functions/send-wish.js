@@ -13,7 +13,8 @@ exports.handler = async function (event) {
     const body = JSON.parse(event.body || "{}");
 
     const cleanWish = String(body.wish || "").trim();
-    const cleanName = String(body.name || "Anonymous").trim();
+    const cleanName = String(body.name || "Tuấn Anh / Người gửi").trim();
+    const cleanMood = String(body.tiramisuMood || "classic").trim();
 
     if (!cleanWish) {
       return {
@@ -39,18 +40,24 @@ exports.handler = async function (event) {
 
     const discordPayload = {
       username: "Birthday Wish Mailbox 💌",
+      avatar_url: "https://cdn-icons-png.flaticon.com/512/3159/3159420.png",
       embeds: [
         {
-          title: "✨ New Birthday Wish",
+          title: "✨ Lời Ước Sinh Nhật Mới!",
           color: 16738740,
           fields: [
             {
-              name: "From",
-              value: cleanName || "Anonymous",
+              name: "👤 Tới / Người chọn",
+              value: cleanName,
               inline: true
             },
             {
-              name: "Wish",
+              name: "🍰 Tiramisù Mood",
+              value: cleanMood.toUpperCase(),
+              inline: true
+            },
+            {
+              name: "💌 Điều ước",
               value: cleanWish.slice(0, 1000)
             }
           ],
@@ -68,6 +75,8 @@ exports.handler = async function (event) {
     });
 
     if (!discordResponse.ok) {
+      const errorText = await discordResponse.text();
+      console.error("Discord API Error:", errorText);
       return {
         statusCode: 500,
         body: JSON.stringify({
@@ -84,6 +93,7 @@ exports.handler = async function (event) {
       })
     };
   } catch (error) {
+    console.error("Server Error:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({

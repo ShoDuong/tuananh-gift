@@ -1,706 +1,1093 @@
-<!doctype html>
-<html lang="vi">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Góc Radio Thanh Xuân</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
-  <script>
-    if (localStorage.getItem("radioUnlocked") !== "true") {
-      window.location.replace("photobooth.html");
-    }
-  </script>
-  <style>
-    :root {
-      --ink: #38263d;
-      --muted: #765b7d;
-      --pink: #ff79ad;
-      --peach: #ffbd9b;
-      --cream: #fff8ef;
-      --card: rgba(255, 251, 247, .88);
-    }
+<!DOCTYPE html>
 
-    * { box-sizing: border-box; }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      overflow-x: hidden;
-      color: var(--ink);
-      font-family: "Nunito", system-ui, sans-serif;
-      background:
-        radial-gradient(circle at 15% 15%, rgba(255, 192, 215, .8), transparent 30%),
-        radial-gradient(circle at 85% 80%, rgba(255, 218, 169, .8), transparent 35%),
-        linear-gradient(145deg, #fff0f6, #fff8e9);
-    }
-
-    body::before {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      background-image: radial-gradient(rgba(255, 121, 173, .18) 1px, transparent 1px);
-      background-size: 22px 22px;
-      content: "";
-      pointer-events: none;
-    }
-
-    .page {
-      width: min(100% - 32px, 1040px);
-      margin: 0 auto;
-      padding: 28px 0 48px;
-    }
-
-    .topbar, .radio-card, .lyrics-card, .instructions {
-      border: 2px solid rgba(255, 121, 173, .35);
-      box-shadow: 0 18px 45px rgba(119, 62, 93, .12);
-      backdrop-filter: blur(10px);
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 14px 18px;
-      border-radius: 22px;
-      background: rgba(255, 255, 255, .62);
-    }
-
-    .brand {
-      margin: 0;
-      font-size: clamp(1.25rem, 3vw, 1.8rem);
-    }
-
-    .back-link {
-      color: var(--ink);
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    .back-link:hover, .back-link:focus-visible { color: #d34d86; }
-
-    .hero {
-      padding: 42px 12px 22px;
-      text-align: center;
-    }
-
-    .eyebrow {
-      margin: 0 0 8px;
-      color: #d34d86;
-      font-size: .9rem;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(2.2rem, 8vw, 4.8rem);
-      line-height: .95;
-      text-shadow: 4px 4px 0 rgba(255, 255, 255, .8);
-    }
-
-    .subtitle {
-      max-width: 570px;
-      margin: 18px auto 0;
-      color: var(--muted);
-      font-size: 1.08rem;
-    }
-
-    .radio-card {
-      position: relative;
-      display: grid;
-      grid-template-columns: minmax(260px, .9fr) minmax(280px, 1.1fr);
-      align-items: center;
-      gap: clamp(26px, 5vw, 70px);
-      padding: clamp(24px, 5vw, 54px);
-      overflow: hidden;
-      border-radius: 32px;
-      background: var(--card);
-    }
-
-    .radio-card.is-playing {
-      animation: beat-glow 1.1s ease-in-out infinite;
-    }
-
-    @keyframes beat-glow {
-      0%, 100% { box-shadow: 0 18px 45px rgba(119, 62, 93, .12), 0 0 0 rgba(255, 121, 173, 0); }
-      50% { box-shadow: 0 18px 45px rgba(119, 62, 93, .12), 0 0 38px rgba(255, 121, 173, .65); }
-    }
-
-    .deck {
-      position: relative;
-      display: grid;
-      min-height: 300px;
-      place-items: center;
-    }
-
-    .record {
-      position: relative;
-      width: min(68vw, 290px);
-      aspect-ratio: 1;
-      border: 10px solid #241c2b;
-      border-radius: 50%;
-      background: repeating-radial-gradient(circle, #302438 0 2px, #19151f 3px 5px);
-      box-shadow: 12px 15px 0 rgba(51, 34, 51, .16), inset 0 0 0 18px #3b2b44;
-    }
-
-    .record::before {
-      position: absolute;
-      inset: 24%;
-      border: 8px solid #ffb3ca;
-      border-radius: 50%;
-      background: radial-gradient(circle, #ff7fad 0 15%, #ffd1d9 16% 42%, #e76399 43% 100%);
-      content: "";
-    }
-
-    .record::after {
-      position: absolute;
-      top: 48%;
-      left: 48%;
-      width: 4%;
-      aspect-ratio: 1;
-      border: 4px solid #fff4e8;
-      border-radius: 50%;
-      background: #32223c;
-      content: "";
-    }
-
-    .is-playing .record { animation: spin 4s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .tonearm {
-      position: absolute;
-      top: 14px;
-      right: 3%;
-      width: 45%;
-      height: 18px;
-      border-radius: 999px;
-      background: #e9a3bb;
-      box-shadow: 0 5px 0 rgba(70, 40, 63, .18);
-      transform: rotate(-14deg);
-      transform-origin: right center;
-      transition: transform .55s cubic-bezier(.2, .8, .2, 1);
-    }
-
-    .tonearm::before {
-      position: absolute;
-      top: -14px;
-      right: -3px;
-      width: 42px;
-      height: 42px;
-      border: 8px solid #5b3b5d;
-      border-radius: 50%;
-      background: #f5c0d0;
-      content: "";
-    }
-
-    .tonearm::after {
-      position: absolute;
-      bottom: -8px;
-      left: -3px;
-      width: 22px;
-      height: 22px;
-      border-radius: 4px;
-      background: #5b3b5d;
-      content: "";
-    }
-
-    .is-playing .tonearm { transform: rotate(8deg); }
-
-    .track-info { position: relative; z-index: 1; }
-    .live-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      color: #a83d6e;
-      background: #ffe1ec;
-      font-size: .86rem;
-      font-weight: 700;
-    }
-    .live-badge::before {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-      content: "";
-    }
-
-    .track-title { margin: 18px 0 5px; font-size: clamp(1.6rem, 4vw, 2.5rem); }
-    .track-artist { margin: 0 0 24px; color: var(--muted); font-size: 1.05rem; }
-
-    .progress {
-      width: 100%;
-      height: 8px;
-      overflow: hidden;
-      border-radius: 10px;
-      background: #f4dce7;
-    }
-    .progress-bar { width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--pink), var(--peach)); }
-    .time-row { display: flex; justify-content: space-between; margin-top: 7px; color: var(--muted); font-size: .82rem; }
-
-    .controls { display: flex; align-items: center; gap: 12px; margin-top: 24px; }
-    .control-btn {
-      border: 0;
-      border-radius: 999px;
-      color: white;
-      background: #e35e94;
-      box-shadow: 0 6px 0 #b94572;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-    }
-    .control-btn:hover, .control-btn:focus-visible { background: #d34d86; }
-    .play-btn { width: 64px; height: 64px; font-size: 1.5rem; }
-    .skip-btn { width: 42px; height: 42px; background: #8e668f; box-shadow: 0 5px 0 #674969; }
-
-    .lyrics-card, .instructions {
-      margin-top: 22px;
-      padding: 22px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, .68);
-    }
-    .section-label { margin: 0 0 12px; color: #d34d86; font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; }
-    .lyrics {
-      min-height: 2.2em;
-      margin: 0;
-      overflow: hidden;
-      color: var(--ink);
-      font-size: clamp(1.25rem, 3vw, 1.7rem);
-      line-height: 1.35;
-      text-align: center;
-    }
-    .lyrics span { display: inline-block; animation: lyrics-in .7s ease both; }
-    @keyframes lyrics-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-    .instructions { color: var(--muted); }
-    .instructions p { margin: 0; }
-
-    .toast {
-      position: fixed;
-      top: 22px;
-      right: 22px;
-      z-index: 10;
-      width: min(330px, calc(100vw - 44px));
-      padding: 16px 18px;
-      border: 2px solid #ff9ec1;
-      border-radius: 18px;
-      color: var(--ink);
-      background: #fff8fc;
-      box-shadow: 0 14px 30px rgba(126, 60, 94, .2);
-      opacity: 0;
-      transform: translateY(-140%);
-      pointer-events: none;
-    }
-    .toast.show { animation: toast-in-out 4.8s ease both; }
-    .toast strong { display: block; margin-bottom: 4px; color: #d34d86; }
-    @keyframes toast-in-out {
-      0%, 100% { opacity: 0; transform: translateY(-140%); }
-      12%, 82% { opacity: 1; transform: translateY(0); }
-    }
-
-    .particle {
-      position: fixed;
-      z-index: 5;
-      width: 38px;
-      height: 38px;
-      object-fit: contain;
-      pointer-events: none;
-      animation: float-away 1.5s ease-out forwards;
-    }
-    @keyframes float-away {
-      to { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rotation)); }
-    }
-    .confetti {
-      position: fixed;
-      z-index: 11;
-      width: 7px;
-      height: 12px;
-      background: var(--color);
-      pointer-events: none;
-      animation: confetti-fall 1.5s ease-out forwards;
-    }
-    @keyframes confetti-fall {
-      to { opacity: 0; transform: translate(var(--x), 110px) rotate(280deg); }
-    }
-
-    @media (max-width: 720px) {
-      .radio-card { grid-template-columns: 1fr; padding: 28px 22px; }
-      .deck { min-height: 260px; }
-      .topbar { align-items: flex-start; flex-direction: column; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-    }
-
-    /* Schoolyard details keep the player feeling like a page from an old notebook. */
-    body {
-      background:
-        linear-gradient(rgba(255, 251, 232, .68), rgba(255, 246, 218, .72)),
-        repeating-linear-gradient(0deg, transparent 0 31px, rgba(107, 164, 183, .18) 32px),
-        linear-gradient(135deg, #f8e4c5, #d9edf0 58%, #f5d4d2);
-    }
-    body::after {
-      position: fixed;
-      top: 0;
-      right: 8vw;
-      width: 110px;
-      height: 150px;
-      border: 2px solid rgba(70, 110, 91, .2);
-      border-top: 0;
-      border-radius: 0 0 60px 60px;
-      background: rgba(139, 190, 147, .2);
-      content: "";
-      pointer-events: none;
-      transform: rotate(12deg);
-    }
-    .topbar, .radio-card, .lyrics-card, .instructions {
-      border-color: #b58e62;
-      box-shadow: 7px 8px 0 rgba(85, 64, 50, .13);
-    }
-    .topbar { border-radius: 6px; background: rgba(255, 250, 232, .9); }
-    .brand, h1, .track-title { font-family: "Quicksand", "Nunito", sans-serif; }
-    button, a, input, textarea, select { font-family: "Nunito", system-ui, sans-serif; }
-    .brand { color: #385c63; }
-    .back-link { color: #7d5a44; }
-    .hero { text-align: left; padding-left: clamp(12px, 5vw, 60px); }
-    .eyebrow { color: #567d6b; letter-spacing: .08em; }
-    h1 { max-width: 760px; color: #4b3842; font-style: italic; font-weight: 600; line-height: 1.05; }
-    .subtitle { margin-left: 0; max-width: 630px; color: #715b50; }
-    .radio-card { border-radius: 10px 22px 10px 22px; background: rgba(255, 250, 232, .92); }
-    .record { border-color: #4c3d3a; box-shadow: 12px 15px 0 rgba(74, 57, 45, .18), inset 0 0 0 18px #665348; }
-    .record::before { border-color: #e5c17f; background: radial-gradient(circle, #6e9295 0 15%, #f4d49b 16% 42%, #c87a70 43% 100%); }
-    .tonearm { background: #b58e62; }
-    .live-badge { color: #496b5b; background: #dcebdc; }
-    .track-artist, .time-row { color: #806b60; }
-    .progress { background: #eadcc5; }
-    .progress-bar { background: linear-gradient(90deg, #6f9e91, #d38b75); }
-    .control-btn { color: #fffaf0; background: #6f9187; box-shadow: 0 6px 0 #4d7067; }
-    .control-btn:hover, .control-btn:focus-visible { background: #5d8178; }
-    .skip-btn { background: #b58e62; box-shadow: 0 5px 0 #876747; }
-    .section-label { color: #567d6b; }
-    .lyrics-card, .instructions { border-radius: 6px 18px 6px 18px; background: rgba(255, 250, 232, .82); }
-    .lyrics { color: #59434a; font-family: Georgia, "Times New Roman", serif; font-style: italic; }
-    .playlist { display: grid; gap: 10px; margin-top: 22px; }
-    .playlist-title { margin: 0; color: #567d6b; font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; }
-    .track-option {
-      display: flex; align-items: center; justify-content: space-between; gap: 12px;
-      width: 100%; padding: 12px 14px; border: 1px solid #d8bd96; border-radius: 6px;
-      color: #59434a; background: rgba(255, 255, 255, .45); cursor: pointer; font: inherit; text-align: left;
-    }
-    .track-option:hover, .track-option.is-selected { border-color: #6f9187; background: #e4efdf; }
-    .track-option small { color: #8a7160; }
-    .next-page {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      margin-top: 22px;
-      padding: 15px 20px;
-      border: 2px solid #b58e62;
-      border-radius: 8px;
-      color: #fffaf0;
-      background: #c47770;
-      box-shadow: 0 5px 0 #92564f;
-      font: inherit;
-      font-weight: 700;
-      text-decoration: none;
-    }
-    .next-page:hover, .next-page:focus-visible { background: #ad665f; }
-  </style>
-</head>
-<body>
-  <main class="page">
-    <header class="topbar">
-      <p class="brand">📻 Sổ tay thanh xuân</p>
-      <a class="back-link" href="photobooth.html">← Về góc sticker</a>
-    </header>
-
-    <section class="hero" aria-labelledby="page-title">
-      <p class="eyebrow">Summer  memories · lớp học · 2010s</p>
-      <h1 id="page-title">This song reminds me about you...</h1>
-    </section>
-
-    <section class="radio-card" id="playerCard" aria-label="Trình phát nhạc">
-      <div class="deck">
-        <div class="record" aria-hidden="true"></div>
-        <div class="tonearm" aria-hidden="true"></div>
-      </div>
-      <div class="track-info">
-        <span class="live-badge">ON AIR • GÓC BÀN CUỐI LỚP</span>
-        <h2 class="track-title" id="trackTitle">So Many Cute Things In The World</h2>
-        <p class="track-artist" id="trackArtist">Băng cassette mùa hè</p>
-        <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
-        <div class="time-row"><span id="currentTime">0:00</span><span id="duration">0:00</span></div>
-        <div class="controls">
-          <button class="control-btn skip-btn" id="backButton" type="button" aria-label="Lùi 10 giây">↶</button>
-          <button class="control-btn play-btn" id="playButton" type="button" aria-label="Phát nhạc">▶</button>
-          <button class="control-btn skip-btn" id="forwardButton" type="button" aria-label="Tiến 10 giây">↷</button>
-        </div>
-        <div class="playlist" aria-label="Playlist local">
-          <p class="playlist-title">Playlist trong ngăn bàn</p>
-          <button class="track-option is-selected" type="button" data-track="0"><span>So Many Cute Things In The World</span><small>local MP3</small></button>
-          <button class="track-option" type="button" data-track="1"><span>Chờ Tới Khi Anh Về</span><small>local MP3</small></button>
-          <button class="track-option" type="button" data-track="2"><span>Người Im Lặng Gặp Người Hay Nói</span><small> local MP3</small></button>
-          <button class="track-option" type="button" data-track="4"><span>IDNAT</span><small>local MP3</small></button>
-          <button class="track-option" type="button" data-track="3"><span>Giải Cứu Thế Giới</span><small>local MP3</small></button>
-        </div>
-      </div>
-    </section>
-
-    <section class="lyrics-card" aria-live="polite">
-      <p class="section-label">Dòng chữ trong lưu bút</p>
-      <p class="lyrics" id="lyrics">Nhấn play để nghe lại một mùa hè thật dịu dàng ✨</p>
-    </section>
-    <aside class="instructions">
-      <p><strong>Lời nhắn:</strong> Cảm ơn vì đã xuất hiện trong những năm tháng thanh xuân của tớ ✨</p>
-    </aside>
-    <a class="next-page" href="photobooth.html">Đến OtterBooth Chụp Hình Thôi 📸</a>
-  </main>
-
-  <div class="toast" id="toast" role="status">
-    <strong>Achievement unlocked ✨</strong>
-    <span id="toastMessage"></span>
-  </div>
-
-  <audio id="radioAudio" loop preload="metadata">
-    <source id="audioSource" src="assets/so many cute things in the world.mp3" type="audio/mpeg">
-  </audio>
-
-  <script>
-    const audio = document.getElementById("radioAudio");
-    const playerCard = document.getElementById("playerCard");
-    const playButton = document.getElementById("playButton");
-    const progressBar = document.getElementById("progressBar");
-    const currentTimeLabel = document.getElementById("currentTime");
-    const durationLabel = document.getElementById("duration");
-    const lyricsElement = document.getElementById("lyrics");
-    const toast = document.getElementById("toast");
-    const toastMessage = document.getElementById("toastMessage");
-    const audioSource = document.getElementById("audioSource");
-    const trackTitle = document.getElementById("trackTitle");
-    const trackArtist = document.getElementById("trackArtist");
-    const playlistButtons = document.querySelectorAll(".track-option");
-
-    // Replace or extend these local paths with transparent PNG/GIF assets.
-    const cuteImageUrls = [
-      "assets/fish-photobooth/camerapage/stickers/otter.png",
-      "assets/fish-photobooth/camerapage/stickers/otterface.png",
-      "assets/fish-photobooth/camerapage/stickers/otter-flower.gif",
-      "assets/fish-photobooth/camerapage/stickers/seaotter.png",
-      "assets/tuananh_sticker/tuananh_sticker_1.gif",
-      "assets/tuananh_sticker/tuananh_sticker_3.png"
-    ];
-    const tracks = [
-      {
-        title: "So Many Cute Things In The World",
-        artist: "Băng cassette mùa hè",
-        src: "assets/so many cute things in the world.mp3"
-      },
-      {
-        title: "Chờ Tới Khi Anh Về",
-        artist: "Lofi acoustic trong ngăn bàn",
-        src: "assets/chờ tới khi anh về.mp3"
-      },
-      {
-        title: "Người Im Lặng Gặp Người Hay Nói",
-        artist: "HIEUTHUHAI · Studio Live Session",
-        src: "assets/HIEUTHUHAI - Người Im Lặng Gặp Người Hay Nói (Studio Live Session).mp3"
-      },
-      {
-        title: "Giải cứu thế giới - Demo",
-        artist: "Tinh Hà Say Hi",
-        src: "assets/Demo Giải Cứu Thế Giới - Sáng tác của tác giả TRID MINH.mp3"
-      },
-      {
-        title: "IDNAT",
-        artist: "Tinh Hà Say Hi",
-        src: "assets/IM ĐỢI NGƯỜI ANH THƯƠNG - Wren Evans, CAPTAIN BOY, IVAN, Thể Thiên  TINH HÀ SAY HI [PERFORMANCE].mp3"
-      }
-
-    ];
-    const lyricLines = [
-      "Hôm nay vũ trụ gửi bạn một cái ôm thật to 💌",
-      "Mong nụ cười của bạn luôn sáng hơn cả nắng ✨",
-      "Cứ chill thôi, mọi điều dễ thương đang đến rồi",
-      "Bạn là phiên bản đáng yêu nhất của chính mình",
-      "Happy birthday — keep shining!"
-    ];
-    const achievementMessages = [
-      "Achievement Unlocked: Bạn vừa nhận được 1 cái ôm thanh xuân 🫂",
-      "Mức độ đáng yêu hôm nay: Vượt mức cho phép ⚠️",
-      "Achievement Unlocked: Người đẹp trai nhất vũ trụ! 🌟",
-      "Rái cá vừa gửi tặng bạn 1 chiếc thả tim siêu cấp cute! 🐾"
-    ];
-    let audioContext;
-    let analyser;
-    let source;
-    let isPlaying = false;
-    let lyricIndex = 0;
-    let lastBeat = 0;
-    let selectedTrackIndex = 0;
-
-    const formatTime = (seconds) => {
-      if (!Number.isFinite(seconds)) return "0:00";
-      return `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
-    };
-
-    function setPlaying(nextPlaying) {
-      isPlaying = nextPlaying;
-      playerCard.classList.toggle("is-playing", isPlaying);
-      playButton.textContent = isPlaying ? "Ⅱ" : "▶";
-      playButton.setAttribute("aria-label", isPlaying ? "Tạm dừng nhạc" : "Phát nhạc");
-    }
-
-    function createAudioGraph() {
-      if (audioContext) return;
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      source = audioContext.createMediaElementSource(audio);
-      source.connect(analyser);
-      analyser.connect(audioContext.destination);
-    }
-
-    async function playRadio() {
-      createAudioGraph();
-      if (audioContext.state === "suspended") await audioContext.resume();
-      const savedTime = Number.parseFloat(localStorage.getItem("musicTime") || "57");
-      if (Number.isFinite(savedTime) && Math.abs(audio.currentTime - savedTime) > 2) audio.currentTime = savedTime;
-      await audio.play();
-      setPlaying(true);
-    }
-
-    function pauseRadio() {
-      audio.pause();
-      setPlaying(false);
-      localStorage.setItem("musicPlaying", "false");
-    }
-
-    function selectTrack(index, resetTime = true) {
-      const track = tracks[index];
-      if (!track) return;
-      const wasPlaying = isPlaying;
-      selectedTrackIndex = index;
-      audio.pause();
-      audioSource.src = track.src;
-      audio.load();
-      localStorage.setItem("currentTrackSrc", track.src);
-      if (resetTime) localStorage.setItem("musicTime", "0");
-      trackTitle.textContent = track.title;
-      trackArtist.textContent = track.artist;
-      playlistButtons.forEach((button, buttonIndex) => {
-        button.classList.toggle("is-selected", buttonIndex === index);
-      });
-      if (wasPlaying) playRadio().catch((error) => console.error("Unable to switch radio track.", error));
-    }
-
-    playlistButtons.forEach((button) => {
-      button.addEventListener("click", () => selectTrack(Number(button.dataset.track)));
-    });
-
-    const storedTrackSrc = localStorage.getItem("currentTrackSrc");
-    const storedTrackIndex = tracks.findIndex((track) => track.src === storedTrackSrc);
-    if (storedTrackIndex >= 0) selectTrack(storedTrackIndex, false);
-    else localStorage.setItem("currentTrackSrc", tracks[0].src);
-
-    playButton.addEventListener("click", () => {
-      if (isPlaying) pauseRadio();
-      else playRadio().catch((error) => {
-        console.error("Unable to play radio audio.", error);
-      });
-    });
-    document.getElementById("backButton").addEventListener("click", () => { audio.currentTime = Math.max(0, audio.currentTime - 10); });
-    document.getElementById("forwardButton").addEventListener("click", () => { audio.currentTime = Math.min(audio.duration || audio.currentTime + 10, audio.currentTime + 10); });
-
-    audio.addEventListener("loadedmetadata", () => { durationLabel.textContent = formatTime(audio.duration); });
-    audio.addEventListener("timeupdate", () => {
-      currentTimeLabel.textContent = formatTime(audio.currentTime);
-      progressBar.style.width = audio.duration ? `${(audio.currentTime / audio.duration) * 100}%` : "0%";
-      localStorage.setItem("musicTime", audio.currentTime);
-    });
-    audio.addEventListener("pause", () => setPlaying(false));
-    audio.addEventListener("play", () => { setPlaying(true); localStorage.setItem("musicPlaying", "true"); });
-    window.addEventListener("beforeunload", () => {
-      localStorage.setItem("musicTime", audio.currentTime);
-      localStorage.setItem("musicPlaying", String(isPlaying));
-    });
-
-    if (localStorage.getItem("musicPlaying") === "true") {
-      playRadio().catch(() => {
-        setPlaying(false);
-      });
-    }
-
-    function spawnParticle() {
-      if (!isPlaying) return;
-      const particle = document.createElement("img");
-      const rect = playerCard.getBoundingClientRect();
-      particle.className = "particle";
-      particle.src = cuteImageUrls[Math.floor(Math.random() * cuteImageUrls.length)];
-      particle.alt = "";
-      particle.style.left = `${rect.left + rect.width / 2 + (Math.random() - .5) * 50}px`;
-      particle.style.top = `${rect.top + rect.height / 2}px`;
-      particle.style.setProperty("--dx", `${(Math.random() - .5) * 280}px`);
-      particle.style.setProperty("--dy", `${-80 - Math.random() * 220}px`);
-      particle.style.setProperty("--rotation", `${(Math.random() - .5) * 80}deg`);
-      document.body.appendChild(particle);
-      particle.addEventListener("animationend", () => particle.remove(), { once: true });
-    }
-
-    function animateBeat(timestamp) {
-      if (isPlaying && analyser) {
-        const data = new Uint8Array(analyser.frequencyBinCount);
-        analyser.getByteFrequencyData(data);
-        const average = data.slice(0, 12).reduce((sum, value) => sum + value, 0) / 12;
-        if (average > 105 && timestamp - lastBeat > 260) {
-          lastBeat = timestamp;
-          spawnParticle();
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sổ tay thanh xuân - Mùa Hoa Anh Đào</title>
+<!-- Tailwind CSS v3 CDN with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#faf5eb',
+            'paper-card': '#fffbf6',
+            'line-border': '#ebd8cd',
+            'ink-dark': '#2c2523',
+            'accent-teal': '#4d7570',
+            'accent-sage': '#e2ece2',
+            'accent-peach': '#f39e8a',
+            'accent-sakura': '#f7b5c3',
+            'accent-sakura-light': '#fef0f3',
+            'accent-brown': '#9d7356',
+            'tag-green': '#dce8dc',
+          },
+          fontFamily: {
+            serif: ['Playfair Display', 'Georgia', 'serif'],
+            handwriting: ['Caveat', 'Dancing Script', 'cursive'],
+            sans: ['Nunito', 'Segoe UI', 'sans-serif'],
+          }
         }
       }
-      requestAnimationFrame(animateBeat);
     }
-    requestAnimationFrame(animateBeat);
-
-    setInterval(() => {
-      if (isPlaying) spawnParticle();
-    }, 1800);
-
-    function showAchievementToast() {
-      const message = achievementMessages[Math.floor(Math.random() * achievementMessages.length)];
-      toastMessage.textContent = message;
-      toast.classList.remove("show");
-      void toast.offsetWidth;
-      toast.classList.add("show");
-      for (let index = 0; index < 12; index += 1) {
-        const confetti = document.createElement("i");
-        confetti.className = "confetti";
-        confetti.style.left = `${Math.random() * 100}vw`;
-        confetti.style.top = "18px";
-        confetti.style.setProperty("--x", `${(Math.random() - .5) * 130}px`);
-        confetti.style.setProperty("--color", ["#ff79ad", "#ffd166", "#8bd3dd", "#cdb4db"][index % 4]);
-        document.body.appendChild(confetti);
-        confetti.addEventListener("animationend", () => confetti.remove(), { once: true });
-      }
-      window.setTimeout(showAchievementToast, 15000 + Math.random() * 5000);
-    }
-    window.setTimeout(showAchievementToast, 15000 + Math.random() * 5000);
-
-    setInterval(() => {
-      if (!isPlaying) return;
-      lyricIndex = (lyricIndex + 1) % lyricLines.length;
-      lyricsElement.innerHTML = `<span>${lyricLines[lyricIndex]}</span>`;
-    }, 4200);
   </script>
-  <script src="cursor-trail.js"></script>
-<script>
-  document.querySelectorAll("body *").forEach((element) => {
-    element.childNodes.forEach((node) => {
-      if (node.nodeType === Node.TEXT_NODE) node.nodeValue = node.nodeValue.normalize("NFC");
+<!-- Google Fonts for Aesthetic Scrapbook Typography -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Caveat:wght@600;700&amp;family=Montserrat:wght@700;800&amp;family=Nunito:wght@400;600;700;800&amp;family=Playfair+Display:ital,wght@1,600;1,700&amp;family=Quicksand:wght@500;600;700&amp;display=swap&amp;subset=vietnamese" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<!-- Three.js CDN for 3D Fast Cute Vinyl Player & Fullscreen Sakura Petals -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Custom CSS for Dot Grid, Scrapbook Decors & Canvas -->
+<style data-purpose="background-grid">
+    body {
+      background-color: #fbf5ee;
+      color: #332d29;
+      font-family: 'Nunito', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Subtle dot grid overlay texture with delicate opacity */
+    .dot-grid-overlay {
+      background-image: radial-gradient(#d9beaf 1.1px, transparent 1.1px);
+      background-size: 24px 24px;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    /* Soft ambient sakura gradient glow backdrop */
+    .sakura-ambiance {
+      background: radial-gradient(circle at 18% 18%, rgba(255, 215, 226, 0.48) 0%, transparent 55%),
+                  radial-gradient(circle at 82% 78%, rgba(255, 229, 219, 0.42) 0%, transparent 60%),
+                  radial-gradient(circle at 50% 50%, rgba(253, 245, 235, 0.3) 0%, transparent 80%);
+      pointer-events: none;
+    }
+
+    /* Subtle paper texture overlay with delicate sakura blush glow */
+    .paper-texture {
+      box-shadow: 0 14px 36px -12px rgba(184, 137, 137, 0.16), 0 3px 10px rgba(160, 115, 105, 0.06);
+    }
+
+    /* Floating cloud puff animations */
+    @keyframes floatCloudSlow {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(-12px) translateX(8px); }
+    }
+    @keyframes floatCloudGentle {
+      0%, 100% { transform: translateY(0px) translateX(0px); }
+      50% { transform: translateY(10px) translateX(-6px); }
+    }
+    .cloud-puff-1 {
+      animation: floatCloudSlow 18s ease-in-out infinite;
+    }
+    .cloud-puff-2 {
+      animation: floatCloudGentle 22s ease-in-out infinite;
+    }
+  </style>
+<style data-purpose="washi-tape-decor">
+    .washi-top-right {
+      position: absolute;
+      top: -12px;
+      right: 48px;
+      width: 90px;
+      height: 140px;
+      background: rgba(246, 214, 219, 0.75);
+      border-radius: 4px 4px 50px 50px;
+      transform: rotate(6deg);
+      pointer-events: none;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(220, 160, 170, 0.2);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #dfd4c4;
+      border-radius: 4px;
+    }
+
+    .vinyl-2d-stage {
+      position: relative;
+      width: min(76vw, 280px);
+      aspect-ratio: 1;
+      filter: drop-shadow(14px 16px 0 rgba(72, 57, 53, .16));
+    }
+    #vinyl-canvas-container > canvas { display: none; }
+    .vinyl-2d-disc {
+      position: absolute;
+      left: 4%;
+      bottom: 4%;
+      width: 78%;
+      aspect-ratio: 1;
+      border: 11px solid #51463f;
+      border-radius: 50%;
+      background:
+        repeating-radial-gradient(circle, #161326 0 2px, #211b31 3px 4px),
+        #211b31;
+      box-shadow: inset 0 0 0 7px #2f2732, 10px 12px 0 rgba(66, 53, 49, .2);
+      animation: vinyl-2d-spin 4s linear infinite;
+      animation-play-state: paused;
+    }
+    .is-playing .vinyl-2d-disc { animation-play-state: running; }
+    .vinyl-2d-label {
+      position: absolute;
+      inset: 25%;
+      border: 7px solid #f6dfa1;
+      border-radius: 50%;
+      background: radial-gradient(circle, #e6e0b6 0 18%, #b98179 19% 62%, #efd99b 63% 100%);
+    }
+    .vinyl-2d-label::before {
+      position: absolute;
+      inset: 43%;
+      border: 3px solid #766e65;
+      border-radius: 50%;
+      background: #eef1e6;
+      content: "";
+    }
+    .vinyl-2d-label::after {
+      position: absolute;
+      inset: 47%;
+      border-radius: 50%;
+      background: #263044;
+      content: "";
+    }
+    .vinyl-2d-arm {
+      position: absolute;
+      top: 23%;
+      right: 0;
+      width: 46%;
+      height: 10px;
+      border-radius: 999px;
+      background: #9a7c59;
+      box-shadow: 0 4px 0 rgba(72, 57, 53, .16);
+      transform: rotate(9deg);
+      transform-origin: right center;
+    }
+    .vinyl-2d-arm::before {
+      position: absolute;
+      top: -17px;
+      right: -8px;
+      width: 40px;
+      height: 40px;
+      border: 6px solid #4a374d;
+      border-radius: 50%;
+      background: #efc9d5;
+      content: "";
+    }
+    .vinyl-2d-arm::after {
+      position: absolute;
+      left: -8px;
+      top: -6px;
+      width: 18px;
+      height: 21px;
+      border-radius: 4px;
+      background: #4b354f;
+      content: "";
+    }
+    @keyframes vinyl-2d-spin { to { transform: rotate(360deg); } }
+    .birthday-message-backdrop {
+      background: rgba(69, 48, 55, .24);
+      backdrop-filter: blur(16px) saturate(1.08);
+    }
+    @keyframes birthday-card-entrance {
+      0% { opacity: 0; transform: scale(.82) translateY(24px); filter: blur(8px); }
+      70% { transform: scale(1.02) translateY(-4px); filter: blur(0); }
+      100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    }
+    @keyframes birthday-card-float {
+      0%, 100% { transform: translateY(0) rotate(0); }
+      50% { transform: translateY(-6px) rotate(1.5deg); }
+    }
+    @keyframes birthday-ring-bloom {
+      0% { opacity: .9; transform: scale(.4) rotate(0); }
+      100% { opacity: 0; transform: scale(1.45) rotate(45deg); }
+    }
+    .birthday-message-card {
+      border: 1px solid rgba(255, 255, 255, .78);
+      background: linear-gradient(135deg, rgba(255, 255, 255, .78), rgba(255, 240, 245, .65) 50%, rgba(255, 228, 235, .72));
+      backdrop-filter: blur(22px) saturate(1.15);
+      box-shadow: 0 24px 50px -12px rgba(244, 114, 182, .3), 0 0 0 1px rgba(255, 255, 255, .85) inset, 0 8px 24px -4px rgba(225, 29, 72, .12);
+      animation: birthday-card-entrance 1.1s cubic-bezier(.175, .885, .32, 1.275) both, birthday-card-glow 2.8s ease-in-out 1.1s infinite;
+      overflow: hidden;
+    }
+    @keyframes birthday-card-glow {
+      0%, 100% { box-shadow: 0 24px 70px rgba(128, 78, 95, .28), 0 0 26px rgba(255, 188, 211, .55), inset 0 1px 0 rgba(255, 255, 255, .9); }
+      50% { box-shadow: 0 24px 70px rgba(128, 78, 95, .34), 0 0 42px rgba(255, 166, 200, .78), inset 0 1px 0 rgba(255, 255, 255, 1); }
+    }
+
+    .birthday-message-decoration {
+      animation: birthday-card-float 4s ease-in-out infinite;
+    }
+    .birthday-message-ring {
+      position: absolute;
+      width: 8rem;
+      height: 8rem;
+      border: 2px solid rgba(251, 113, 133, .5);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: birthday-ring-bloom 1.4s cubic-bezier(.1, .8, .3, 1) 1s both;
+    }
+    .birthday-message-ring-left { left: -2.5rem; bottom: -2rem; }
+    .birthday-message-ring-right { right: -2.5rem; top: -2rem; animation-delay: 1.2s; }
+    .birthday-message-copy {
+      font-family: 'Quicksand', 'Be Vietnam Pro', sans-serif;
+      font-size: clamp(1rem, 2.2vw, 1.16rem);
+      font-weight: 600;
+      letter-spacing: .015em;
+      line-height: 1.9;
+    }
+    .birthday-message-action {
+      font-family: 'Be Vietnam Pro', sans-serif;
+      border: 1px solid rgba(255, 255, 255, .48);
+      background: linear-gradient(135deg, #df837a, #ed9b91 52%, #e7869a);
+      box-shadow: 0 10px 22px rgba(194, 111, 105, .25), inset 0 1px 0 rgba(255, 255, 255, .42);
+      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .birthday-message-action:hover {
+      filter: saturate(1.12) brightness(1.03);
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 15px 28px rgba(194, 111, 105, .34), inset 0 1px 0 rgba(255, 255, 255, .58);
+    }
+    .birthday-message-action:focus-visible {
+      outline: 3px solid rgba(232, 135, 145, .36);
+      outline-offset: 3px;
+    }
+    .photobooth-cta {
+      min-height: 48px;
+      border: 1px solid rgba(255, 255, 255, .62);
+      background: linear-gradient(135deg, #df837a, #eb9b91);
+      box-shadow: 0 10px 20px rgba(194, 111, 105, .24), inset 0 1px 0 rgba(255, 255, 255, .4);
+      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .photobooth-cta:hover {
+      filter: saturate(1.08);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 26px rgba(194, 111, 105, .32), inset 0 1px 0 rgba(255, 255, 255, .5);
+    }
+    .photobooth-cta:focus-visible {
+      outline: 3px solid rgba(232, 135, 145, .38);
+      outline-offset: 3px;
+    }
+    #playerCard {
+      background: rgba(255, 255, 255, .58) !important;
+      backdrop-filter: blur(24px) saturate(160%);
+      border-color: rgba(255, 255, 255, .88);
+      box-shadow: 0 25px 55px -10px rgba(251, 191, 36, .22), 0 12px 35px -5px rgba(244, 63, 94, .18), inset 0 0 35px rgba(255, 255, 255, .75), inset 0 1px 0 rgba(255, 255, 255, .9);
+    }
+    @keyframes music-card-border-glow {
+      0%, 100% {
+        border-color: rgba(255, 255, 255, .88);
+        box-shadow: 0 25px 55px -10px rgba(251, 191, 36, .22), 0 12px 35px -5px rgba(244, 63, 94, .18), inset 0 0 35px rgba(255, 255, 255, .75), inset 0 1px 0 rgba(255, 255, 255, .9);
+      }
+      50% {
+        border-color: rgba(246, 164, 184, .98);
+        box-shadow: 0 25px 55px -8px rgba(251, 191, 36, .34), 0 12px 38px -4px rgba(244, 63, 94, .3), 0 0 22px rgba(245, 143, 174, .55), inset 0 0 42px rgba(255, 255, 255, .9), inset 0 1px 0 rgba(255, 255, 255, 1);
+      }
+    }
+    #playerCard.is-playing {
+      animation: music-card-border-glow 1.8s ease-in-out infinite;
+    }
+    #music-notes-canvas {
+      opacity: .92;
+      mix-blend-mode: multiply;
+    }
+  </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between p-4 sm:p-6 md:p-10 selection:bg-rose-100">
+<!-- Fullscreen 3D Sakura Petals Canvas Background -->
+<canvas class="fixed inset-0 w-full h-full pointer-events-none z-0" id="sakura-bg-canvas"></canvas>
+<!-- Dreamy Cloud Puffs & Ambient Gradients -->
+<div aria-hidden="true" class="fixed inset-0 w-full h-full sakura-ambiance z-[1]"></div>
+<div aria-hidden="true" class="fixed inset-0 w-full h-full dot-grid-overlay z-[2]"></div>
+<!-- Soft Floating Cloud Shapes -->
+<div aria-hidden="true" class="fixed top-12 -left-16 w-80 h-52 bg-white/40 rounded-full blur-3xl pointer-events-none cloud-puff-1 z-[2]"></div>
+<div aria-hidden="true" class="fixed bottom-16 right-[-50px] w-96 h-64 bg-[#fedde4]/35 rounded-full blur-3xl pointer-events-none cloud-puff-2 z-[2]"></div>
+<!-- Washi tape decorative element at top right -->
+<div aria-hidden="true" class="washi-top-right hidden lg:block"></div>
+<!-- BEGIN: PageWrapper -->
+<div class="max-w-[1080px] w-full mx-auto flex flex-col flex-1 relative z-20">
+<!-- BEGIN: TopBarNav -->
+<header class="w-full mb-8">
+<div class="w-full bg-[#fdfaf5]/90 backdrop-blur-sm border border-[#e8d5cb] rounded-md px-5 py-3 flex items-center justify-between shadow-sm relative overflow-hidden">
+<div class="flex items-center gap-2 text-sm md:text-base font-semibold text-[#483d37]">
+<span class="text-lg">🌸</span>
+<span>Sổ tay thanh xuân</span>
+<span class="hidden sm:inline-block text-[11px] font-normal px-2.5 py-0.5 rounded-full bg-[#fde8ed] text-[#b25b74] ml-1">Mùa hoa nở</span>
+</div>
+<a class="text-xs md:text-sm text-[#846e63] hover:text-[#2c2523] transition-colors flex items-center gap-1 font-medium" href="fortune.html">
+<span>←</span> Về góc sticker
+        </a>
+</div>
+</header>
+<!-- END: TopBarNav -->
+<!-- BEGIN: MainHeaderTitles -->
+<section class="mb-7 px-2 text-center md:text-left relative" data-purpose="heading-section">
+<!-- Corner sakura petal icon decor -->
+<span class="hidden sm:inline-block absolute -top-3 -left-3 text-xl opacity-65 animate-bounce select-none pointer-events-none" style="animation-duration: 3.5s;">🌸</span>
+<p class="text-[11px] md:text-xs tracking-[0.22em] font-bold text-[#a07474] uppercase mb-1 flex items-center justify-center md:justify-start gap-1.5">
+<span>🌸</span>
+<span>MÙA HOA ANH ĐÀO · LỚP HỌC · 2010S</span>
+</p>
+<h1 class="font-serif italic text-4xl sm:text-5xl md:text-[54px] leading-tight text-[#302824] tracking-wide select-none drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] flex flex-wrap items-center justify-center md:justify-start gap-3">
+<span>This song reminds <br class="hidden sm:inline"/>me about you...</span>
+<span class="text-2xl sm:text-3xl text-[#f395a8] not-italic drop-shadow-sm select-none" title="Sakura Blossom">🌸</span>
+</h1>
+</section>
+<!-- END: MainHeaderTitles -->
+<!-- BEGIN: MusicPlayerMainContainer -->
+<main id="playerCard" class="w-full bg-[#fffcf7]/95 backdrop-blur-md border-[1.5px] border-[#e8d2c6] rounded-2xl p-6 md:p-10 paper-texture mb-8 transition-all relative overflow-hidden" data-purpose="main-music-card">
+<canvas id="music-notes-canvas" class="absolute inset-0 z-0 h-full w-full pointer-events-none" aria-hidden="true"></canvas>
+<div class="absolute -left-20 top-1/4 z-[1] h-72 w-72 rounded-full bg-amber-100/25 blur-3xl pointer-events-none"></div>
+<div class="absolute -bottom-24 right-8 z-[1] h-72 w-72 rounded-full bg-rose-200/25 blur-3xl pointer-events-none"></div>
+<!-- Delicate Corner Petal SVG Decors -->
+<svg aria-hidden="true" class="absolute -top-3 -right-3 w-14 h-14 text-[#f7cad4]/40 pointer-events-none select-none rotate-12" fill="currentColor" viewbox="0 0 100 100">
+<path d="M50 0 C45 25 15 35 15 55 C15 75 35 85 50 100 C65 85 85 75 85 55 C85 35 55 25 50 0 Z"></path>
+</svg>
+<svg aria-hidden="true" class="absolute -bottom-4 -left-4 w-16 h-16 text-[#f8d7de]/35 pointer-events-none select-none -rotate-45" fill="currentColor" viewbox="0 0 100 100">
+<path d="M50 0 C45 25 15 35 15 55 C15 75 35 85 50 100 C65 85 85 75 85 55 C85 35 55 25 50 0 Z"></path>
+</svg>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
+<!-- Left Column: 2D Vinyl Player -->
+<div class="lg:col-span-5 flex flex-col items-center justify-center relative min-h-[280px]" data-purpose="vinyl-turntable-container">
+<!-- 3D Canvas Mount Point -->
+<div class="w-full max-w-[320px] h-[290px] relative flex items-center justify-center" id="vinyl-canvas-container">
+<div class="vinyl-2d-stage" aria-label="Đĩa than 2D tương tác">
+  <div class="vinyl-2d-disc">
+    <div class="vinyl-2d-label"></div>
+  </div>
+  <div class="vinyl-2d-arm" aria-hidden="true"></div>
+</div>
+</div>
+</div>
+<!-- Right Column: Player Controls & Local Playlist -->
+<div class="lg:col-span-7 flex flex-col justify-between" data-purpose="player-details-and-list">
+<!-- Now Playing Meta Badge -->
+<div class="flex items-center gap-3 mb-2 flex-wrap">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fae8ec] text-[#a14a60] text-[11px] font-bold tracking-wider border border-[#f4cbd3]">
+<span class="w-1.5 h-1.5 rounded-full bg-[#d65d79]"></span>
+              ON AIR · GÓC BÀN CUỐI LỚP
+            </span>
+</div>
+<!-- Song Info -->
+<div class="mb-4">
+<h2 class="text-2xl md:text-3xl font-extrabold text-[#29221e] tracking-tight flex items-center gap-2" id="current-song-title">
+<span>IDNAT</span>
+<span class="text-base text-[#f28e9f]">🌸</span>
+</h2>
+<p class="text-sm font-semibold text-[#8b7a6d]" id="current-artist">Tình Hà Say Hi</p>
+</div>
+<!-- Scrubber / Progress Bar with cute cherry blossom pin thumb -->
+<div class="mb-5" data-purpose="timeline-scrubber">
+<div class="w-full bg-[#eeddce] h-2.5 rounded-full overflow-visible cursor-pointer relative" id="progress-bar-bg">
+<!-- Sakura pink / coral rose gradient track -->
+<div class="h-full bg-gradient-to-r from-[#ea8189] via-[#f1958b] to-[#f6b095] rounded-full transition-all duration-300 relative" id="progress-bar-fill" style="width: 77%;">
+<!-- Cute cherry blossom flower pin as scrub thumb indicator -->
+<div class="absolute -right-3 -top-2 w-6 h-6 flex items-center justify-center pointer-events-none select-none drop-shadow-md transform hover:scale-110 transition-transform">
+<span class="text-base leading-none">🌸</span>
+</div>
+</div>
+</div>
+<div class="flex justify-between text-[11px] text-[#938173] font-semibold mt-2">
+<span id="current-time-label">3:40</span>
+<span id="total-time-label">4:45</span>
+</div>
+</div>
+<!-- Tactile Playback Controls -->
+<div class="flex items-center justify-center gap-4 mb-6" data-purpose="control-buttons">
+<!-- Shuffle / Mode Button -->
+<button class="w-9 h-9 rounded-full bg-[#b8957e] hover:bg-[#a8826a] text-white flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all" id="btn-shuffle" title="Trộn bài">
+<svg class="w-4 h-4" fill="currentColor" viewbox="0 0 24 24">
+<path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"></path>
+</svg>
+</button>
+<!-- Previous Track -->
+<button class="w-10 h-10 rounded-full bg-[#b69279] hover:bg-[#a67f64] text-white flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all" id="btn-prev" title="Bài trước">
+<svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24">
+<path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"></path>
+</svg>
+</button>
+<!-- Big Master Play / Pause Button in deep sakura sage / emerald rose tone with miniature blooming sakura icon -->
+<div class="relative">
+<button class="w-14 h-14 rounded-full bg-[#466f6a] hover:bg-[#3b5f5b] text-white flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all border border-[#7baea7]/40 ring-2 ring-[#f4d1d8]/50" id="btn-master-play" title="Tạm dừng / Tiếp tục">
+<svg class="w-6 h-6" fill="currentColor" id="icon-pause" viewbox="0 0 24 24">
+<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path>
+</svg>
+<svg class="w-6 h-6 hidden" fill="currentColor" id="icon-play" viewbox="0 0 24 24">
+<path d="M8 5v14l11-7z"></path>
+</svg>
+</button>
+<!-- Miniature blooming sakura icon sticker badge -->
+<span class="absolute -bottom-1 -right-1 text-base select-none pointer-events-none drop-shadow-sm transform rotate-12">🌸</span>
+</div>
+<!-- Next Track -->
+<button class="w-10 h-10 rounded-full bg-[#b69279] hover:bg-[#a67f64] text-white flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all" id="btn-next" title="Bài tiếp">
+<svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24">
+<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"></path>
+</svg>
+</button>
+<!-- Repeat Mode -->
+<button class="w-9 h-9 rounded-full bg-[#b8957e] hover:bg-[#a8826a] text-white flex items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all" id="btn-repeat" title="Lặp lại">
+<svg class="w-4 h-4" fill="currentColor" viewbox="0 0 24 24">
+<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"></path>
+</svg>
+</button>
+</div>
+<!-- Desk Drawer Playlist Table -->
+<div class="mt-2" data-purpose="playlist-container">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xs font-bold text-[#8a7667] tracking-wider uppercase flex items-center gap-1.5">
+<span>PLAYLIST TRONG NGĂN BÀN</span>
+<span class="text-xs">🌸</span>
+</h3>
+<span class="text-[11px] text-[#a08a7c]">6 bài hát lưu bút</span>
+</div>
+<ul class="space-y-1.5 text-sm" id="playlist-track-list">
+<!-- Item 1 -->
+<li class="playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors" data-artist="Acoustic Classroom" data-index="0" data-title="So Many Cute Things In The World">
+<span class="font-medium text-[#3b332e] truncate pr-2">01. So Many Cute Things In The World</span>
+<span class="text-[11px] text-[#998b7e] shrink-0 font-mono">local MP3</span>
+</li>
+<!-- Item 2 -->
+<li class="playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors" data-artist="Guitar Gỗ 2012" data-index="1" data-title="Chờ Tới Khi Anh Về">
+<span class="font-medium text-[#3b332e] truncate pr-2">02. Chờ Tới Khi Anh Về</span>
+<span class="text-[11px] text-[#998b7e] shrink-0 font-mono">local MP3</span>
+</li>
+<!-- Item 3 -->
+<li class="playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors" data-artist="Bàn 4 Tổ 2" data-index="2" data-title="Người Im Lặng Gặp Người Hay Nói">
+<span class="font-medium text-[#3b332e] truncate pr-2">03. Người Im Lặng Gặp Người Hay Nói</span>
+<span class="text-[11px] text-[#998b7e] shrink-0 font-mono">local MP3</span>
+</li>
+<!-- Item 4 (Active song from screenshot - soft matcha sakura green / blushing pink with blooming petal marker) -->
+<li class="playlist-item border border-[#f3b5c3] bg-[#faebef] px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer font-semibold text-[#8b3f54] shadow-sm" data-artist="Tình Hà Say Hi" data-index="3" data-title="IDNAT">
+<span class="truncate pr-2 flex items-center gap-2">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-[#d65d79] animate-pulse"></span>
+                  04. IDNAT
+                </span>
+<span class="text-[11px] text-[#b64b67] shrink-0 font-medium flex items-center gap-1">
+<span>Đang phát 🌸</span>
+</span>
+</li>
+<!-- Item 5 -->
+<li class="playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors" data-artist="Hạ Cuối 12A" data-index="4" data-title="Giải Cứu Thế Giới — Demo">
+<span class="font-medium text-[#3b332e] truncate pr-2">05. Giải Cứu Thế Giới — Demo</span>
+<span class="text-[11px] text-[#998b7e] shrink-0 font-mono">local MP3</span>
+</li>
+<!-- Item 6 -->
+<li class="playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors" data-artist="Hạ Cuối 12A" data-index="5" data-title="Giải Cứu Thế Giới — Bản chính thức">
+<span class="font-medium text-[#3b332e] truncate pr-2">06. Giải Cứu Thế Giới — Bản chính thức</span>
+<span class="text-[11px] text-[#998b7e] shrink-0 font-mono">local MP3</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</main>
+<!-- END: MusicPlayerMainContainer -->
+<!-- BEGIN: BottomDiaryNote -->
+<footer class="w-full bg-[#fdfaf5]/95 backdrop-blur-sm border border-[#e5d0c3] rounded-xl p-5 md:p-6 mb-8 paper-texture text-center flex items-center justify-center relative overflow-hidden">
+<div class="shrink-0 flex items-center gap-3 relative z-10">
+<!-- CTA button styled with warm blush rose / sakura coral gradient -->
+<a class="photobooth-cta inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider text-white" href="photobooth.html">
+<span>📷 Đến OtterBooth Chụp Hình Thôi</span>
+<span>→</span>
+</a>
+</div>
+</footer>
+<!-- END: BottomDiaryNote -->
+</div>
+<!-- END: PageWrapper -->
+<!-- BEGIN: BirthdayMessagePopup -->
+<div id="birthday-message-popup" class="birthday-message-backdrop fixed inset-0 z-50 hidden items-center justify-center p-5" role="dialog" aria-modal="true" aria-label="Lời chúc sinh nhật">
+<div class="birthday-message-card relative w-full max-w-lg rounded-[2.5rem] px-7 py-8 text-center sm:px-10 sm:py-10">
+<div class="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-pink-200/50 blur-2xl" aria-hidden="true"></div>
+<div class="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-rose-200/45 blur-2xl" aria-hidden="true"></div>
+<span class="birthday-message-ring birthday-message-ring-left" aria-hidden="true"></span>
+<span class="birthday-message-ring birthday-message-ring-right" aria-hidden="true"></span>
+<button id="close-birthday-message" class="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/60 text-xl text-[#8b5b68] transition hover:bg-white hover:scale-105" type="button" aria-label="Đóng lời chúc">×</button>
+<div id="birthday-message-blossom" class="birthday-message-decoration flex items-center justify-center gap-2 px-2 pb-5 pt-2 select-none cursor-pointer" aria-label="Bung nở hoa" role="button" tabindex="0">
+<span class="text-4xl drop-shadow-[0_4px_12px_rgba(244,114,182,.5)]">🌸</span>
+<span class="text-4xl drop-shadow-[0_4px_14px_rgba(251,191,36,.6)]">✨</span>
+</div>
+<p class="birthday-message-copy relative z-10 px-2 sm:px-4 text-[#4d3938]">Chúc mừng sinh nhật anh nhìuuuuuu lun nhóooo ạ. Chúc anh một ngày sinh nhật vui vẻ và hạnh phúc nhất nhất quả đất lun. Dù cả hai đang ở rất xa nhau và cũng chưa có quen biết gì lunnnnn, nhưng em luôn muốn anh biết rằng trên thế giới này luôn có một đứa mê trai vẫn luôn theo dõi, ủng hộ và yêu quý anh rất nhiều lun nhóoooo.</p>
+<button id="birthday-message-confirm" class="birthday-message-action mt-8 rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider text-white" type="button">Cảm ơn lời chúc 🌷</button>
+</div>
+</div>
+<!-- END: BirthdayMessagePopup -->
+<!-- BEGIN: ThreeJsFullBackgroundSakuraSimulation -->
+<script data-purpose="threejs-sakura-falling-background">
+  (function initSakuraBackground() {
+    const bgCanvas = document.getElementById('sakura-bg-canvas');
+    if (!bgCanvas) return;
+
+    const bgScene = new THREE.Scene();
+    const bgCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    bgCamera.position.set(0, 0, 18);
+
+    const bgRenderer = new THREE.WebGLRenderer({
+      canvas: bgCanvas,
+      alpha: true,
+      antialias: true
     });
-  });
+    bgRenderer.setSize(window.innerWidth, window.innerHeight);
+    bgRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Petal Geometry Generator: Curved Organic 3D Sakura Petal
+    function createPetalGeometry() {
+      const shape = new THREE.Shape();
+      // Organic notched sakura petal outline
+      shape.moveTo(0, 0);
+      shape.bezierCurveTo(0.25, 0.4, 0.45, 0.85, 0.35, 1.35);
+      shape.bezierCurveTo(0.25, 1.55, 0.08, 1.6, 0.0, 1.48); // Notch center
+      shape.bezierCurveTo(-0.08, 1.6, -0.25, 1.55, -0.35, 1.35);
+      shape.bezierCurveTo(-0.45, 0.85, -0.25, 0.4, 0, 0);
+
+      const geom = new THREE.ShapeGeometry(shape, 8);
+      // Give delicate curvature
+      const pos = geom.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const y = pos.getY(i);
+        const x = pos.getX(i);
+        const z = -Math.sin(y * 1.5) * 0.15 + (x * x) * 0.15;
+        pos.setZ(i, z);
+      }
+      geom.computeVertexNormals();
+      return geom;
+    }
+
+    const petalGeo = createPetalGeometry();
+
+    // Blooming 3D Sakura flowers frame the player while staying behind the card.
+    function createSakuraFlower() {
+      const flower = new THREE.Group();
+      const shape = new THREE.Shape();
+      shape.moveTo(0, 0);
+      shape.bezierCurveTo(.25, .35, .45, .8, .12, 1.15);
+      shape.lineTo(.04, 1.08);
+      shape.lineTo(-.04, 1.08);
+      shape.bezierCurveTo(-.12, 1.15, -.45, .8, -.25, .35);
+      shape.bezierCurveTo(-.15, .15, -.05, .05, 0, 0);
+      const geometry = new THREE.ShapeGeometry(shape, 10);
+      const position = geometry.attributes.position;
+      for (let i = 0; i < position.count; i++) {
+        const y = position.getY(i);
+        const x = position.getX(i);
+        position.setZ(i, Math.sin(y * 2.5) * .14 - Math.abs(x) * .08);
+      }
+      geometry.computeVertexNormals();
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xffb7cc,
+        emissive: 0x45152a,
+        emissiveIntensity: .35,
+        roughness: .35,
+        side: THREE.DoubleSide
+      });
+      for (let i = 0; i < 5; i++) {
+        const petal = new THREE.Mesh(geometry, material);
+        petal.rotation.z = i * Math.PI * 2 / 5;
+        petal.rotation.x = .24;
+        flower.add(petal);
+      }
+      const center = new THREE.Mesh(
+        new THREE.SphereGeometry(.16, 10, 10),
+        new THREE.MeshStandardMaterial({ color: 0xf43f5e, roughness: .45 })
+      );
+      center.position.z = .08;
+      flower.add(center);
+      return flower;
+    }
+
+    const flowers = [];
+    const flowersGroup = new THREE.Group();
+    bgScene.add(flowersGroup);
+    for (let i = 0; i < 26; i++) {
+      const flower = createSakuraFlower();
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 6 + Math.random() * 10;
+      const baseScale = .42 + Math.random() * .55;
+      flower.position.set(Math.cos(angle) * distance * 1.3, Math.sin(angle) * distance, -2 + Math.random() * 8);
+      flower.scale.setScalar(baseScale);
+      flower.userData = {
+        baseScale,
+        baseY: flower.position.y,
+        phase: Math.random() * Math.PI * 2,
+        speed: .7 + Math.random() * .8,
+        float: .25 + Math.random() * .4,
+        rotX: (Math.random() - .5) * .012,
+        rotY: (Math.random() - .5) * .012,
+        rotZ: .004 + Math.random() * .008,
+        burst: 1
+      };
+      flowersGroup.add(flower);
+      flowers.push(flower);
+    }
+
+    const sparkleCount = 160;
+    const sparkleGeometry = new THREE.BufferGeometry();
+    const sparklePositions = new Float32Array(sparkleCount * 3);
+    for (let i = 0; i < sparkleCount; i++) {
+      sparklePositions[i * 3] = (Math.random() - .5) * 34;
+      sparklePositions[i * 3 + 1] = (Math.random() - .5) * 24;
+      sparklePositions[i * 3 + 2] = (Math.random() - .5) * 16 + 3;
+    }
+    sparkleGeometry.setAttribute('position', new THREE.BufferAttribute(sparklePositions, 3));
+    const sparkleCanvas = document.createElement('canvas');
+    sparkleCanvas.width = 64;
+    sparkleCanvas.height = 64;
+    const sparkleContext = sparkleCanvas.getContext('2d');
+    if (sparkleContext) {
+      // Use a clear five-petal blossom instead of the former round white glow.
+      sparkleContext.translate(32, 32);
+      for (let petalIndex = 0; petalIndex < 5; petalIndex++) {
+        sparkleContext.save();
+        sparkleContext.rotate((Math.PI * 2 * petalIndex) / 5);
+        sparkleContext.beginPath();
+        sparkleContext.moveTo(0, -3);
+        sparkleContext.bezierCurveTo(5, -12, 13, -10, 11, -2);
+        sparkleContext.bezierCurveTo(10, 4, 4, 7, 0, 5);
+        sparkleContext.closePath();
+        sparkleContext.fillStyle = 'rgba(255, 247, 250, .96)';
+        sparkleContext.shadowColor = 'rgba(255, 214, 231, .9)';
+        sparkleContext.shadowBlur = 5;
+        sparkleContext.fill();
+        sparkleContext.restore();
+      }
+      sparkleContext.beginPath();
+      sparkleContext.arc(0, 0, 4, 0, Math.PI * 2);
+      sparkleContext.fillStyle = '#f9c85b';
+      sparkleContext.shadowColor = 'rgba(255, 230, 150, .95)';
+      sparkleContext.shadowBlur = 6;
+      sparkleContext.fill();
+    }
+    const sparkleMaterial = new THREE.PointsMaterial({
+      size: 1.2,
+      map: new THREE.CanvasTexture(sparkleCanvas),
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      color: 0xffeef5
+    });
+    const sparkles = new THREE.Points(sparkleGeometry, sparkleMaterial);
+    bgScene.add(sparkles);
+    let bloomPulse = 1;
+    window.triggerSakuraBloom = () => {
+      bloomPulse = 1.35;
+      sparkleMaterial.opacity = 1;
+      flowers.forEach((flower) => {
+        flower.userData.burst = 1.35;
+        window.setTimeout(() => { flower.userData.burst = 1; }, 600);
+      });
+    };
+
+    // Petal Palette (Delicate Sakura Pink shades)
+    const petalColors = [
+      0xffb7c5, // Soft blush pink
+      0xffcad4, // Pale baby blossom
+      0xfda4ba, // Rose cherry
+      0xffe5ec, // Off-white blush
+      0xf99db0  // Vibrant cherry pink
+    ];
+
+    const petalCount = 95;
+    const petals = [];
+    const petalGroup = new THREE.Group();
+    bgScene.add(petalGroup);
+
+    // Mouse Wind Interaction
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetMouseWindX = 0;
+    let targetMouseWindY = 0;
+    let currentWindX = 0;
+    let currentWindY = 0;
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+      targetMouseWindX = mouseX * 0.025;
+      targetMouseWindY = mouseY * 0.015;
+    });
+
+    for (let i = 0; i < petalCount; i++) {
+      const color = petalColors[i % petalColors.length];
+      const petalMat = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.5,
+        metalness: 0.05,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.72 + Math.random() * 0.24,
+        shadowSide: THREE.DoubleSide
+      });
+
+      const mesh = new THREE.Mesh(petalGeo, petalMat);
+      const scale = 0.28 + Math.random() * 0.38;
+      mesh.scale.set(scale, scale, scale);
+
+      // Spawn across desktop space
+      mesh.position.set(
+        (Math.random() - 0.5) * 32,
+        (Math.random() - 0.5) * 24,
+        (Math.random() - 0.5) * 16
+      );
+
+      mesh.rotation.set(
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2
+      );
+
+      mesh.userData = {
+        speedY: 0.012 + Math.random() * 0.018,
+        speedX: 0.004 + Math.random() * 0.01,
+        rotSpeedX: (Math.random() - 0.5) * 0.035,
+        rotSpeedY: (Math.random() - 0.5) * 0.04,
+        rotSpeedZ: (Math.random() - 0.5) * 0.025,
+        swayFrequency: 1.2 + Math.random() * 2.0,
+        swayAmplitude: 0.008 + Math.random() * 0.012,
+        initialZ: mesh.position.z
+      };
+
+      petalGroup.add(mesh);
+      petals.push(mesh);
+    }
+
+    // Ambient Lighting for soft realistic translucency
+    const ambientLight = new THREE.AmbientLight(0xfff7f8, 1.2);
+    bgScene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xffe3ea, 0.9);
+    sunLight.position.set(10, 20, 15);
+    bgScene.add(sunLight);
+
+    const softFill = new THREE.PointLight(0xffd1dc, 0.8, 30);
+    softFill.position.set(-10, -5, 10);
+    bgScene.add(softFill);
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+      bgCamera.aspect = window.innerWidth / window.innerHeight;
+      bgCamera.updateProjectionMatrix();
+      bgRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Animation loop for falling petals
+    let clockTime = 0;
+    function animateSakuraBg() {
+      requestAnimationFrame(animateSakuraBg);
+      clockTime += 0.016;
+
+      // Smooth mouse wind easing
+      currentWindX += (targetMouseWindX - currentWindX) * 0.05;
+      currentWindY += (targetMouseWindY - currentWindY) * 0.05;
+
+      petals.forEach((p, idx) => {
+        const u = p.userData;
+
+        // Flutter rotation
+        p.rotation.x += u.rotSpeedX;
+        p.rotation.y += u.rotSpeedY;
+        p.rotation.z += u.rotSpeedZ;
+
+        // Falling down & organic sway with wind influence
+        p.position.y -= (u.speedY + currentWindY * 0.5);
+        p.position.x += Math.sin(clockTime * u.swayFrequency + idx) * u.swayAmplitude + u.speedX + currentWindX;
+        p.position.z += Math.cos(clockTime * 0.8 + idx) * 0.005;
+
+        // Wrap around bottom to top
+        if (p.position.y < -12) {
+          p.position.y = 13 + Math.random() * 4;
+          p.position.x = (Math.random() - 0.5) * 32;
+          p.position.z = (Math.random() - 0.5) * 16;
+        }
+
+        // Horizontal boundaries wrap
+        if (p.position.x > 18) p.position.x = -18;
+        if (p.position.x < -18) p.position.x = 18;
+      });
+
+      flowers.forEach((flower) => {
+        const data = flower.userData;
+        const pulse = 1 + .1 * Math.sin(clockTime * data.speed + data.phase);
+        const scale = data.baseScale * pulse * data.burst;
+        flower.scale.setScalar(scale);
+        flower.position.y = data.baseY + Math.sin(clockTime * 1.1 + data.phase) * data.float;
+        flower.rotation.x += data.rotX;
+        flower.rotation.y += data.rotY;
+        flower.rotation.z += data.rotZ;
+      });
+      bloomPulse += (1 - bloomPulse) * .05;
+      sparkleMaterial.size = (1.25 + Math.sin(clockTime * 3.5) * .45) * bloomPulse;
+      sparkleMaterial.opacity = .7 + (bloomPulse - 1) * 1.8;
+      sparkles.rotation.y = clockTime * .015;
+      sparkles.rotation.z = Math.sin(clockTime * .5) * .02;
+
+      bgRenderer.render(bgScene, bgCamera);
+    }
+    animateSakuraBg();
+  })();
 </script>
-</body>
-</html>
+<!-- END: ThreeJsFullBackgroundSakuraSimulation -->
+
+<script data-purpose="threejs-floating-music-notes">
+(() => {
+  const canvas = document.getElementById("music-notes-canvas");
+  if (!canvas || typeof THREE === "undefined") return;
+  const container = canvas.parentElement;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(42, 1, .1, 100);
+  camera.position.z = 28;
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  const resize = () => {
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    if (!width || !height) return;
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height, false);
+  };
+  resize();
+  window.addEventListener("resize", resize);
+
+  scene.add(new THREE.AmbientLight(0xfff3eb, 1.5));
+  const light = new THREE.PointLight(0xffb7c5, 2.2, 45);
+  light.position.set(-8, 8, 12);
+  scene.add(light);
+  const materials = [
+    new THREE.MeshStandardMaterial({ color: 0xdf848b, metalness: .55, roughness: .22, transparent: true, opacity: .82 }),
+    new THREE.MeshStandardMaterial({ color: 0xefb06f, metalness: .5, roughness: .28, transparent: true, opacity: .8 }),
+    new THREE.MeshStandardMaterial({ color: 0xdb6b7b, metalness: .5, roughness: .25, transparent: true, opacity: .78 })
+  ];
+  const extrude = { depth: .32, bevelEnabled: true, bevelSegments: 2, bevelSize: .08, bevelThickness: .08 };
+  const makeNote = (doubleNote) => {
+    const group = new THREE.Group();
+    const addHead = (x, y) => {
+      const shape = new THREE.Shape();
+      for (let i = 0; i <= 20; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        const px = x + Math.cos(angle) * .9;
+        const py = y + Math.sin(angle) * .62 + px * .22;
+        if (i === 0) shape.moveTo(px, py); else shape.lineTo(px, py);
+      }
+      group.add(new THREE.Mesh(new THREE.ExtrudeGeometry(shape, extrude)));
+    };
+    const addStem = (x, y, height) => {
+      const shape = new THREE.Shape();
+      shape.moveTo(x, y); shape.lineTo(x + .25, y + .05); shape.lineTo(x + .25, y + height);
+      shape.lineTo(x, y + height); shape.closePath();
+      group.add(new THREE.Mesh(new THREE.ExtrudeGeometry(shape, extrude)));
+    };
+    addHead(0, 0);
+    addStem(.65, .12, 3.6);
+    if (doubleNote) {
+      addHead(2.2, .25);
+      addStem(2.85, .37, 3.25);
+      const beam = new THREE.Shape();
+      beam.moveTo(.65, 3.15); beam.lineTo(3.1, 3.45); beam.lineTo(3.1, 3.9); beam.lineTo(.65, 3.6); beam.closePath();
+      group.add(new THREE.Mesh(new THREE.ExtrudeGeometry(beam, extrude)));
+    }
+    return group;
+  };
+  const notes = [];
+  for (let i = 0; i < 13; i++) {
+    const note = makeNote(i % 3 === 0);
+    note.traverse((child) => { if (child.isMesh) child.material = materials[i % materials.length]; });
+    const scale = .28 + Math.random() * .2;
+    note.scale.setScalar(scale);
+    note.position.set((Math.random() - .5) * 32, -15 + Math.random() * 28, (Math.random() - .5) * 5);
+    note.rotation.set((Math.random() - .5) * .4, (Math.random() - .5) * .5, (Math.random() - .5) * .3);
+    scene.add(note);
+    notes.push({
+      object: note,
+      speed: .018 + Math.random() * .018,
+      drift: .018 + Math.random() * .02,
+      orbitX: .8 + Math.random() * 1.7,
+      orbitY: .35 + Math.random() * .7,
+      phase: Math.random() * Math.PI * 2,
+      baseX: note.position.x,
+      baseY: note.position.y
+    });
+  }
+  let clock = 0;
+  const animate = () => {
+    requestAnimationFrame(animate);
+    const speedFactor = window.isMusicPlaying === false ? .35 : 1;
+    clock += .016 * speedFactor;
+    notes.forEach((note) => {
+      note.object.position.y += note.speed * speedFactor;
+      note.object.position.x += Math.sin(clock * 1.6 + note.phase) * note.drift * speedFactor;
+      note.object.position.x += Math.cos(clock * .7 + note.phase) * .004 * speedFactor;
+      note.object.position.y += Math.sin(clock * 1.25 + note.phase) * .006 * speedFactor;
+      note.object.rotation.x += .002 * speedFactor;
+      note.object.rotation.y += .003 * speedFactor;
+      note.object.rotation.z += Math.sin(clock * 1.4 + note.phase) * .004 * speedFactor;
+      if (note.object.position.y > 15) {
+        note.object.position.y = -15;
+        note.object.position.x = (Math.random() - .5) * 32;
+      }
+    });
+    renderer.render(scene, camera);
+  };
+  animate();
+})();
+</script>
+
+<audio id="radioAudio" preload="metadata">
+  <source id="audioSource" src="assets/so many cute things in the world.mp3" type="audio/mpeg">
+</audio>
+<!-- BEGIN: InteractivePlayerUIHandlers -->
+<script data-purpose="music-player-logic">
+(() => {
+  const audio = document.getElementById("radioAudio");
+  const sourceEl = document.getElementById("audioSource");
+  const masterPlay = document.getElementById("btn-master-play");
+  const iconPlay = document.getElementById("icon-play");
+  const iconPause = document.getElementById("icon-pause");
+  const titleEl = document.getElementById("current-song-title");
+  const artistEl = document.getElementById("current-artist");
+  const items = [...document.querySelectorAll(".playlist-item")];
+  const fill = document.getElementById("progress-bar-fill");
+  const progress = document.getElementById("progress-bar-bg");
+  const currentLabel = document.getElementById("current-time-label");
+  const totalLabel = document.getElementById("total-time-label");
+  let isPlaying = false;
+  const tracks = [
+    { title: "So Many Cute Things In The World", artist: "Acoustic Classroom", src: "assets/so many cute things in the world.mp3" },
+    { title: "Chờ Tới Khi Anh Về", artist: "Guitar Gỗ 2012", src: "assets/chờ tới khi anh về.mp3" },
+    { title: "Người Im Lặng Gặp Người Hay Nói", artist: "Bàn 4 Tổ 2", src: "assets/HIEUTHUHAI - Người Im Lặng Gặp Người Hay Nói (Studio Live Session).mp3" },
+    { title: "IDNAT", artist: "Tình Hà Say Hi", src: "assets/IM ĐỢI NGƯỜI ANH THƯƠNG - Wren Evans, CAPTAIN BOY, IVAN, Thể Thiên  TINH HÀ SAY HI [PERFORMANCE].mp3" },
+    { title: "Giải Cứu Thế Giới — Demo", artist: "Hạ Cuối 12A", src: "assets/Demo Giải Cứu Thế Giới - Sáng tác của tác giả TRID MINH.mp3" },
+    { title: "Giải Cứu Thế Giới — Bản chính thức", artist: "Hạ Cuối 12A", src: "assets/Giải cứu Thế Giới.mp3" }
+  ];
+  let selectedIndex = 0;
+  const formatTime = (value) => Number.isFinite(value) ? `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}` : "0:00";
+  const normalize = (value) => { try { return new URL(value, location.href).pathname; } catch { return value; } };
+  const setPlaying = (playing) => {
+    isPlaying = playing;
+    window.isMusicPlaying = playing;
+    document.getElementById("playerCard").classList.toggle("is-playing", playing);
+    iconPause.classList.toggle("hidden", !playing);
+    iconPlay.classList.toggle("hidden", playing);
+  };
+  const persist = () => {
+    localStorage.setItem("musicTime", String(audio.currentTime || 0));
+    localStorage.setItem("musicPlaying", String(!audio.paused));
+    localStorage.setItem("currentTrackSrc", sourceEl.src || tracks[selectedIndex].src);
+  };
+  const playAudio = () => audio.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+  const selectTrack = (index, reset = true) => {
+    const track = tracks[index]; if (!track) return;
+    selectedIndex = index; sourceEl.src = track.src; audio.load();
+    if (reset) localStorage.setItem("musicTime", "0");
+    titleEl.innerHTML = `<span>${track.title}</span> <span class="text-base text-[#f28e9f]">🌸</span>`;
+    artistEl.textContent = track.artist;
+    items.forEach((item, itemIndex) => {
+      item.className = itemIndex === index
+        ? "playlist-item border border-[#f3b5c3] bg-[#faebef] px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer font-semibold text-[#8b3f54] shadow-sm"
+        : "playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors";
+      const status = item.children[1];
+      if (status) status.textContent = itemIndex === index ? "Đang phát 🌸" : "local MP3";
+    });
+    if (localStorage.getItem("musicPlaying") === "true" || !audio.paused) playAudio();
+  };
+  const selectRandomTrack = () => {
+    if (tracks.length < 2) return;
+    const candidates = tracks.map((_, index) => index).filter((index) => index !== selectedIndex);
+    const nextIndex = candidates[Math.floor(Math.random() * candidates.length)];
+    selectTrack(nextIndex);
+  };
+  masterPlay.addEventListener("click", () => audio.paused ? playAudio() : audio.pause());
+  items.forEach((item) => item.addEventListener("click", () => selectTrack(Number(item.dataset.index))));
+  document.getElementById("btn-shuffle").addEventListener("click", selectRandomTrack);
+  document.getElementById("btn-next").addEventListener("click", () => selectTrack((selectedIndex + 1) % tracks.length));
+  document.getElementById("btn-prev").addEventListener("click", () => selectTrack((selectedIndex + tracks.length - 1) % tracks.length));
+  progress.addEventListener("click", (event) => { if (!audio.duration) return; const rect = progress.getBoundingClientRect(); audio.currentTime = ((event.clientX - rect.left) / rect.width) * audio.duration; });
+  audio.addEventListener("loadedmetadata", () => { totalLabel.textContent = formatTime(audio.duration); });
+  audio.addEventListener("timeupdate", () => { currentLabel.textContent = formatTime(audio.currentTime); fill.style.width = audio.duration ? `${audio.currentTime / audio.duration * 100}%` : "0%"; persist(); });
+  audio.addEventListener("play", () => setPlaying(true));
+  audio.addEventListener("pause", () => { setPlaying(false); persist(); });
+  audio.addEventListener("ended", selectRandomTrack);
+  const storedSrc = localStorage.getItem("currentTrackSrc");
+  const storedIndex = tracks.findIndex((track) => normalize(track.src) === normalize(storedSrc || ""));
+  selectTrack(storedIndex >= 0 ? storedIndex : 0, false);
+  const savedTime = Number.parseFloat(localStorage.getItem("musicTime") || "57");
+  audio.addEventListener("loadedmetadata", () => { if (Number.isFinite(savedTime)) audio.currentTime = Math.min(savedTime, audio.duration || savedTime); }, { once: true });
+  if (localStorage.getItem("musicPlaying") === "true") playAudio(); else setPlaying(false);
+  ["pointerdown", "keydown", "touchstart"].forEach((eventName) => window.addEventListener(eventName, () => { if (localStorage.getItem("musicPlaying") === "true" && audio.paused) playAudio(); }, { passive: true }));
+  window.addEventListener("pagehide", persist);
+  window.addEventListener("beforeunload", persist);
+})();
+</script>
+<!-- END: InteractivePlayerUIHandlers -->
+<script data-purpose="birthday-message-popup">
+(() => {
+  const popup = document.getElementById("birthday-message-popup");
+  const closeButton = document.getElementById("close-birthday-message");
+  const confirmButton = document.getElementById("birthday-message-confirm");
+  const blossomButton = document.getElementById("birthday-message-blossom");
+  if (!popup || !closeButton || !confirmButton || !blossomButton) return;
+
+  const celebrate = () => {
+    if (typeof window.triggerSakuraBloom === "function") window.triggerSakuraBloom();
+    if (typeof window.confetti === "function") {
+      window.confetti({
+        particleCount: 60,
+        spread: 65,
+        origin: { y: .65 },
+        colors: ["#f472b6", "#fb7185", "#fecdd3", "#fed7aa", "#ffffff"]
+      });
+      window.setTimeout(() => {
+        window.confetti({
+          particleCount: 35,
+          angle: 60,
+          spread: 55,
+          origin: { x: .1, y: .65 },
+          colors: ["#fb7185", "#fda4af", "#fef08a"]
+        });
+        window.confetti({
+          particleCount: 35,
+          angle: 120,
+          spread: 55,
+          origin: { x: .9, y: .65 },
+          colors: ["#fb7185", "#fda4af", "#fef08a"]
+        });
+      }, 180);
+    }
+  };
+
+  const closePopup = () => {
+    popup.classList.add("hidden");
+    popup.classList.remove("flex");
+  };
+  const openPopup = () => {
+    popup.classList.remove("hidden");
+    popup.classList.add("flex");
+    closeButton.focus();
+  };
+
+  closeButton.addEventListener("click", closePopup);
+  confirmButton.addEventListener("click", () => {
+    celebrate();
+    closePopup();
+  });
+  blossomButton.addEventListener("click", celebrate);
+  blossomButton.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      celebrate();
+    }
+  });
+  popup.addEventListener("click", (event) => {
+    if (event.target === popup) closePopup();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !popup.classList.contains("hidden")) closePopup();
+  });
+  window.setTimeout(openPopup, 2000);
+})();
+</script>
+</body></html>
