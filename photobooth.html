@@ -11,7 +11,7 @@
         <!-- gifshot: used ONLY for the manual, user-initiated "save the gif" download button (Fixed via jsDelivr CDN) -->
         <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/build/gifshot.min.js"></script>
         <!-- Frame templates (khung có sẵn, ảnh tự khớp) -->
-        <script src="js/frames.js"></script>
+        <script src="js/frames.js?v=tpl26"></script>
 
         <style>
             :root {
@@ -1938,6 +1938,18 @@
     .bts-loading .bar{ width:70%; height:8px; border-radius:99px; background:rgba(255,255,255,.22); overflow:hidden }
     .bts-loading .bar i{ display:block; height:100%; width:0; background:linear-gradient(90deg,#ff9ec0,#ffd6a5); transition:width .3s }
 
+    /* ===== Add Cute Text: luôn hiện dưới các cột nút ===== */
+    .booth-rail{ flex-direction:column !important; align-items:stretch !important; gap:10px !important }
+    .rail-cols{ display:flex; flex-direction:row; gap:12px; flex:1 1 auto; min-height:0 }
+    .cute-text-panel{ flex:0 0 auto; margin:0 !important; padding:9px 10px 10px; border-radius:16px;
+        border:2px dashed #ffb3c9; background:rgba(255,250,252,.85) }
+    .cute-title{ position:static !important; margin:0 0 7px !important; padding:0 !important; backdrop-filter:none !important }
+    .cute-text-panel .ransom-row{ gap:6px }
+    .cute-text-panel .ransom-row input{ padding:7px 10px; font-size:.86rem }
+    .cute-text-panel .ransom-row button{ padding:6px 10px; font-size:.82rem }
+    .cute-text-panel .ransom-preview{ margin-top:8px; min-height:86px; max-height:120px }
+    .cute-text-panel .ransom-preview canvas{ max-height:110px }
+    body.night-mode .cute-text-panel{ background:rgba(10,45,72,.6); border-color:#4ebfe4 }
     @media (max-width:1400px){
         .rail-group{ width:118px; flex:0 0 118px }
         .right-column{ width:300px !important; flex:0 0 300px !important }
@@ -1945,6 +1957,7 @@
     @media (max-width:1120px){
         .booth-frame{ flex-wrap:wrap !important }
         .booth-rail{ width:100% !important; height:auto; flex:1 1 100% !important }
+        .rail-cols{ flex-wrap:wrap; width:100% }
         .rail-group{ flex:1 1 150px; width:auto }
         .booth-stage .screen-container{ height:auto !important; width:100% !important }
         .right-column{ width:100% !important; flex:1 1 100% !important }
@@ -2045,11 +2058,11 @@
 
                 <!-- ============ CỘT TRÁI: BẢNG ĐIỀU KHIỂN GỌN ============ -->
                 <aside class="booth-rail custom-controls" id="boothRail">
+                  <div class="rail-cols">
                     <div class="rail-group">
                         <p class="rail-title">🎀 Trang Trí</p>
                         <button class="rail-btn booth-control frame-picker-control" onclick="document.getElementById('frameModal').style.display='flex'">🖼️<span>Khung</span></button>
                         <button class="rail-btn booth-control" onclick="document.getElementById('stickerModal').style.display='flex'">✨<span>Sticker</span></button>
-                        <button class="rail-btn booth-control" id="ransomBtn" onclick="openRansomModal()">✂️<span>Chữ Cắt Báo</span></button>
                         <button class="rail-btn booth-control" id="autoDecorateToggle" hidden>🎉<span>Auto: OFF</span></button>
                         <button class="rail-btn booth-control" id="addUnderseaPreset">🌊<span>Biển Cả</span></button>
                         <button class="rail-btn booth-control" data-spam="cat">🐱<span>Cat Gang</span></button>
@@ -2082,6 +2095,16 @@
                         <button class="rail-btn booth-control" id="toggleChallengeBtn">🎲<span>Thử Thách: OFF</span></button>
                         <button class="rail-btn booth-control" onclick="triggerBloomingFlowers()">🌺<span>Hoa Nở Lại</span></button>
                         <button class="rail-btn booth-control" id="musicToggleBtn">🎵<span>Tắt Nhạc</span></button>
+                    </div>
+                  </div>
+                    <div class="ransom-box cute-text-panel" id="cuteTextPanel">
+                        <p class="rail-title cute-title">🔤 Add Cute Text</p>
+                                            <div class="ransom-row">
+                            <input type="text" id="ransomInput" maxlength="40" value="happy birthday" placeholder="gõ chữ vào đây…" autocomplete="off">
+                            <button type="button" class="secondary-btn" id="ransomShuffle" title="Đổi kiểu khác">🎲</button>
+                            <button type="button" class="primary-btn" id="ransomAdd">➕ Thêm</button>
+                        </div>
+                        <div class="ransom-preview"><canvas id="ransomPreview"></canvas><span id="ransomHint">Chữ sẽ hiện ở đây ✨</span></div>
                     </div>
                 </aside>
 
@@ -2225,25 +2248,6 @@
                 <div class="sticker-grid" id="stickerListContainer"></div>
                 <div class="booth-modal-foot">
                     <button class="primary-btn" onclick="closeStickerModal()">Đóng</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ============ STICKER CHỮ CẮT BÁO ============ -->
-        <div id="ransomModal" class="booth-modal" style="display:none">
-            <div class="booth-modal-card">
-                <h3>✂️ Chữ Cắt Báo</h3>
-                <p class="booth-modal-sub">Gõ chữ là tự thành sticker — mỗi lần gõ hoặc bấm 🎲 ra một kiểu khác.</p>
-                <div class="ransom-box">
-                                        <div class="ransom-row">
-                        <input type="text" id="ransomInput" maxlength="40" placeholder="vd: besties forever" autocomplete="off">
-                        <button type="button" class="secondary-btn" id="ransomShuffle" title="Đổi kiểu khác">🎲</button>
-                        <button type="button" class="primary-btn" id="ransomAdd">➕ Thêm</button>
-                    </div>
-                    <div class="ransom-preview"><canvas id="ransomPreview"></canvas><span id="ransomHint">Chữ sẽ hiện ở đây ✨</span></div>
-                </div>
-                <div class="booth-modal-foot">
-                    <button class="primary-btn" onclick="closeRansomModal()">Đóng</button>
                 </div>
             </div>
         </div>
@@ -2567,14 +2571,77 @@
                 if (window.updateShotCounter) window.updateShotCounter();
                 // Nạp ảnh overlay của frame (nếu có), vẽ lại khi tải xong
                 if (t.overlay && !t._img) {
-                    t._img = new Image();
-                    t._img.onload = () => { if (activeTemplate === t) drawCanvas(); };
-                    t._img.onerror = () => console.error('Không tải được frame:', t.overlay);
-                    t._img.src = t.overlay;
+                    if (t.key) {
+                        // khung còn ô caro/trắng: tải ảnh gốc rồi khoét trong suốt LÚC CHẠY (không tạo file mới)
+                        t._img = { complete: false, naturalWidth: 0 };
+                        const raw = new Image();
+                        raw.onload = () => {
+                            try { t._img = keyFrameHoles(raw, t); t._underlay = false; }
+                            catch (e) {
+                                // không đọc được điểm ảnh (vd mở bằng file://) -> vẽ khung NỀN, ảnh nằm trên ô
+                                console.warn('Không khoét được lỗ, chuyển sang vẽ ảnh đè lên khung:', e);
+                                t._img = raw; t._underlay = true;
+                            }
+                            if (activeTemplate === t) drawCanvas();
+                        };
+                        raw.onerror = () => console.error('Không tải được frame:', t.overlay);
+                        raw.src = encodeURI(t.overlay);
+                    } else {
+                        t._img = new Image();
+                        t._img.onload = () => { if (activeTemplate === t) drawCanvas(); };
+                        t._img.onerror = () => console.error('Không tải được frame:', t.overlay);
+                        t._img.src = t.overlay;
+                    }
                 }
                 drawCanvas();
                 const m = document.getElementById('frameModal');
                 if (m) m.style.display = 'none';
+            }
+            // Khoét lỗ cho khung chưa trong suốt: trong mỗi ô, loang từ giữa ô qua các điểm
+            // caro / trắng (xám nhạt, không màu) rồi cho trong suốt. Trang trí có màu đè lên ô vẫn giữ.
+            function keyFrameHoles(img, t) {
+                const W = t.w, H = t.h;
+                const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+                const c = cv.getContext('2d', { willReadFrequently: true });
+                c.imageSmoothingQuality = 'high';
+                c.drawImage(img, 0, 0, W, H);
+                const id = c.getImageData(0, 0, W, H), d = id.data;
+                const isKey = i => { const r = d[i], g = d[i + 1], b = d[i + 2];
+                    const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx - mn <= 22 && mn >= 135; };
+                const isLight = i => { const r = d[i], g = d[i + 1], b = d[i + 2];
+                    const mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx - mn <= 45 && mn >= 95; };
+                const hole = new Uint8Array(W * H);
+                t.slots.forEach(s => {
+                    const x0 = Math.max(0, s.x - 4), y0 = Math.max(0, s.y - 4);
+                    const x1 = Math.min(W, s.x + s.w + 4), y1 = Math.min(H, s.y + s.h + 4);
+                    const seen = new Uint8Array(W * H), stack = [];
+                    // hạt giống: các điểm caro ở 60% giữa ô
+                    for (let y = Math.round(s.y + s.h * .2); y < s.y + s.h * .8; y += 3)
+                        for (let x = Math.round(s.x + s.w * .2); x < s.x + s.w * .8; x += 3) {
+                            const p = y * W + x; if (isKey(p * 4)) { stack.push(p); seen[p] = 1; }
+                        }
+                    while (stack.length) {
+                        const p = stack.pop(); hole[p] = 1;
+                        const x = p % W, y = (p / W) | 0;
+                        if (x > x0)     { const q = p - 1; if (!seen[q]) { seen[q] = 1; if (isKey(q * 4)) stack.push(q); } }
+                        if (x < x1 - 1) { const q = p + 1; if (!seen[q]) { seen[q] = 1; if (isKey(q * 4)) stack.push(q); } }
+                        if (y > y0)     { const q = p - W; if (!seen[q]) { seen[q] = 1; if (isKey(q * 4)) stack.push(q); } }
+                        if (y < y1 - 1) { const q = p + W; if (!seen[q]) { seen[q] = 1; if (isKey(q * 4)) stack.push(q); } }
+                    }
+                    // nới 2px vào viền mờ (răng cưa) để không còn rìa xám
+                    for (let pass = 0; pass < 2; pass++) {
+                        const add = [];
+                        for (let y = y0 + 1; y < y1 - 1; y++) for (let x = x0 + 1; x < x1 - 1; x++) {
+                            const p = y * W + x; if (hole[p]) continue;
+                            if ((hole[p - 1] || hole[p + 1] || hole[p - W] || hole[p + W]) && isLight(p * 4)) add.push(p);
+                        }
+                        add.forEach(p => hole[p] = 1);
+                    }
+                });
+                for (let p = 0; p < W * H; p++) if (hole[p]) d[p * 4 + 3] = 0;
+                c.putImageData(id, 0, 0);
+                cv.complete = true; cv.naturalWidth = W; cv.naturalHeight = H;
+                return cv;
             }
             const DEFAULT_TEMPLATE = 'kraftStrip';
             let preferredTemplate = DEFAULT_TEMPLATE;   // null = người dùng chọn "không khung"
@@ -2992,6 +3059,8 @@
                 const ovReady = ov && ov.complete && ov.naturalWidth;
                 // nền trắng dưới lỗ (để in/tải không bị trong suốt), chỉ khi overlay đã sẵn sàng
                 if (ovReady) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); }
+                const underlay = ovReady && activeTemplate._underlay;
+                if (underlay) ctx.drawImage(ov, 0, 0, W, H);
                 if (activeTemplate.drawBack) { try { activeTemplate.drawBack(ctx, W, H); } catch (e) { console.error('drawBack', e); } }
 
                 // thứ tự lớp: slot có z lớn nằm trên (mặc định = thứ tự ô)
@@ -3054,7 +3123,7 @@
                 });
 
                 // overlay ảnh frame đè lên trên (viền/chữ/trang trí nằm trên ảnh, lỗ trong suốt để lộ ảnh)
-                if (ovReady) ctx.drawImage(ov, 0, 0, W, H);
+                if (ovReady && !underlay) ctx.drawImage(ov, 0, 0, W, H);
                 try { if (activeTemplate.drawFront) activeTemplate.drawFront(ctx, W, H); } catch (e) { console.error('drawFront', e); }
                 stickers.forEach(s => ctx.drawImage(s.img, s.offsetX, s.offsetY, s.drawWidth, s.drawHeight));
                 drawSelectionHandles();
@@ -3363,6 +3432,9 @@
             });
 
             window.addEventListener('keydown', (e) => {
+                // đang gõ chữ (Add Cute Text, tìm sticker…) thì không xoá / phóng to món đang chọn
+                const tg = e.target && e.target.tagName;
+                if (tg === 'INPUT' || tg === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
                 if ((e.key === 'Delete' || e.key === 'Backspace') && selectedItem) {
                     if (selectedItem.type === 'sticker') {
                         stickers = stickers.filter(s => s !== selectedItem);
@@ -3387,12 +3459,11 @@
             });
 
             function openRansomModal() {
-                document.getElementById('ransomModal').style.display = 'flex';
                 loadRansomFonts();
                 setTimeout(() => { const i = document.getElementById('ransomInput'); if (i) { i.focus(); i.select(); } }, 60);
             }
             function closeRansomModal() {
-                document.getElementById('ransomModal').style.display = 'none';
+                const m = document.getElementById('ransomModal'); if (m) m.style.display = 'none';
             }
             window.openRansomModal = openRansomModal; window.closeRansomModal = closeRansomModal;
             function closeStickerModal() {
@@ -4313,6 +4384,10 @@
                 ransomInput.addEventListener('focus', loadRansomFonts, { once: true });
             }
             document.getElementById('ransomShuffle')?.addEventListener('click', renderRansomPreview);
+            if (ransomInput) {
+                ransomInput.addEventListener('focus', () => ransomInput.select());
+                renderRansomPreview();   // hiện sẵn chữ mẫu ngay khi mở trang
+            }
             document.getElementById('ransomAdd')?.addEventListener('click', addRansomSticker);
             function addRansomSticker() {
                 const txt = (ransomInput && ransomInput.value || '').trim();
@@ -4407,7 +4482,7 @@
                         const card = document.createElement('button');
                         card.className = 'frame-card';
                         card.dataset.tpl = t.id;
-                        card.innerHTML = '<img src="' + t.overlay + '" alt="" loading="lazy">'
+                        card.innerHTML = '<img src="' + encodeURI(t.overlay) + '" alt="" loading="lazy">'
                             + '<b>' + t.name + '</b><i>' + t.slots.length + ' ảnh</i>';
                         card.onclick = () => { setTemplate(t.id); renderTemplateCards(); };
                         if (activeTemplate && activeTemplate.id === t.id) card.classList.add('active');

@@ -71,22 +71,20 @@ Mỗi template:
 
 Ảnh nguồn gốc (có hình mẫu) được lưu ở `assets/_unused/frame-sources/`.
 
-## Khung có sẵn (26 khung)
-Khung là ảnh đã khoét trong suốt đúng chỗ ô ảnh. Ảnh chụp tự crop vừa khít vào ô rồi khung vẽ
-ĐÈ LÊN TRÊN, nên sao / hoa / bướm / kẹp giấy vẫn nằm trên ảnh. Bảng chọn khung hiện preview thật
-và tự sinh từ `js/frames.js` — thêm khung mới chỉ cần thêm 1 dòng ở đó.
+## Khung có sẵn
+Danh sách khung = 16 file trong `assets/frames/templates/` + 10 khung Rái Cá trong `assets/frames/`, khai báo ở `js/frames.js`,
+chia nhóm theo số ảnh trong bảng chọn khung:
 
-**Khung Rollbooth** (`assets/frames/templates/*.webp`, cắt từ file .jpg gốc cùng thư mục):
-Giấy Mộc 3 · Mây Doodle 3 · Film Strip 4 · Sinh Nhật Film 4 · Polaroid Chồng 5 · Collage 4 ·
-Bướm Polaroid 3 · Denim Sao 4 · Vải Đỏ 4 · Sao Đỏ 3 · Gingham Đỏ 2 · Nhung Đỏ 2 ·
-Gingham Xanh 1 · Sinh Nhật 1 Ảnh 1 · Hóa Đơn 1 · Wanted 1
+| Nhóm | Khung |
+|---|---|
+| 🎞️ 2–3 ảnh | Giấy Mộc (mặc định) · Mây Doodle · Sao Đỏ · Bướm Polaroid · Nhung Đỏ · Gingham Đỏ |
+| 🖼️ 4+ ảnh | Sinh Nhật Film · Film Strip · Collage Sinh Nhật · Denim Sao · Vải Đỏ · Polaroid Chồng |
+| 📸 1 ảnh | Gingham Xanh · Sinh Nhật 1 Ảnh · Wanted · Hóa Đơn |
+| 🦦 Khung Rái Cá (`assets/frames/*.png`) | Cute Hột Me · Giấy Kết Hôn · Khung Trơn · Be Yourself · Y2K · One Piece · Rái Cá Ngầu · Rái Cá Memories · Cảnh Sát Rái Cá · Rái Cá Cute |
 
-**Khung Rái Cá** (`assets/frames/*.png`, dùng luôn file gốc, chỉ dò toạ độ ô):
-Cute Hột Me 4 · Giấy Kết Hôn 4 · Khung Trơn 3 · Be Yourself 4 · Y2K 4 · One Piece 4 ·
-Rái Cá Ngầu 4 · Rái Cá Memories 5 · Cảnh Sát Rái Cá 4 · Rái Cá Cute 4
-
-Khung mặc định khi mới vào trang và sau khi Reset All là **Giấy Mộc** (`kraftStrip`),
-trừ khi bạn bấm "Bỏ Khung".
+Sáu file còn ô caro (`đoole`, `butterfly`, `red strip`, `B-day`, `4 collage`, `Receipt`) có `key: true`:
+lúc chạy trang tự làm trong suốt phần caro trong mỗi ô (không tạo file mới). Nếu mở bằng `file://`,
+ảnh sẽ được vẽ đè lên ô thay vì nằm dưới khung.
 
 ## Tự khoét khung bằng Frame Maker
 Mở `tools/frame-maker.html` (double-click là chạy, không cần server):
@@ -105,7 +103,7 @@ Mở `tools/frame-maker.html` (double-click là chạy, không cần server):
 - **Tự chụp liên tiếp**: khung từ 2 ô trở lên, sau tấm đầu sẽ đếm 5 giây rồi tự chụp tấm kế
   cho tới khi đủ ô. Đồng hồ hiện ngay trong khung camera.
 - Hàng nút dưới camera: 🌙/☀️ Night-Sunny · 📁 Upload · ⏺️ Chụp · 🔄 Xoá ảnh · ❓ Hướng dẫn.
-- **Reset All** không đụng Night/Sunny, và đưa khung về Giấy Mộc.
+- **Reset All** không đụng Night/Sunny, và đưa khung về khung đang chọn (mặc định Giấy Mộc).
 - **Xoá Sticker**: xoá sticker nhưng giữ nguyên khung và ảnh.
 - **Màu Ảnh**: 12 bộ lọc chỉnh trên từng pixel theo thang Lightroom (Tyndall, Mùa Hè Anime, Dream Core, Ấm, Lạnh, Đen Trắng, Vintage…), áp cho mọi ảnh trong khung và Scrapbook.
   và áp luôn khi xuất Scrapbook.
@@ -119,7 +117,7 @@ Mở `tools/frame-maker.html` (double-click là chạy, không cần server):
   (`bts-tam-N.webm`) qua `netlify/functions/send-photo`.
 - **Sticker**: 1 danh sách chung + ô tìm kiếm, 6 cái mỗi hàng, không có GIF, và không lặp lại
   các sticker đã dùng ở phần khác của web (rái cá, Tuấn Anh).
-- **✂️ Chữ Cắt Báo** (nút riêng ở cột Trang Trí): gõ chữ → tự tạo sticker kiểu chữ cắt báo; mỗi lần gõ / bấm 🎲 ra kiểu khác. Bấm ➕ Thêm hoặc Enter để dán vào ảnh.
+- **🔤 Add Cute Text** (luôn hiện ngay dưới các cột nút bên trái, có sẵn chữ mẫu): gõ chữ → tự tạo sticker kiểu chữ cắt báo; mỗi lần gõ / bấm 🎲 ra kiểu khác. Bấm ➕ Thêm hoặc Enter để dán vào ảnh.
 - Chọn từng sticker chỉ thêm 1 cái; chỉ các nút spam mới rải nhiều.
 - **Nút spam** (mỗi ô lưới 1 con, không trùng nhau): Biển Cả · Cat Gang (pack3 16–20, 25) ·
   Flower (19, 21, 22, pack3_14) · Sunny · Otter Party.
