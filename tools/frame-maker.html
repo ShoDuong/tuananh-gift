@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frame Maker — tự khoét khung cho OtterBooth</title>
+<style>
+  :root { --pink:#ff7aa8; --bg:#fff5f8; --ink:#4a2a38; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); display:flex; height:100vh; }
+  aside { width: 360px; padding: 16px; overflow-y:auto; background:#fff; border-right:2px solid #ffd3e2; flex-shrink:0; }
+  main { flex:1; overflow:auto; padding:16px; background: repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/20px 20px; }
+  h1 { font-size: 1.15rem; margin: 0 0 4px; }
+  h2 { font-size: .95rem; margin: 18px 0 6px; }
+  p, li { font-size: .85rem; line-height: 1.45; }
+  ol, ul { padding-left: 18px; margin: 6px 0; }
+  button { display:inline-block; border:2px solid var(--pink); background:#fff; color:var(--ink); padding:7px 10px; border-radius:10px; cursor:pointer; font-weight:600; font-size:.85rem; margin:2px 2px 2px 0; }
+  button.on { background: var(--pink); color:#fff; }
+  button.primary { background: var(--pink); color:#fff; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  input[type=text], select, textarea { width:100%; padding:6px; border:1.5px solid #ffc0d6; border-radius:8px; font:inherit; font-size:.85rem; }
+  textarea { height: 170px; font-family: ui-monospace, Consolas, monospace; font-size:.72rem; }
+  .ctl { display:grid; grid-template-columns: 92px 1fr 38px; gap:6px; align-items:center; font-size:.82rem; margin:3px 0; }
+  .ctl output { text-align:right; color:#8a6a78; }
+  .panel { border:1.5px dashed #ffc0d6; border-radius:10px; padding:8px 10px; margin:8px 0; background:#fffafc; }
+  .panel b { font-size:.82rem; }
+  .hint { background:#fff3c4; border-radius:8px; padding:6px 8px; font-size:.8rem; margin:6px 0; }
+  canvas { max-width:none; display:block; cursor: crosshair; background: transparent; }
+  #stage { position:relative; display:inline-block; line-height:0; }
+  .slotitem { display:flex; justify-content:space-between; align-items:center; padding:4px 8px; border:1.5px solid #ffd3e2; border-radius:8px; margin:3px 0; font-size:.82rem; cursor:pointer; }
+  .slotitem.sel { background:#ffe3ee; border-color: var(--pink); }
+  small { color:#8a6a78; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>✂️ Frame Maker</h1>
+  <p>Khoét "lỗ" cho ảnh trong khung, xuất PNG/WebP + đoạn code dán vào <code>js/frames.js</code>.</p>
+
+  <h2>1. Mở ảnh khung</h2>
+  <input type="file" id="file" accept="image/*">
+  <small id="info">Chưa có ảnh.</small>
+
+  <h2>2. Chọn cách vẽ ô ảnh</h2>
+  <div>
+    <button id="mAuto" class="on">🪄 Đũa phép</button>
+    <button id="mRect">▭ Chữ nhật</button>
+    <button id="mEllipse">⬭ Elip</button>
+    <button id="mPoly">⬠ Đa giác</button>
+    <button id="mKeep">🛡️ Giữ sticker</button>
+  </div>
+
+  <div class="panel" id="pAuto">
+    <b>🪄 Đũa phép — dễ nhất</b>
+    <div class="hint">① <b>Bấm vào hình mẫu</b> (vd chỗ nền kem). Vùng cùng màu sẽ sáng lên.<br>
+    ② <b>Bấm hoặc tô kéo chuột</b> qua phần còn thiếu (tóc, da, tay…) cho đến khi phủ kín ô. Lố ra ngoài? <b>Shift+bấm/tô</b> để trừ bớt.<br>
+    ③ Tool tự nối kẽ hở và dò viền, kể cả ô bo tròn / hình đám mây / lộn xộn.</div>
+    <div class="ctl"><span>Độ nhạy</span><input type="range" id="aTol" min="2" max="80" value="18"><output id="aTolV"></output></div>
+    <div class="ctl"><span>Nở / co viền</span><input type="range" id="aGrow" min="-20" max="40" value="3"><output id="aGrowV"></output></div>
+    <div class="ctl"><span>Độ mượt</span><input type="range" id="aSmooth" min="1" max="15" value="3"><output id="aSmoothV"></output></div>
+    <div class="ctl"><span>Kiểu kết quả</span>
+      <select id="aShape" style="grid-column: span 2">
+        <option value="contour">Bám sát viền (hình bất kỳ)</option>
+        <option value="hull">Bao lồi (mịn, bo tròn nhẹ)</option>
+        <option value="box">Hộp chữ nhật bo góc</option>
+      </select></div>
+    <div>
+      <button id="wNew">➕ Ô mới</button>
+      <button id="wUndo">↶ Bỏ lần bấm cuối</button>
+    </div>
+    <small><b>Độ nhạy</b> cao = vùng lan rộng hơn (nếu tràn ra ngoài hãy giảm). <b>Nở/co</b> chỉnh viền lố hoặc hụt vài px. Các thanh trượt áp dụng cho ô đang chọn.</small>
+  </div>
+
+  <div class="panel" id="pRect" style="display:none">
+    <b>▭ Chữ nhật</b> — kéo chuột trên vùng cần khoét.
+    <div class="ctl"><span>Bo góc</span><input type="range" id="rRad" min="0" max="200" value="0"><output id="rRadV"></output></div>
+    <small>Kéo thanh trượt để bo góc cho ô đang chọn.</small>
+  </div>
+  <div class="panel" id="pEllipse" style="display:none"><b>⬭ Elip</b> — kéo chuột trên vùng cần khoét.</div>
+  <div class="panel" id="pPoly" style="display:none">
+    <b>⬠ Đa giác</b> — bấm từng góc, <b>bấm đúp</b> hoặc <b>Enter</b> để đóng hình. <b>Esc</b> để huỷ. Dùng cho ô nghiêng hoặc hình đặc biệt.
+  </div>
+
+  <div class="panel" id="pKeep" style="display:none">
+    <b>🛡️ Giữ lại sticker / trang trí nằm đè lên ô ảnh</b>
+    <div class="hint">Khi khoét, những chi tiết của khung <b>nằm trong ô ảnh</b> (hoa, nơ, băng keo, viền…) cũng bị khoét mất. Tô vào chúng ở đây để <b>giữ lại, hiện đè lên trên ảnh chụp</b>. Vùng giữ có màu xanh lá. Chỉ có tác dụng trong phạm vi các ô ảnh đã vẽ — hãy vẽ ô ảnh trước.</div>
+    <div class="ctl"><span>Công cụ</span>
+      <select id="kTool" style="grid-column: span 2">
+        <option value="wand">🪄 Đũa phép (bấm/tô lên sticker)</option>
+        <option value="brush">🖌️ Cọ (tô tay)</option>
+        <option value="erase">🧽 Tẩy (xoá vùng giữ)</option>
+      </select></div>
+    <div class="ctl"><span>Độ nhạy</span><input type="range" id="kTol" min="3" max="90" value="30"><output id="kTolV"></output></div>
+    <div class="ctl"><span>Nở viền</span><input type="range" id="kGrow" min="0" max="8" value="1"><output id="kGrowV"></output></div>
+    <div class="ctl"><span>Cỡ cọ / tẩy</span><input type="range" id="kBrush" min="3" max="90" value="20"><output id="kBrushV"></output></div>
+    <div>
+      <button id="kUndo">↶ Hoàn tác</button>
+      <button id="kClear">🗑️ Xoá hết vùng giữ</button>
+    </div>
+    <small>Đũa phép: <b>Shift+bấm/tô</b> để bỏ bớt vùng. Nếu tô lan sang cả hình mẫu người: giảm <b>Độ nhạy</b>, hoặc dùng Cọ.</small>
+  </div>
+  <label style="display:block;margin:8px 0"><input type="checkbox" id="preview"> 👁️ Xem trước kết quả (đã khoét + giữ sticker)</label>
+
+  <ul>
+    <li>Kéo các chấm tròn của ô đang chọn để chỉnh tay. <b>Delete</b> xoá ô.</li>
+    <li>Bấm vào trong 1 ô (không kéo) để chọn nó.</li>
+    <li>Thứ tự vẽ = thứ tự ảnh được chụp (ô 1, 2, 3…).</li>
+  </ul>
+  <div class="ctl"><span>Zoom</span><input type="range" id="zoom" min="20" max="200" value="100"><output id="zoomV"></output></div>
+
+  <h2>Các ô ảnh</h2>
+  <div class="panel" id="pLayer">
+    <b>🗂️ Thứ tự lớp</b> <small>(ô nào nằm trên ô nào khi chồng nhau)</small>
+    <div>
+      <button id="zFront" title="Ctrl + ]">⤒ Lên trên cùng</button>
+      <button id="zFwd" title="]">↑ Lên 1 lớp</button>
+      <button id="zBack" title="[">↓ Xuống 1 lớp</button>
+      <button id="zBottom" title="Ctrl + [">⤓ Xuống dưới cùng</button>
+    </div>
+    <small>Phím tắt: <b>]</b> lên · <b>[</b> xuống · <b>Ctrl+]</b> trên cùng · <b>Ctrl+[</b> dưới cùng. Số thứ tự (Ô 1, 2, 3…) vẫn là thứ tự chụp, không đổi.</small>
+  </div>
+  <div id="list"></div>
+  <button id="undo">↶ Xoá ô cuối</button>
+  <button id="clear">🗑️ Xoá hết</button>
+
+  <h2>3. Xuất</h2>
+  <label>ID khung <small>(không dấu, không cách)</small></label>
+  <input type="text" id="fid" value="myFrame">
+  <label>Tên hiển thị</label>
+  <input type="text" id="fname" value="✨ Khung Của Tôi">
+  <label><input type="checkbox" id="dup"> Dải strip dọc (khi In xếp 2 dải trên tờ 4×6)</label>
+  <div>
+    <button class="primary" id="exportPng" disabled>⬇ Tải PNG đã khoét</button>
+    <button id="exportWebp" disabled>⬇ WebP (nhẹ)</button>
+  </div>
+  <small>Bỏ file vào <code>assets/frames/templates/</code> (code bên dưới tự đổi đuôi theo bản bạn vừa tải).</small>
+  <h2>4. Dán đoạn này vào <code>js/frames.js</code></h2>
+  <textarea id="code" readonly placeholder="Vẽ ít nhất 1 ô để có code…"></textarea>
+  <button id="copy">📋 Copy code</button>
+  <small>Dán vào trong mảng <code>window.FRAME_TEMPLATES = [ … ]</code>, nhớ có dấu phẩy giữa các khung. Rồi thêm 1 nút trong <code>photobooth.html</code>:<br>
+  <code id="btnHint"></code></small>
+</aside>
+
+<main>
+  <div id="stage"><canvas id="cv" width="600" height="400"></canvas></div>
+</main>
+
+<script>
+(() => {
+  'use strict';
+  const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+
+  // slot.z = thứ tự lớp (lớn = nằm trên). slot = { pts:[[x,y]..], kind:'rect'|'ellipse'|'poly'|'auto', box:{x,y,w,h}, radius, auto:{tol,grow,smooth,shape} }
+  let img = null, srcData = null;
+  let slots = [], sel = -1, mode = 'auto';
+  let newWand = false, stroke = null;
+  let keepCv = null, keepTint = null, keepHist = [], keepDirty = true, kBrushing = null;
+  let draft = null, drag = null, zoom = 1, lastExt = 'png', downAt = null;
+  const HIT = 9;
+  const R = n => Math.round(n);
+
+  /* ---------- hình học cơ bản ---------- */
+  const bboxOf = pts => {
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const x = Math.min(...xs), y = Math.min(...ys);
+    return { x: R(x), y: R(y), w: R(Math.max(...xs) - x), h: R(Math.max(...ys) - y) };
+  };
+  const normBox = (a, b) => ({ x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x), h: Math.abs(b.y - a.y) });
+  function roundedRectPts(b, r) {
+    r = Math.max(0, Math.min(r, b.w / 2, b.h / 2));
+    if (r < 1) return [[b.x, b.y], [b.x + b.w, b.y], [b.x + b.w, b.y + b.h], [b.x, b.y + b.h]];
+    const seg = Math.max(4, Math.min(12, Math.round(r / 6))), pts = [];
+    const corners = [[b.x + b.w - r, b.y + r, -90], [b.x + b.w - r, b.y + b.h - r, 0], [b.x + r, b.y + b.h - r, 90], [b.x + r, b.y + r, 180]];
+    corners.forEach(([cx, cy, a0]) => { for (let i = 0; i <= seg; i++) { const a = (a0 + 90 * i / seg) * Math.PI / 180; pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } });
+    return pts;
+  }
+  function ellipsePts(b, n = 48) {
+    const cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    return Array.from({ length: n }, (_, i) => { const t = i / n * Math.PI * 2; return [cx + Math.cos(t) * b.w / 2, cy + Math.sin(t) * b.h / 2]; });
+  }
+  function inside(pts, p) {
+    let c = false;
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const [xi, yi] = pts[i], [xj, yj] = pts[j];
+      if ((yi > p.y) !== (yj > p.y) && p.x < (xj - xi) * (p.y - yi) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+  }
+  function convexHull(points) {
+    const p = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+    if (p.length < 3) return p;
+    const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    const lo = []; for (const q of p) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+    const up = []; for (let i = p.length - 1; i >= 0; i--) { const q = p[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+    lo.pop(); up.pop(); return lo.concat(up);
+  }
+  // Douglas-Peucker cho vòng kín: tách đôi tại điểm xa nhất rồi đơn giản hoá từng nửa
+  function rdp(pts, eps) {
+    if (pts.length < 4) return pts;
+    const dist = (p, a, b) => {
+      const dx = b[0] - a[0], dy = b[1] - a[1], l = dx * dx + dy * dy;
+      if (!l) return Math.hypot(p[0] - a[0], p[1] - a[1]);
+      const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l));
+      return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+    };
+    const line = arr => {
+      const rec = (a, b) => {
+        let m = 0, idx = -1;
+        for (let i = a + 1; i < b; i++) { const v = dist(arr[i], arr[a], arr[b]); if (v > m) { m = v; idx = i; } }
+        return m > eps ? rec(a, idx).slice(0, -1).concat(rec(idx, b)) : [arr[a], arr[b]];
+      };
+      return rec(0, arr.length - 1);
+    };
+    let far = 0, fm = 0;
+    for (let i = 1; i < pts.length; i++) { const v = Math.hypot(pts[i][0] - pts[0][0], pts[i][1] - pts[0][1]); if (v > fm) { fm = v; far = i; } }
+    const A = line(pts.slice(0, far + 1)), B = line(pts.slice(far).concat([pts[0]]));
+    return A.slice(0, -1).concat(B.slice(0, -1));
+  }
+
+  /* ---------- thứ tự lớp (z) ---------- */
+  const stackOrder = () => slots.slice().sort((a, b) => a.z - b.z);          // từ dưới lên trên
+  function addSlot(s) { s.z = slots.reduce((m, o) => Math.max(m, o.z), -1) + 1; slots.push(s); sel = slots.length - 1; }
+  function moveZ(how) {
+    const s = slots[sel]; if (!s) return;
+    const st = stackOrder(), i = st.indexOf(s);
+    const j = how === 'front' ? st.length - 1 : how === 'bottom' ? 0 : how === 'fwd' ? Math.min(st.length - 1, i + 1) : Math.max(0, i - 1);
+    st.splice(i, 1); st.splice(j, 0, s); st.forEach((o, k) => o.z = k);
+    refreshList(); refreshOutputs(); draw();
+  }
+  $('zFront').onclick = () => moveZ('front'); $('zFwd').onclick = () => moveZ('fwd');
+  $('zBack').onclick = () => moveZ('back'); $('zBottom').onclick = () => moveZ('bottom');
+
+  /* ---------- dò viền tự động ---------- */
+  function ensureSrc() {
+    if (srcData) return srcData;
+    const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    srcData = x.getImageData(0, 0, c.width, c.height); return srcData;
+  }
+  // cửa sổ vuông bằng bảng tổng (summed-area table) -> dilate/erode nhanh
+  function windowCount(mask, w, h, r) {
+    const W = w + 1, sat = new Int32Array(W * (h + 1));
+    for (let y = 0; y < h; y++) { let row = 0; for (let x = 0; x < w; x++) { row += mask[y * w + x]; sat[(y + 1) * W + x + 1] = sat[y * W + x + 1] + row; } }
+    const out = new Int32Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(w - 1, x + r), y0 = Math.max(0, y - r), y1 = Math.min(h - 1, y + r);
+      out[y * w + x] = sat[(y1 + 1) * W + x1 + 1] - sat[y0 * W + x1 + 1] - sat[(y1 + 1) * W + x0] + sat[y0 * W + x0];
+    }
+    return out;
+  }
+  const dilate = (m, w, h, r) => { if (r <= 0) return m; const c = windowCount(m, w, h, r), o = new Uint8Array(w * h); for (let i = 0; i < o.length; i++) o[i] = c[i] > 0 ? 1 : 0; return o; };
+  const erode = (m, w, h, r) => {
+    if (r <= 0) return m; const c = windowCount(m, w, h, r), o = new Uint8Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const ww = Math.min(w - 1, x + r) - Math.max(0, x - r) + 1, hh = Math.min(h - 1, y + r) - Math.max(0, y - r) + 1;
+      o[y * w + x] = c[y * w + x] === ww * hh ? 1 : 0;
+    } return o;
+  };
+  function fillHoles(m, w, h) {
+    const seen = new Uint8Array(w * h), st = [];
+    const push = i => { if (!seen[i] && !m[i]) { seen[i] = 1; st.push(i); } };
+    for (let x = 0; x < w; x++) { push(x); push((h - 1) * w + x); } for (let y = 0; y < h; y++) { push(y * w); push(y * w + w - 1); }
+    while (st.length) { const i = st.pop(), x = i % w, y = (i / w) | 0; if (x > 0) push(i - 1); if (x < w - 1) push(i + 1); if (y > 0) push(i - w); if (y < h - 1) push(i + w); }
+    const o = new Uint8Array(w * h); for (let i = 0; i < o.length; i++) o[i] = seen[i] ? 0 : 1; return o;
+  }
+  function largestComponent(m, w, h) {
+    const lab = new Int32Array(w * h); let best = 0, bestId = 0, id = 0;
+    for (let s = 0; s < m.length; s++) {
+      if (!m[s] || lab[s]) continue; id++; let n = 0; const st = [s]; lab[s] = id;
+      while (st.length) { const i = st.pop(); n++; const x = i % w, y = (i / w) | 0;
+        for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1]) if (j >= 0 && m[j] && !lab[j]) { lab[j] = id; st.push(j); } }
+      if (n > best) { best = n; bestId = id; }
+    }
+    const o = new Uint8Array(w * h); for (let i = 0; i < o.length; i++) o[i] = lab[i] === bestId ? 1 : 0; return o;
+  }
+  // Moore-neighbour: lấy đường biên ngoài của vùng
+  function traceOutline(m, w, h) {
+    let sx = -1, sy = -1;
+    outer: for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (m[y * w + x]) { sx = x; sy = y; break outer; }
+    if (sx < 0) return [];
+    const dirs = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+    const at = (x, y) => x >= 0 && y >= 0 && x < w && y < h && m[y * w + x];
+    const out = [[sx, sy]]; let x = sx, y = sy, d = 6, guard = w * h * 4, first = true;
+    while (guard--) {
+      let found = false;
+      for (let k = 0; k < 8; k++) {
+        const nd = (d + 6 + k) % 8, nx = x + dirs[nd][0], ny = y + dirs[nd][1];
+        if (at(nx, ny)) { x = nx; y = ny; d = nd; found = true; break; }
+      }
+      if (!found) break;
+      if (x === sx && y === sy && !first) break;
+      first = false; out.push([x, y]);
+    }
+    return out;
+  }
+  // Loang theo màu từ điểm bấm (so với màu điểm gốc, sai khác tối đa 1 kênh <= tol)
+  function floodSeed(sd, tol, out, allowed) {
+    const d = ensureSrc(), W = d.width, H = d.height, D = d.data;
+    const o = (sd.y * W + sd.x) * 4, r0 = D[o], g0 = D[o + 1], b0 = D[o + 2];
+    const seen = new Uint8Array(W * H), st = [sd.y * W + sd.x]; seen[st[0]] = 1;
+    while (st.length) {
+      const i = st.pop(), k = i * 4;
+      if ((allowed && !allowed[i]) || D[k + 3] < 10 || Math.max(Math.abs(D[k] - r0), Math.abs(D[k + 1] - g0), Math.abs(D[k + 2] - b0)) > tol) continue;
+      out[i] = 1;
+      const x = i % W, y = (i / W) | 0;
+      if (x > 0 && !seen[i - 1]) { seen[i - 1] = 1; st.push(i - 1); }
+      if (x < W - 1 && !seen[i + 1]) { seen[i + 1] = 1; st.push(i + 1); }
+      if (y > 0 && !seen[i - W]) { seen[i - W] = 1; st.push(i - W); }
+      if (y < H - 1 && !seen[i + W]) { seen[i + W] = 1; st.push(i + W); }
+    }
+  }
+  function wandDetect(seeds, o) {
+    const d = ensureSrc(), W = d.width, H = d.height;
+    const add = new Uint8Array(W * H), sub = new Uint8Array(W * H);
+    seeds.forEach(sd => { const t = sd.sub ? sub : add; if (!t[sd.y * W + sd.x]) floodSeed(sd, o.tol, t); });
+    let x0 = W, y0 = H, x1 = -1, y1 = -1;
+    for (let i = 0; i < add.length; i++) if (add[i] && !sub[i]) { const x = i % W, y = (i / W) | 0; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < 0) return null;
+    const closeR = 3, pad = Math.max(o.grow, 0) + closeR + 3;
+    x0 = Math.max(0, x0 - pad); y0 = Math.max(0, y0 - pad); x1 = Math.min(W - 1, x1 + pad); y1 = Math.min(H - 1, y1 + pad);
+    const bw = x1 - x0 + 1, bh = y1 - y0 + 1;
+    let m = new Uint8Array(bw * bh);
+    for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) { const i = (y + y0) * W + x + x0; m[y * bw + x] = add[i] && !sub[i] ? 1 : 0; }
+    m = erode(dilate(m, bw, bh, closeR), bw, bh, closeR);   // nối các kẽ nhỏ
+    m = fillHoles(m, bw, bh);                                // lấp hết "lỗ" bên trong (tóc, mắt, tay…)
+    m = largestComponent(m, bw, bh);
+    if (o.grow > 0) m = dilate(m, bw, bh, o.grow); else if (o.grow < 0) m = erode(m, bw, bh, -o.grow);
+    let pts = traceOutline(m, bw, bh);
+    if (pts.length < 3) return null;
+    pts = rdp(pts, o.smooth).map(p => [p[0] + x0, p[1] + y0]);
+    if (o.shape === 'hull') pts = convexHull(pts);
+    else if (o.shape === 'box') return { box: bboxOf(pts) };
+    return { pts };
+  }
+
+  /* ---------- vùng GIỮ LẠI (sticker nằm đè lên ô ảnh) ---------- */
+  function slotsMask(pad) {
+    const W = img.naturalWidth, H = img.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'); x.fillStyle = x.strokeStyle = '#000'; x.lineWidth = pad * 2; x.lineJoin = 'round';
+    slots.forEach(s => { pathOf(x, s.pts); x.fill(); if (pad) x.stroke(); });
+    const d = x.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H);
+    for (let i = 0; i < m.length; i++) m[i] = d[i * 4 + 3] > 0 ? 1 : 0;
+    return m;
+  }
+  function maskToCanvas(m, W, H) {
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'), id = x.createImageData(W, H);
+    for (let i = 0; i < m.length; i++) if (m[i]) { id.data[i * 4] = id.data[i * 4 + 1] = id.data[i * 4 + 2] = 255; id.data[i * 4 + 3] = 255; }
+    x.putImageData(id, 0, 0); return c;
+  }
+  function keepSnapshot() { keepHist.push(keepCv.getContext('2d').getImageData(0, 0, keepCv.width, keepCv.height)); if (keepHist.length > 15) keepHist.shift(); }
+  function keepWand(seeds) {
+    if (!slots.length) { alert('Hãy vẽ ô ảnh trước, rồi mới tô phần sticker nằm trong ô.'); return; }
+    const W = img.naturalWidth, H = img.naturalHeight, allowed = slotsMask(3), tol = +$('kTol').value, g = +$('kGrow').value;
+    const add = new Uint8Array(W * H), sub = new Uint8Array(W * H);
+    seeds.forEach(sd => { const t = sd.sub ? sub : add, i = sd.y * W + sd.x; if (allowed[i] && !t[i]) floodSeed(sd, tol, t, allowed); });
+    const fin = m => { let o = g > 0 ? dilate(m, W, H, g) : m; o = o === m ? m.slice() : o; for (let i = 0; i < o.length; i++) o[i] = o[i] && allowed[i] ? 1 : 0; return o; };
+    const hasA = add.some(v => v), hasS = sub.some(v => v);
+    if (!hasA && !hasS) { alert('Điểm bấm nằm ngoài các ô ảnh. Hãy bấm vào phần sticker NẰM TRONG ô ảnh (vùng đang tô màu hồng/xanh dương).'); return; }
+    keepSnapshot();
+    const x = keepCv.getContext('2d');
+    if (hasA) x.drawImage(maskToCanvas(fin(add), W, H), 0, 0);
+    if (hasS) { x.globalCompositeOperation = 'destination-out'; x.drawImage(maskToCanvas(fin(sub), W, H), 0, 0); x.globalCompositeOperation = 'source-over'; }
+    keepDirty = true; refreshOutputs();
+  }
+  function brushTo(a, b) {
+    const x = keepCv.getContext('2d'), size = +$('kBrush').value;
+    x.globalCompositeOperation = kBrushing.erase ? 'destination-out' : 'source-over';
+    x.strokeStyle = x.fillStyle = '#fff'; x.lineWidth = size; x.lineCap = x.lineJoin = 'round';
+    x.beginPath(); x.moveTo(a.x, a.y); x.lineTo(b.x + .01, b.y); x.stroke(); x.globalCompositeOperation = 'source-over';
+    keepDirty = true;
+  }
+  $('kUndo').onclick = () => { const h = keepHist.pop(); if (!h || !keepCv) return; keepCv.getContext('2d').putImageData(h, 0, 0); keepDirty = true; refreshOutputs(); draw(); };
+  $('kClear').onclick = () => { if (!keepCv) return; keepSnapshot(); keepCv.getContext('2d').clearRect(0, 0, keepCv.width, keepCv.height); keepDirty = true; refreshOutputs(); draw(); };
+  $('preview').onchange = draw;
+
+  /* ---------- sinh/tính lại hình của 1 ô ---------- */
+  function rebuild(s) {
+    if (s.kind === 'rect') s.pts = roundedRectPts(s.box, s.radius || 0);
+    else if (s.kind === 'ellipse') s.pts = ellipsePts(s.box);
+    else if (s.kind === 'wand') {
+      const r = wandDetect(s.seeds, s.auto);
+      if (!r) return false;
+      if (r.box) { s.box = r.box; s.pts = roundedRectPts(r.box, s.radius || Math.min(r.box.w, r.box.h) * 0.08); }
+      else s.pts = r.pts;
+    }
+    return true;
+  }
+  const autoOpts = () => ({ tol: +$('aTol').value, grow: +$('aGrow').value, smooth: +$('aSmooth').value, shape: $('aShape').value });
+
+  /* ---------- giao diện: chế độ & thanh trượt ---------- */
+  const MODES = ['Auto', 'Rect', 'Ellipse', 'Poly', 'Keep'];
+  function setMode(m) {
+    mode = m; draft = null;
+    MODES.forEach(n => { $('m' + n).classList.toggle('on', n.toLowerCase() === m); $('p' + n).style.display = n.toLowerCase() === m ? '' : 'none'; });
+    draw();
+  }
+  MODES.forEach(n => $('m' + n).onclick = () => setMode(n.toLowerCase()));
+  const outs = { kTol: 'kTolV', kGrow: 'kGrowV', kBrush: 'kBrushV', aTol: 'aTolV', aGrow: 'aGrowV', aSmooth: 'aSmoothV', rRad: 'rRadV', zoom: 'zoomV' };
+  Object.entries(outs).forEach(([i, o]) => { const f = () => $(o).textContent = $(i).value + (i === 'zoom' ? '%' : 'px'); $(i).addEventListener('input', f); f(); });
+  function onAutoCtl() {
+    const s = slots[sel];
+    if (s && s.kind === 'wand') { s.auto = autoOpts(); if (rebuild(s)) { refreshList(); refreshOutputs(); draw(); } }
+  }
+  ['aTol', 'aGrow', 'aSmooth', 'aShape'].forEach(i => $(i).addEventListener('input', onAutoCtl));
+  $('rRad').addEventListener('input', () => {
+    const s = slots[sel];
+    if (s && (s.kind === 'rect' || (s.kind === 'wand' && s.auto.shape === 'box'))) { s.radius = +$('rRad').value; rebuild(s); refreshOutputs(); draw(); }
+  });
+  $('zoom').addEventListener('input', e => { zoom = e.target.value / 100; applyZoom(); draw(); });
+  function applyZoom() { if (!img) return; cv.style.width = (cv.width * zoom) + 'px'; cv.style.height = (cv.height * zoom) + 'px'; }
+
+  /* ---------- chuột ---------- */
+  function pos(e) { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * cv.width / r.width, y: (e.clientY - r.top) * cv.height / r.height }; }
+  function findPoint(p) {
+    const s = slots[sel]; if (!s) return null;
+    const tol = HIT * cv.width / cv.getBoundingClientRect().width;
+    for (let j = 0; j < s.pts.length; j++) if (Math.hypot(s.pts[j][0] - p.x, s.pts[j][1] - p.y) <= tol) return { slot: sel, idx: j };
+    return null;
+  }
+  cv.addEventListener('mousedown', e => {
+    if (!img) return;
+    const p = pos(e), hit = !draft && mode !== 'keep' && findPoint(p);
+    if (hit) { drag = hit; return; }
+    downAt = p;
+    if (mode === 'keep') {
+      if ($('kTool').value === 'wand') stroke = { keep: true, seeds: [{ x: Math.floor(p.x), y: Math.floor(p.y), sub: e.shiftKey }], sub: e.shiftKey };
+      else { keepSnapshot(); kBrushing = { erase: $('kTool').value === 'erase', last: p }; brushTo(p, p); }
+      draw(); return;
+    }
+    if (mode === 'auto') { stroke = { seeds: [{ x: Math.floor(p.x), y: Math.floor(p.y), sub: e.shiftKey }], sub: e.shiftKey }; draw(); return; }
+    if (mode === 'poly') { if (!draft) draft = { type: 'poly', pts: [] }; draft.pts.push([p.x, p.y]); draft.cur = p; draw(); return; }
+    draft = { type: mode, a: p, b: p }; draw();
+  });
+  // Một lần bấm/tô = nhiều điểm gốc; tô kéo qua tóc/mặt/tay cho nhanh
+  function commitWand(seeds) {
+    let s = slots[sel], fresh = false;
+    if (!s || s.kind !== 'wand' || newWand) { s = { kind: 'wand', seeds: [], auto: autoOpts(), radius: 0, pts: [] }; fresh = true; }
+    const before = s.seeds.length;
+    s.seeds.push(...seeds);
+    if (!rebuild(s)) {
+      s.seeds.length = before;
+      if (!fresh) rebuild(s); else alert('Không dò được vùng ở điểm này. Thử bấm chỗ khác hoặc tăng "Độ nhạy".');
+      return;
+    }
+    const b = bboxOf(s.pts);
+    if (b.w * b.h > 0.6 * cv.width * cv.height) { // dò tràn ra cả trang => nền hình mẫu gần giống nền khung
+      s.seeds.length = before; if (!fresh) rebuild(s);
+      alert('Vùng dò bị tràn ra cả khung (nền hình mẫu gần giống nền trang).\nHãy giảm "Độ nhạy", hoặc nếu ô là hình chữ nhật thì dùng chế độ ▭ Chữ nhật.');
+      return;
+    }
+    if (fresh) { addSlot(s); newWand = false; }
+    refreshList(); refreshOutputs();
+  }
+  $('wNew').onclick = () => { newWand = true; sel = -1; refreshList(); draw(); $('wNew').textContent = '➕ Bấm vào ảnh mẫu tiếp theo…'; setTimeout(() => $('wNew').textContent = '➕ Ô mới', 2500); };
+  $('wUndo').onclick = () => {
+    const s = slots[sel]; if (!s || s.kind !== 'wand') return;
+    s.seeds.pop(); if (!s.seeds.length || !rebuild(s)) { slots.splice(sel, 1); sel = -1; }
+    refreshList(); refreshOutputs(); draw();
+  };
+  cv.addEventListener('mousemove', e => {
+    if (!img) return; const p = pos(e);
+    if (kBrushing) { brushTo(kBrushing.last, p); kBrushing.last = p; draw(); return; }
+    if (stroke) {
+      const l = stroke.seeds[stroke.seeds.length - 1], k = cv.width / cv.getBoundingClientRect().width;
+      if (p.x >= 0 && p.y >= 0 && p.x < cv.width && p.y < cv.height && Math.hypot(p.x - l.x, p.y - l.y) > 8 * k) stroke.seeds.push({ x: Math.floor(p.x), y: Math.floor(p.y), sub: stroke.sub });
+      draw(); return;
+    }
+    if (drag) { const s = slots[drag.slot]; s.pts[drag.idx] = [p.x, p.y]; s.kind = 'poly'; refreshOutputs(); draw(); return; }
+    if (draft) { if (draft.type === 'poly') draft.cur = p; else draft.b = p; draw(); }
+  });
+  window.addEventListener('mouseup', e => {
+    if (kBrushing) { kBrushing = null; refreshOutputs(); draw(); return; }
+    if (stroke) { const sd = stroke.seeds, kp = stroke.keep; stroke = null; if (kp) keepWand(sd); else commitWand(sd); draw(); return; }
+    if (drag) { drag = null; refreshList(); return; }
+    if (!draft || draft.type === 'poly') return;
+    const p = pos(e), box = normBox(draft.a, p), moved = box.w > 8 && box.h > 8;
+    if (!moved) { // bấm đơn: chọn ô chứa điểm đó
+      const top = stackOrder().filter(s => inside(s.pts, p)).pop(), i = top ? slots.indexOf(top) : undefined;
+      if (i !== undefined) { sel = i; syncCtl(); refreshList(); }
+    } else {
+      let s;
+      if (draft.type === 'rect') s = { kind: 'rect', box, radius: +$('rRad').value };
+      else s = { kind: 'ellipse', box };
+      if (rebuild(s)) { addSlot(s); refreshList(); refreshOutputs(); }
+    }
+    draft = null; draw();
+  });
+  function syncCtl() { const s = slots[sel]; if (!s) return; if (s.kind === 'wand') { $('aTol').value = s.auto.tol; $('aGrow').value = s.auto.grow; $('aSmooth').value = s.auto.smooth; $('aShape').value = s.auto.shape; Object.values(outs).forEach(() => {}); ['aTol', 'aGrow', 'aSmooth'].forEach(i => $(outs[i]).textContent = $(i).value + 'px'); } if (s.kind === 'rect') { $('rRad').value = s.radius || 0; $('rRadV').textContent = (s.radius || 0) + 'px'; } }
+  cv.addEventListener('dblclick', () => { if (draft && draft.type === 'poly') finishPoly(true); });
+  function finishPoly(dbl) {
+    if (!draft || draft.type !== 'poly') return;
+    let pts = draft.pts; if (dbl && pts.length > 1) pts = pts.slice(0, -1);
+    if (pts.length >= 3) addSlot({ kind: 'poly', pts });
+    draft = null; refreshList(); refreshOutputs(); draw();
+  }
+  window.addEventListener('keydown', e => {
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) && e.target.type !== 'range') return;
+    if (e.key === ']') moveZ(e.ctrlKey || e.metaKey ? 'front' : 'fwd');
+    else if (e.key === '[') moveZ(e.ctrlKey || e.metaKey ? 'bottom' : 'back');
+    else if (e.key === 'Enter') finishPoly(false);
+    else if (e.key === 'Escape') { draft = null; draw(); }
+    else if ((e.key === 'Delete' || e.key === 'Backspace') && sel >= 0 && !draft) { slots.splice(sel, 1); sel = -1; refreshList(); refreshOutputs(); draw(); }
+  });
+  $('undo').onclick = () => { slots.pop(); sel = -1; refreshList(); refreshOutputs(); draw(); };
+  $('clear').onclick = () => { if (slots.length && !confirm('Xoá hết các ô?')) return; slots = []; sel = -1; refreshList(); refreshOutputs(); draw(); };
+
+  $('file').onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const name = f.name.replace(/\.[^.]+$/, ''), url = URL.createObjectURL(f), im = new Image();
+    im.onload = () => {
+      img = im; srcData = null; keepHist = []; keepDirty = true;
+      keepCv = document.createElement('canvas'); keepCv.width = im.naturalWidth; keepCv.height = im.naturalHeight;
+      keepTint = document.createElement('canvas'); keepTint.width = im.naturalWidth; keepTint.height = im.naturalHeight;
+      cv.width = im.naturalWidth; cv.height = im.naturalHeight; slots = []; sel = -1; draft = null;
+      const fit = Math.min(1, (innerHeight - 40) / im.naturalHeight);
+      zoom = Math.max(0.2, Math.round(fit * 100) / 100); $('zoom').value = zoom * 100; $('zoomV').textContent = Math.round(zoom * 100) + '%';
+      applyZoom();
+      $('info').textContent = `${im.naturalWidth} × ${im.naturalHeight}px — ${f.name}`;
+      $('fid').value = name.replace(/[^a-zA-Z0-9]+(.)?/g, (m, c) => c ? c.toUpperCase() : '').replace(/^./, c => c.toLowerCase()) || 'myFrame';
+      refreshList(); refreshOutputs(); draw();
+    };
+    im.src = url;
+  };
+
+  /* ---------- vẽ ---------- */
+  function pathOf(c, pts) { c.beginPath(); pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); }
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    if (!img) return;
+    if ($('preview').checked && slots.length) {   // xem trước: lỗ hiện màu hồng để thấy chỗ ảnh sẽ nằm
+      ctx.fillStyle = '#ffb3d1'; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(makeCutCanvas(), 0, 0); return;
+    }
+    ctx.drawImage(img, 0, 0);
+    const k = cv.width / (cv.getBoundingClientRect().width || cv.width);
+    stackOrder().forEach(s => {
+      const i = slots.indexOf(s);
+      pathOf(ctx, s.pts);
+      ctx.fillStyle = i === sel ? 'rgba(255,0,140,.38)' : 'rgba(0,180,255,.32)'; ctx.fill();
+      ctx.lineWidth = 2 * k; ctx.strokeStyle = i === sel ? '#ff0090' : '#0099dd'; ctx.stroke();
+      const b = bboxOf(s.pts);
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3 * k; ctx.font = `bold ${22 * k}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.strokeText(i + 1, b.x + b.w / 2, b.y + b.h / 2); ctx.fillText(i + 1, b.x + b.w / 2, b.y + b.h / 2);
+      if (i === sel) s.pts.forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], 5 * k, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 2 * k; ctx.strokeStyle = '#ff0090'; ctx.stroke(); });
+    });
+    if (keepCv) {
+      if (keepDirty) {
+        const t = keepTint.getContext('2d'); t.clearRect(0, 0, keepTint.width, keepTint.height); t.drawImage(keepCv, 0, 0);
+        t.globalCompositeOperation = 'source-in'; t.fillStyle = 'rgba(0,200,110,.6)'; t.fillRect(0, 0, keepTint.width, keepTint.height); t.globalCompositeOperation = 'source-over';
+        keepDirty = false;
+      }
+      ctx.drawImage(keepTint, 0, 0);
+    }
+    if (stroke && stroke.seeds.length) {
+      ctx.lineWidth = 4 * k; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = stroke.sub ? '#d00' : (stroke.keep ? '#00a050' : '#00b36b');
+      ctx.beginPath(); stroke.seeds.forEach((q, i) => i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y)); if (stroke.seeds.length === 1) ctx.lineTo(stroke.seeds[0].x + .1, stroke.seeds[0].y); ctx.stroke(); ctx.lineCap = 'butt';
+    }
+    if (draft) {
+      ctx.lineWidth = 2 * k; ctx.strokeStyle = '#ff0090'; ctx.setLineDash([8 * k, 6 * k]);
+      if (draft.type === 'poly') {
+        const pts = draft.pts.concat(draft.cur ? [[draft.cur.x, draft.cur.y]] : []);
+        ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
+        draft.pts.forEach(p => { ctx.beginPath(); ctx.arc(p[0], p[1], 5 * k, 0, 7); ctx.fillStyle = '#ff0090'; ctx.fill(); });
+      } else {
+        const b = normBox(draft.a, draft.b);
+        if (draft.type === 'ellipse') pathOf(ctx, ellipsePts(b)); else { ctx.beginPath(); ctx.rect(b.x, b.y, b.w, b.h); }
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+  }
+
+  function refreshList() {
+    const el = $('list'); el.innerHTML = '';
+    const label = { wand: 'đũa phép', rect: 'chữ nhật', ellipse: 'elip', poly: 'đa giác' };
+    slots.forEach((s, i) => {
+      const b = bboxOf(s.pts), d = document.createElement('div');
+      d.className = 'slotitem' + (i === sel ? ' sel' : '');
+      d.innerHTML = `<span>Ô ${i + 1} — ${b.w}×${b.h} <small>(${label[s.kind]}, lớp ${stackOrder().indexOf(s) + 1}/${slots.length})</small></span><b data-i="${i}" style="cursor:pointer">✕</b>`;
+      d.onclick = ev => {
+        if (ev.target.dataset.i !== undefined) { slots.splice(+ev.target.dataset.i, 1); sel = -1; refreshOutputs(); }
+        else { sel = i; syncCtl(); }
+        refreshList(); draw();
+      };
+      el.appendChild(d);
+    });
+    if (!slots.length) el.innerHTML = '<small>Chưa có ô nào.</small>';
+  }
+
+  /* ---------- xuất ---------- */
+  function makeCutCanvas() {
+    const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    x.globalCompositeOperation = 'destination-out'; x.fillStyle = '#000';
+    slots.forEach(s => { pathOf(x, s.pts); x.fill(); });
+    x.globalCompositeOperation = 'source-over';
+    if (keepCv) {   // trả lại phần sticker/trang trí đã đánh dấu "giữ" -> nằm đè lên trên ảnh chụp
+      const t = document.createElement('canvas'); t.width = c.width; t.height = c.height;
+      const y = t.getContext('2d'); y.drawImage(img, 0, 0); y.globalCompositeOperation = 'destination-in'; y.drawImage(keepCv, 0, 0);
+      x.drawImage(t, 0, 0);
+    }
+    return c;
+  }
+  const isAxisRect = p => { const e = (a, b) => Math.abs(a - b) < 0.5; return p.length === 4 && e(p[0][1], p[1][1]) && e(p[1][0], p[2][0]) && e(p[2][1], p[3][1]) && e(p[3][0], p[0][0]); };
+  function codeText() {
+    if (!img || !slots.length) return '';
+    const id = $('fid').value.trim() || 'myFrame', name = $('fname').value.trim() || id;
+    const st = stackOrder(), needZ = slots.some((s, i) => st.indexOf(s) !== i);
+    const sl = slots.map(s => {
+      const pts = s.pts.map(p => [R(p[0]), R(p[1])]), b = bboxOf(pts), z = needZ ? `, z: ${st.indexOf(s)}` : '';
+      return isAxisRect(pts) ? `{ x: ${b.x}, y: ${b.y}, w: ${b.w}, h: ${b.h}${z} }`
+        : `{ x: ${b.x}, y: ${b.y}, w: ${b.w}, h: ${b.h}${z}, poly: [${pts.map(p => `[${p}]`).join(',')}] }`;
+    });
+    return `{ id: '${id}', name: '${name.replace(/'/g, "\\'")}', overlay: base + '${id}.${lastExt}', w: ${img.naturalWidth}, h: ${img.naturalHeight},${$('dup').checked ? ' duplicate: true,' : ''}\n  slots: [\n    ${sl.join(',\n    ')}\n  ] },`;
+  }
+  function refreshOutputs() {
+    const ok = !!(img && slots.length);
+    $('exportPng').disabled = $('exportWebp').disabled = !ok;
+    $('code').value = codeText();
+    $('btnHint').textContent = ok ? `<button class="sticker-btn" onclick="setTemplate('${$('fid').value.trim() || 'myFrame'}')">${$('fname').value}</button>` : '';
+  }
+  ['fid', 'fname', 'dup'].forEach(id => $(id).addEventListener('input', refreshOutputs));
+  function save(type) {
+    if (!img || !slots.length) return;
+    lastExt = type === 'image/webp' ? 'webp' : 'png'; refreshOutputs();
+    makeCutCanvas().toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = ($('fid').value.trim() || 'myFrame') + '.' + lastExt; a.click(); }, type, 0.95);
+  }
+  $('exportPng').onclick = () => save('image/png');
+  $('exportWebp').onclick = () => save('image/webp');
+  $('copy').onclick = () => { $('code').select(); document.execCommand('copy'); $('copy').textContent = '✅ Đã copy'; setTimeout(() => $('copy').textContent = '📋 Copy code', 1500); };
+  refreshList();
+})();
+</script>
+</body>
+</html>

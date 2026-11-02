@@ -10,6 +10,8 @@
         <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet" />
         <!-- gifshot: used ONLY for the manual, user-initiated "save the gif" download button (Fixed via jsDelivr CDN) -->
         <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/build/gifshot.min.js"></script>
+        <!-- Frame templates (khung có sẵn, ảnh tự khớp) -->
+        <script src="js/frames.js"></script>
 
         <style>
             :root {
@@ -81,7 +83,7 @@
                 width: 100%;
             }
 
-            #frameListContainer, #stickerListContainer, #hatListContainer {
+            #frameListContainer, #stickerListContainer {
                 display: grid;
                 grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
@@ -715,6 +717,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Archivo+Black&family=Courier+Prime:wght@700&family=Playfair+Display:ital,wght@0,900;1,700&family=Bodoni+Moda:ital,wght@0,800;1,600&family=Rubik:wght@800&display=swap" rel="stylesheet">
     <style>body, button, a, input, textarea, select, label { font-family: "Nunito", system-ui, sans-serif !important; }</style>
     <style id="ocean-booth-theme">
         :root {
@@ -1566,11 +1569,391 @@
                 .mode-choice-icon { display: inline; margin-right: 8px; font-size: 1.35rem; }
             }
         </style>
+
+    <style id="booth-rollbooth-layout">
+    /* ======== BỐ CỤC PHOTOBOOTH KIỂU ROLLBOOTH ======== */
+    :root{ --rail-w: 172px; --rail-ink:#7a3550; }
+    #mainBooth{ max-width: 1240px !important; }
+    .booth-frame{
+        display:flex !important; flex-direction:row !important;
+        align-items:stretch; gap:16px !important;
+        border-radius:34px !important; padding:18px !important;
+    }
+
+    /* ---- cột trái: nút xếp gọn ---- */
+    .booth-rail{
+        width:var(--rail-w); flex:0 0 var(--rail-w);
+        max-height:min(78vh,760px); overflow-y:auto; overflow-x:hidden;
+        padding:10px 9px !important; border-radius:22px !important;
+        display:flex; flex-direction:column; gap:10px;
+        scrollbar-width:thin;
+    }
+    .booth-rail::-webkit-scrollbar{ width:7px }
+    .booth-rail::-webkit-scrollbar-thumb{ background:rgba(223,97,124,.45); border-radius:10px }
+    .rail-group{ display:flex; flex-direction:column; gap:5px }
+    .rail-title{
+        margin:2px 0 1px; font-size:.68rem; font-weight:800; letter-spacing:.06em;
+        text-transform:uppercase; opacity:.78; color:var(--rail-ink);
+    }
+    body.night-mode .rail-title{ color:#9fe8ff }
+    .rail-btn{
+        display:flex; align-items:center; gap:7px;
+        width:100%; padding:7px 9px; min-height:38px;
+        font-size:.8rem; font-weight:700; line-height:1.1; text-align:left;
+        border-radius:13px; border:2px solid #df617c; cursor:pointer;
+        background:rgba(255,245,247,.92); color:#713044;
+        box-shadow:0 3px 0 #bf4b68;
+        transition:transform .14s ease, box-shadow .14s ease, background .14s ease;
+    }
+    .rail-btn[hidden]{ display:none !important }
+    .rail-btn span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+    .rail-btn:hover{ transform:translateY(-2px); box-shadow:0 5px 0 #bf4b68; background:#ffe5ec }
+    .rail-btn:active{ transform:translateY(1px); box-shadow:0 1px 0 #bf4b68 }
+    .rail-btn.danger{ border-color:#ff8f8f; color:#9b2b2b; background:rgba(255,236,236,.95); box-shadow:0 3px 0 #e07878 }
+    .rail-btn.on{ background:linear-gradient(135deg,#ffd6e6,#ffe9b8); box-shadow:0 3px 0 #bf4b68, 0 0 14px rgba(255,140,180,.5) }
+    body.night-mode .rail-btn{ background:rgba(17,83,117,.55); color:#d9fbff; border-color:rgba(102,232,255,.7); box-shadow:0 3px 0 rgba(27,139,174,.7) }
+    body.night-mode .rail-btn.danger{ background:rgba(110,35,55,.55); color:#ffd8e0; border-color:#ff9bb3; box-shadow:0 3px 0 #a0415a }
+    .rail-colors{ display:flex; flex-direction:column; gap:5px }
+    .rail-colors label{ display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:.74rem; font-weight:700; color:var(--rail-ink) }
+    body.night-mode .rail-colors label{ color:#cdf3ff }
+    .rail-colors input[type=color]{ width:36px; height:26px; border:none; border-radius:8px; background:none; cursor:pointer; padding:0 }
+
+    /* ---- giữa: camera ---- */
+    .booth-stage{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:14px; align-items:center }
+    .booth-stage .screen-container{
+        width:100% !important; padding-top:0 !important;
+        aspect-ratio:3/4; max-height:min(70vh,700px);
+        border-radius:26px !important; position:relative; overflow:hidden;
+    }
+    .booth-stage .screen-container video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover }
+    .cam-grid{ position:absolute; inset:0; pointer-events:none; opacity:.4;
+        background:
+          linear-gradient(to right, transparent 33.3%, rgba(255,255,255,.75) 33.3%, rgba(255,255,255,.75) calc(33.3% + 1px), transparent calc(33.3% + 1px)),
+          linear-gradient(to right, transparent 66.6%, rgba(255,255,255,.75) 66.6%, rgba(255,255,255,.75) calc(66.6% + 1px), transparent calc(66.6% + 1px)),
+          linear-gradient(to bottom, transparent 33.3%, rgba(255,255,255,.75) 33.3%, rgba(255,255,255,.75) calc(33.3% + 1px), transparent calc(33.3% + 1px)),
+          linear-gradient(to bottom, transparent 66.6%, rgba(255,255,255,.75) 66.6%, rgba(255,255,255,.75) calc(66.6% + 1px), transparent calc(66.6% + 1px));
+    }
+    .bts-badge{
+        position:absolute; top:12px; left:12px; z-index:4;
+        display:none; align-items:center; gap:7px;
+        padding:5px 12px; border-radius:999px;
+        background:rgba(20,10,18,.58); color:#fff; font-size:.78rem; font-weight:800; letter-spacing:.08em;
+        backdrop-filter:blur(6px);
+    }
+    .bts-badge.live{ display:inline-flex }
+    .bts-badge i{ width:9px; height:9px; border-radius:50%; background:#ff4d6d; animation:btsBlink 1s infinite }
+    @keyframes btsBlink{ 0%,100%{opacity:1} 50%{opacity:.25} }
+    .shot-pill{
+        position:absolute; top:12px; right:12px; z-index:4;
+        padding:5px 13px; border-radius:999px; font-size:.8rem; font-weight:800;
+        background:rgba(255,255,255,.86); color:#b23b6a; backdrop-filter:blur(6px);
+    }
+    .stage-actions{ display:flex; align-items:center; justify-content:center; gap:22px }
+    .round-btn{
+        border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;
+        transition:transform .15s ease, box-shadow .15s ease;
+    }
+    .round-btn.small{
+        width:52px; height:52px; font-size:1.25rem;
+        border:2.5px solid #e08aa0; background:#fff7fa; color:#b23b6a; box-shadow:0 4px 0 #d07b92;
+    }
+    .round-btn.small:hover{ transform:translateY(-3px); box-shadow:0 7px 0 #d07b92 }
+    .round-btn.shutter{
+        width:86px; height:86px; border:5px solid #fff; padding:0;
+        background:linear-gradient(145deg,#ff8fb3,#e0556f);
+        box-shadow:0 0 0 4px rgba(224,85,111,.33), 0 10px 26px rgba(224,85,111,.4);
+    }
+    .round-btn.shutter span{ width:62px; height:62px; border-radius:50%; background:rgba(255,255,255,.18) }
+    .round-btn.shutter:hover{ transform:scale(1.06) }
+    .round-btn.shutter:active{ transform:scale(.94) }
+    .round-btn.shutter:disabled{ filter:grayscale(.5); opacity:.6; cursor:not-allowed }
+    body.night-mode .round-btn.small{ background:rgba(17,83,117,.6); color:#d9fbff; border-color:#66eaff; box-shadow:0 4px 0 #1d83a4 }
+
+    /* ---- phải: kết quả ---- */
+    .right-column{ width:300px !important; flex:0 0 300px !important; display:flex; flex-direction:column; align-items:center; gap:8px }
+    .shot-counter{ margin:0; font-size:1.45rem; font-weight:800; color:#e0556f; letter-spacing:.04em }
+    body.night-mode .shot-counter{ color:#7de3ff }
+    .right-column .canvas-wrapper{ flex:1; display:flex; align-items:center; justify-content:center; width:100%; min-height:0 }
+    .right-column #stripCanvas{ max-height:min(60vh,620px); width:auto !important; max-width:100% }
+    .result-actions{ display:flex; gap:8px; width:100%; }
+    .result-actions .primary-btn{ flex:1; font-size:.86rem !important; padding:10px 6px !important; border-radius:16px !important }
+
+    /* ---- nút nhạc hình nốt nhạc (cute) ---- */
+    .floating-radio-btn{
+        position:relative; width:60px !important; height:60px !important;
+        font-size:0 !important; border:none !important; overflow:visible;
+        background:linear-gradient(145deg,#ffd9e8,#ffb6d5) !important;
+        box-shadow:0 6px 0 #e78bb4, 0 0 22px rgba(255,150,195,.5) !important;
+        animation:noteBop 2.6s ease-in-out infinite;
+    }
+    .floating-radio-btn::before{
+        content:"♪"; font-size:1.9rem; line-height:1; color:#fff;
+        text-shadow:0 2px 4px rgba(190,60,120,.55);
+    }
+    .floating-radio-btn::after{
+        content:"♫"; position:absolute; top:-8px; right:-4px; font-size:.95rem; color:#fff;
+        text-shadow:0 2px 4px rgba(190,60,120,.5); animation:noteFloat 2.2s ease-in-out infinite;
+    }
+    .floating-radio-btn:hover{ transform:translateY(-4px) rotate(-8deg) scale(1.06) }
+    @keyframes noteBop{ 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-5px) rotate(4deg)} }
+    @keyframes noteFloat{ 0%{transform:translateY(0) scale(1); opacity:.95} 50%{transform:translateY(-7px) scale(1.15); opacity:.6} 100%{transform:translateY(0) scale(1); opacity:.95} }
+    body.night-mode .floating-radio-btn{ background:linear-gradient(145deg,#2a86a8,#17566f) !important; box-shadow:0 6px 0 #10415a, 0 0 22px rgba(90,220,255,.45) !important }
+
+    .booth-rail{ position:relative; -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 calc(100% - 26px),transparent 100%);
+                 mask-image:linear-gradient(to bottom,#000 0,#000 calc(100% - 26px),transparent 100%) }
+    .booth-rail:hover{ -webkit-mask-image:none; mask-image:none }
+    .floating-radio-btn::before{ animation:noteWig 1.8s ease-in-out infinite }
+    @keyframes noteWig{ 0%,100%{transform:rotate(-7deg)} 50%{transform:rotate(9deg) scale(1.08)} }
+    .floating-radio-btn{ outline:3px dashed rgba(255,255,255,.65); outline-offset:4px }
+
+    @media (max-width: 1080px){
+        .booth-frame{ flex-wrap:wrap !important }
+        .booth-rail{ width:100%; flex:1 1 100%; max-height:none; flex-direction:row; flex-wrap:wrap; gap:14px }
+        .rail-group{ flex:1 1 210px; flex-direction:row; flex-wrap:wrap }
+        .rail-title{ flex:1 1 100% }
+        .rail-btn{ width:auto; flex:1 1 118px }
+        .booth-stage{ flex:1 1 320px }
+        .right-column{ width:100% !important; flex:1 1 100% !important }
+    }
+    @media (max-width: 700px){
+        .booth-frame{ padding:12px !important }
+        .round-btn.shutter{ width:74px; height:74px }
+        .round-btn.shutter span{ width:52px; height:52px }
+    }
+    </style>
+
+    <style id="booth-modal-skin">
+    .booth-modal{ position:fixed; inset:0; z-index:100000; display:none;
+        align-items:center; justify-content:center; padding:18px;
+        background:rgba(40,16,30,.55); backdrop-filter:blur(7px); }
+    .booth-modal-card{
+        background:linear-gradient(150deg,#fffdf7,#ffeef4);
+        border:3px solid #ffb3cc; border-radius:26px;
+        padding:20px 20px 16px; width:min(660px,96vw); max-height:92vh;
+        overflow:auto; box-shadow:0 26px 70px rgba(120,40,70,.35); text-align:center;
+    }
+    body.night-mode .booth-modal-card{ background:linear-gradient(150deg,#06243f,#042033); border-color:#56c9ec; color:#dff7ff }
+    .booth-modal-card h3{ margin:0 0 4px; color:#d6436c; font-size:1.3rem }
+    body.night-mode .booth-modal-card h3{ color:#7de3ff }
+    .booth-modal-sub{ margin:0 0 12px; font-size:.86rem; opacity:.75 }
+    .booth-modal-foot{ display:flex; gap:10px; margin-top:14px; position:sticky; bottom:-16px;
+        padding:10px 0 2px; background:inherit }
+    .booth-modal-foot button{ flex:1 }
+
+    /* khung */
+    .frame-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:11px }
+    .frame-card{ border:2.5px solid #ffc2d6; border-radius:16px; background:#fff; padding:6px 5px 7px;
+        cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px;
+        transition:transform .15s ease, box-shadow .15s ease; box-shadow:0 3px 0 #f0a7c0 }
+    .frame-card:hover{ transform:translateY(-3px); box-shadow:0 7px 0 #f0a7c0 }
+    .frame-card.active{ border-color:#e0556f; box-shadow:0 3px 0 #e0556f, 0 0 16px rgba(224,85,111,.45) }
+    .frame-card img{ width:100%; height:108px; object-fit:contain;
+        background:repeating-conic-gradient(#eee 0 25%, #fff 0 50%) 0 0/12px 12px; border-radius:9px }
+    .frame-card b{ font-size:.73rem; line-height:1.15; color:#8c3a56 }
+    .frame-card i{ font-size:.66rem; font-style:normal; opacity:.65 }
+    body.night-mode .frame-card{ background:rgba(10,45,72,.8); border-color:#4ebfe4 }
+    body.night-mode .frame-card b{ color:#cdf3ff }
+    .frame-extra{ margin-top:14px; text-align:left }
+    .frame-extra summary{ cursor:pointer; font-weight:700; font-size:.85rem; color:#a8446a; padding:6px 0 }
+    body.night-mode .frame-extra summary{ color:#8adcf7 }
+    .frame-old-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; margin-top:6px }
+
+    /* sticker */
+    .pack-tabs{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:12px }
+    .pack-tab{ border:2px solid #ffb3cc; background:#fff; color:#a8446a; border-radius:999px;
+        padding:5px 12px; font-size:.78rem; font-weight:700; cursor:pointer }
+    .pack-tab.active{ background:linear-gradient(135deg,#ff9ec0,#ffd6a5); color:#fff; border-color:#e0556f }
+    body.night-mode .pack-tab{ background:rgba(10,45,72,.8); color:#cdf3ff; border-color:#4ebfe4 }
+    .sticker-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(74px,1fr)); gap:9px; min-height:90px }
+    .sticker-cell{ border:2px solid #ffd3e2; border-radius:14px; background:#fff; padding:5px;
+        cursor:pointer; aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+        transition:transform .14s ease, box-shadow .14s ease }
+    .sticker-cell:hover{ transform:translateY(-3px) scale(1.04); box-shadow:0 6px 14px rgba(224,85,111,.3); border-color:#e0556f }
+    .sticker-cell img{ max-width:100%; max-height:100%; object-fit:contain }
+    .sticker-cell.emoji{ font-size:2rem }
+    body.night-mode .sticker-cell{ background:rgba(10,45,72,.75); border-color:#3fa9cf }
+
+    /* bts */
+    .bts-card{ width:min(560px,96vw) }
+    .bts-stage{ position:relative; width:100%; aspect-ratio:3/4; max-height:54vh; margin:0 auto;
+        background:#120a12; border-radius:20px; overflow:hidden; display:flex; align-items:center; justify-content:center }
+    .bts-stage video,.bts-stage img{ width:100%; height:100%; object-fit:contain; display:none }
+    .bts-stage video.show,.bts-stage img.show{ display:block }
+    .bts-counter{ position:absolute; top:10px; left:10px; padding:4px 12px; border-radius:999px;
+        background:rgba(0,0,0,.55); color:#fff; font-size:.78rem; font-weight:800 }
+    .bts-controls{ display:flex; gap:8px; margin:12px 0 10px; flex-wrap:wrap }
+    .bts-controls button{ flex:1; min-width:120px; font-size:.84rem !important; padding:9px 8px !important }
+    .bts-list{ display:flex; flex-direction:column; gap:7px }
+    .bts-row{ display:flex; align-items:center; gap:9px; border:2px solid #ffd3e2; border-radius:14px; padding:6px 9px; background:#fff }
+    body.night-mode .bts-row{ background:rgba(10,45,72,.7); border-color:#3fa9cf }
+    .bts-row img{ width:42px; height:54px; object-fit:cover; border-radius:7px; background:#eee }
+    .bts-row b{ flex:1; text-align:left; font-size:.82rem }
+    .bts-row button{ border:2px solid #e0556f; background:#fff6f9; color:#b23b6a; border-radius:11px;
+        padding:5px 10px; font-size:.76rem; font-weight:700; cursor:pointer }
+    body.night-mode .bts-row button{ background:rgba(17,83,117,.6); color:#d9fbff; border-color:#66eaff }
+    </style>
+
+    <style id="booth-bigger-fix">
+    /* ====== 1. NỀN PHỦ KÍN MÀN HÌNH (kể cả fullscreen) ======
+       body có zoom nên chiều cao thật chỉ bằng 100vh*zoom -> hở một khúc nền html.
+       Dùng biến --booth-zoom để tính bù lại. */
+    :root{ --booth-zoom: .8; }
+    body{ zoom: var(--booth-zoom) !important; min-height: calc(100vh / var(--booth-zoom)) !important; }
+    html{ background:#fff8ef }
+    html.night-bg{ background:#010611 }
+
+    /* ====== 2. TO HƠN CẢ BỀ NGANG LẪN CHIỀU DỌC ====== */
+    #mainBooth{ max-width: 1560px !important; width:100% }
+    :root{ --rail-w: 196px; }
+    .booth-frame{ gap:22px !important; padding:22px !important }
+    .booth-rail{ max-height:none; padding:12px 11px !important }
+    .rail-btn{ min-height:44px; font-size:.9rem; padding:9px 11px; gap:9px; border-radius:15px }
+    .rail-title{ font-size:.74rem }
+    .rail-colors label{ font-size:.82rem }
+    .rail-colors input[type=color]{ width:44px; height:30px }
+
+    .booth-stage .screen-container{ aspect-ratio:4/3; max-height:none !important }
+    .stage-actions{ gap:26px; flex-wrap:wrap }
+    .round-btn.small{ width:62px; height:62px; font-size:1.5rem }
+    .round-btn.shutter{ width:104px; height:104px; border-width:6px }
+    .round-btn.shutter span{ width:76px; height:76px }
+    .round-btn.mode-btn.on{ background:linear-gradient(145deg,#ffe9a8,#ffc766); border-color:#e0a23a; box-shadow:0 4px 0 #c8872a }
+
+    .right-column{ width:400px !important; flex:0 0 400px !important; gap:10px }
+    .right-column #stripCanvas{ max-height:none !important; max-width:100%; height:auto !important }
+    .right-column .canvas-wrapper{ align-items:flex-start }
+    .shot-counter{ font-size:1.7rem }
+    .result-actions .primary-btn{ font-size:1rem !important; padding:13px 8px !important }
+    .bts-badge{ font-size:.88rem; padding:6px 14px }
+    .shot-pill{ font-size:.9rem; padding:6px 15px }
+
+    /* ====== 3. Ô TÌM STICKER ====== */
+    .sticker-search-row{ display:flex; align-items:center; gap:10px; margin-bottom:12px }
+    .ransom-box{ text-align:left; margin:6px 0 4px }
+    .ransom-head{ font-weight:800; color:#b23b6a; font-size:.92rem; margin-bottom:8px }
+    .ransom-head small{ font-weight:600; opacity:.6; font-size:.74rem; margin-left:6px }
+    .ransom-row{ display:flex; gap:8px; align-items:center }
+    .ransom-row input{ flex:1; min-width:0; padding:9px 12px; border-radius:12px; border:2px solid #ffd3e2; font:600 .95rem 'Nunito',sans-serif; outline:none }
+    .ransom-row input:focus{ border-color:#e0556f; box-shadow:0 0 0 3px rgba(224,85,111,.18) }
+    .ransom-row button{ padding:8px 14px; white-space:nowrap }
+    .ransom-preview{ margin-top:12px; min-height:150px; max-height:260px; display:flex; align-items:center; justify-content:center;
+        border-radius:12px; background:#f4f2ee url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Ccircle cx='1' cy='1' r='.6' fill='%23d9d4cc'/%3E%3C/svg%3E") }
+    .ransom-preview canvas{ max-width:100%; max-height:240px; display:none }
+    .ransom-preview span{ font-size:.8rem; opacity:.5 }
+    body.night-mode .ransom-preview{ filter:brightness(.92) }
+    body.night-mode .ransom-head{ color:#9fe3ff }
+    body.night-mode .ransom-row input{ background:rgba(10,45,72,.8); color:#dff7ff; border-color:#4ebfe4 }
+    .sticker-search-row input{
+        flex:1; padding:10px 14px; border-radius:999px; border:2px solid #ffb3cc;
+        font-size:.92rem; outline:none; background:#fff; color:#7a3550 }
+    .sticker-search-row input:focus{ border-color:#e0556f; box-shadow:0 0 0 3px rgba(224,85,111,.18) }
+    .sticker-search-row span{ font-size:.78rem; opacity:.65; white-space:nowrap }
+    body.night-mode .sticker-search-row input{ background:rgba(10,45,72,.8); color:#dff7ff; border-color:#4ebfe4 }
+    .booth-modal-card{ width:min(820px,96vw) }
+    .sticker-grid{ grid-template-columns:repeat(auto-fill,minmax(86px,1fr)); gap:11px; max-height:56vh; overflow-y:auto }
+    .frame-grid{ grid-template-columns:repeat(auto-fill,minmax(126px,1fr)); gap:13px }
+    .frame-card img{ height:132px }
+    .frame-card b{ font-size:.8rem }
+
+    @media (max-width: 1240px){
+        .right-column{ width:340px !important; flex:0 0 340px !important }
+    }
+    </style>
+
+    <style id="booth-v3">
+    /* ===== cột nút: 3 cột cạnh nhau, cao bằng khung camera ===== */
+    :root{ --booth-h: 640px; }
+    #mainBooth{ max-width:1760px !important }
+    .booth-frame{ align-items:stretch !important; gap:18px !important }
+    .booth-rail{
+        width:auto !important; flex:0 0 auto !important;
+        display:flex !important; flex-direction:row !important; gap:12px;
+        height:var(--booth-h); max-height:none; overflow:visible !important;
+        -webkit-mask-image:none !important; mask-image:none !important;
+    }
+    .booth-rail{ align-items:flex-start !important }
+    .rail-group{
+        width:132px; flex:0 0 132px; display:flex; flex-direction:column; gap:6px;
+        justify-content:flex-start; align-self:stretch;
+        overflow-y:auto; overflow-x:hidden; padding-right:2px;
+    }
+    .rail-group::-webkit-scrollbar{ width:6px }
+    .rail-group::-webkit-scrollbar-thumb{ background:rgba(223,97,124,.4); border-radius:9px }
+    .rail-title{ position:sticky; top:0; z-index:2; margin:0 0 2px; padding:3px 0;
+        background:inherit; font-size:.72rem; backdrop-filter:blur(4px) }
+    .rail-btn{ min-height:40px; font-size:.82rem; padding:8px 9px; gap:7px }
+    .rail-colors{ margin-top:4px }
+    .rail-colors label{ font-size:.72rem }
+
+    /* ===== camera cao bằng cột nút ===== */
+    .booth-stage{ height:auto; justify-content:flex-start }
+    .booth-stage .screen-container{
+        aspect-ratio:auto !important; height:var(--booth-h) !important;
+        width:auto !important; max-width:100%; aspect-ratio:3/4 !important;
+    }
+    .right-column{ width:360px !important; flex:0 0 360px !important }
+    .right-column #stripCanvas{ max-height:var(--booth-h) !important }
+
+    /* ===== rái cá bánh mì nhỏ lại ===== */
+    #otterBread, #otterBreadCruise #otterBread{ width:clamp(110px, 12vw, 172px) !important }
+    @media (max-width:900px){ #otterBreadCruise #otterBread{ width:clamp(100px, 30vw, 140px) !important } }
+
+    /* ===== đếm ngược tự chụp ===== */
+    .auto-pill{ position:absolute; bottom:12px; left:50%; transform:translateX(-50%); z-index:5;
+        padding:6px 16px; border-radius:999px; font-size:.86rem; font-weight:800;
+        background:rgba(224,85,111,.9); color:#fff; display:none }
+    .auto-pill.on{ display:block }
+
+    /* ===== sticker nhỏ, 6 cái 1 hàng ===== */
+    .sticker-grid{ grid-template-columns:repeat(6,1fr) !important; gap:8px !important;
+        max-height:52vh; overflow-y:auto }
+    .sticker-cell{ padding:4px; border-radius:11px }
+    .sticker-cell.emoji{ font-size:1.5rem }
+    @media (max-width:620px){ .sticker-grid{ grid-template-columns:repeat(4,1fr) !important } }
+
+    /* ===== bảng chỉnh màu ảnh ===== */
+    .tone-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:10px }
+    .tone-btn{ border:2.5px solid #ffc2d6; border-radius:14px; background:#fff; cursor:pointer;
+        padding:6px; display:flex; flex-direction:column; align-items:center; gap:5px; font-size:.78rem;
+        font-weight:700; color:#8c3a56; box-shadow:0 3px 0 #f0a7c0 }
+    .tone-btn.active{ border-color:#e0556f; box-shadow:0 3px 0 #e0556f, 0 0 14px rgba(224,85,111,.4) }
+    .tone-btn canvas{ width:100%; height:62px; border-radius:9px; display:block }
+    body.night-mode .tone-btn{ background:rgba(10,45,72,.8); border-color:#4ebfe4; color:#cdf3ff }
+
+    /* ===== scrapbook ===== */
+    .sb-stage{ display:flex; justify-content:center }
+    #scrapCanvas{ max-width:100%; max-height:56vh; border-radius:14px; box-shadow:0 14px 36px rgba(80,30,50,.3) }
+    .sb-tabs{ display:flex; gap:6px; justify-content:center; margin:0 0 12px }
+    .sb-tab{ border:2px solid #ffb3cc; background:#fff; color:#a8446a; border-radius:999px;
+        padding:6px 18px; font-weight:800; font-size:.85rem; cursor:pointer }
+    .sb-tab.active{ background:linear-gradient(135deg,#ff9ec0,#ffd6a5); color:#fff; border-color:#e0556f }
+    body.night-mode .sb-tab{ background:rgba(10,45,72,.8); color:#cdf3ff; border-color:#4ebfe4 }
+
+    /* ===== BTS reel: chỉ video + save + đóng ===== */
+    .bts-card{ width:min(520px,96vw) }
+    .bts-stage{ aspect-ratio:9/16; max-height:62vh; background:#15100f }
+    #btsReelVideo{ width:100%; height:100%; object-fit:contain; display:block }
+    .bts-loading{ position:absolute; inset:0; display:flex; flex-direction:column; gap:10px;
+        align-items:center; justify-content:center; color:#fff; font-weight:700; text-align:center; padding:20px }
+    .bts-loading .bar{ width:70%; height:8px; border-radius:99px; background:rgba(255,255,255,.22); overflow:hidden }
+    .bts-loading .bar i{ display:block; height:100%; width:0; background:linear-gradient(90deg,#ff9ec0,#ffd6a5); transition:width .3s }
+
+    @media (max-width:1400px){
+        .rail-group{ width:118px; flex:0 0 118px }
+        .right-column{ width:300px !important; flex:0 0 300px !important }
+    }
+    @media (max-width:1120px){
+        .booth-frame{ flex-wrap:wrap !important }
+        .booth-rail{ width:100% !important; height:auto; flex:1 1 100% !important }
+        .rail-group{ flex:1 1 150px; width:auto }
+        .booth-stage .screen-container{ height:auto !important; width:100% !important }
+        .right-column{ width:100% !important; flex:1 1 100% !important }
+    }
+    </style>
     </head>
     <body>
         <canvas id="oceanScene" aria-hidden="true"></canvas>
         <canvas id="luminaCanvas" aria-hidden="true"></canvas>
-        <div id="butterflyStage" aria-hidden="true"></div>
         <div id="otterGlowBackdrop" aria-hidden="true"></div>
         <div id="interactivePond" aria-hidden="true">
             <div id="otterBread" role="button" tabindex="0" aria-label="Tương tác với rái cá bánh mì">
@@ -1621,13 +2004,14 @@
                 ✨ <strong>Hướng dẫn nhanh:</strong> ✨ (🐳 : siêu recommend làm theo nhaaaaaa)<br>
                 1. 🍀🐳 Chạm vào bé rái cá để xem tin nhắn yêu đời. 🐳🍀<br>
                 2. Chạm vào màn hình để chụp hình.<br>
-                3. 🐳 Dùng các nút để thêm Sticker, Mũ, Khung. 🐳<br>
+                3. 🐳 Cột trái: thêm Khung, Sticker, spam Cat Gang / Flower / Sunny. 🐳<br>
                 4. Auto-Mode ON/OFF sẽ spam sticker cực đã.<br>
                 5. 🍀🐳🐻 Bật Night Mode để thấy sự kỳ diệu! 🐻🐳🍀<br>
                 6. 🍀🐳 Nên dùng máy tính để trải nghiệm tốt nhất nghen.<br>
-                7. Lia chuột vào góc và cạnh ảnh/mũ/sticker để edit tuỳ ý.<br>
+                7. Lia chuột vào góc và cạnh ảnh/sticker để edit tuỳ ý.<br>
                 8. 🍀🐳 Thử thách Rái Cá siêu vui, bật lên để chơi nha! 🐳<br>
-                9. 🐳🐻 Đừng quên bấm nút <strong>🌸 Hoa Nở Lại</strong> để ngắm hoa nở tung tóe nhé! 🌸<br>
+                9. 🐳🐻 Đừng quên bấm nút <strong>🌺 Hoa Nở Lại</strong> để ngắm hoa nở tung tóe nhé! 🌸<br>
+                10. 🎬 Bấm <strong>BTS Reel</strong> để xem lại hậu trường từng tấm và lưu video về máy.<br>
             </p>
             <button onclick="document.getElementById('tutorialModal').style.display='none'" class="primary-btn" style="width: 100%; margin-top: 20px;" >Đã hiểu gòi! 🐾</button>
         </div>
@@ -1636,15 +2020,15 @@
         <!-- POP-UP OTTER FLOWER SAU 3 GIÂY -->
         <div id="flowerPopupOverlay">
             <div class="flower-popup-card">
-                <img src="Assets/fish-photobooth/camerapage/stickers/otter-flower.gif" alt="Otter Flower">
+                <img src="assets/stickers/fish/otter-flower.gif" alt="Otter Flower">
                 <h3 style="color: #ff1493; margin-top: 0; font-size: 1.5rem;">🌸 Vườn Hoa Rái Cá Nở Rộ! 🌸</h3>
                 <p style="color: #666; font-size: 1rem; margin-bottom: 20px;">Chúc Anh một ngày ngập tràn hoa thơm và niềm vui nhé! ✨</p>
                 <button class="primary-btn" onclick="closeFlowerPopup()" style="background-color: #ff69b4; box-shadow: 0 4px 0 #cc1166; width: 100%;">Nhận hoa thui nào! 💐</button>
             </div>
         </div>
 
-        <img id="bouncingOtter" src="Assets/fish-photobooth/camerapage/stickers/otter_wink.gif" alt="Otter Bouncing">
-        <img id="swimmingOtter" src="assets/fish-photobooth/camerapage/stickers/otter_leave.gif" alt="" aria-hidden="true">
+        <img id="bouncingOtter" src="assets/stickers/fish/otter_wink.gif" alt="Otter Bouncing">
+        <img id="swimmingOtter" src="assets/stickers/fish/otter_leave.gif" alt="" aria-hidden="true">
         <div id="otterMessage">🫣Đồ đáng yêu🫣</div>
 
         <div id="mainBooth">
@@ -1655,74 +2039,83 @@
                 <span class="title-text">Ask me anything for more "ottermation"</span>
                 <span class="version-tag">v2.4</span>
             </div>
-            <a class="floating-radio-btn" href="radio.html" aria-label="Mở Radio để đổi nhạc">📻🎵</a>
+            <a class="floating-radio-btn" href="radio.html" aria-label="Mở góc Radio để đổi nhạc" title="Góc Radio ♪"></a>
 
             <div class="booth-frame">
-                <div class="left-column">
+
+                <!-- ============ CỘT TRÁI: BẢNG ĐIỀU KHIỂN GỌN ============ -->
+                <aside class="booth-rail custom-controls" id="boothRail">
+                    <div class="rail-group">
+                        <p class="rail-title">🎀 Trang Trí</p>
+                        <button class="rail-btn booth-control frame-picker-control" onclick="document.getElementById('frameModal').style.display='flex'">🖼️<span>Khung</span></button>
+                        <button class="rail-btn booth-control" onclick="document.getElementById('stickerModal').style.display='flex'">✨<span>Sticker</span></button>
+                        <button class="rail-btn booth-control" id="ransomBtn" onclick="openRansomModal()">✂️<span>Chữ Cắt Báo</span></button>
+                        <button class="rail-btn booth-control" id="autoDecorateToggle" hidden>🎉<span>Auto: OFF</span></button>
+                        <button class="rail-btn booth-control" id="addUnderseaPreset">🌊<span>Biển Cả</span></button>
+                        <button class="rail-btn booth-control" data-spam="cat">🐱<span>Cat Gang</span></button>
+                        <button class="rail-btn booth-control" data-spam="flower">🌸<span>Flower</span></button>
+                        <button class="rail-btn booth-control" data-spam="sunny">☀️<span>Sunny</span></button>
+                        <button class="rail-btn booth-control" data-spam="otter">🦦<span>Otter Party</span></button>
+                    </div>
+
+                    <div class="rail-group">
+                        <p class="rail-title">🛠️ Chỉnh Ảnh</p>
+                        <button class="rail-btn booth-control" id="colorAdjustBtn">🎨<span>Màu Ảnh</span></button>
+                        <button class="rail-btn booth-control" onclick="resizeSelected(1.25)">➕<span>Phóng To</span></button>
+                        <button class="rail-btn booth-control" onclick="resizeSelected(0.95)">➖<span>Thu Nhỏ</span></button>
+                        <button class="rail-btn booth-control danger" id="deleteSelectedBtn">🗑️<span>Xoá Món</span></button>
+                        <button class="rail-btn booth-control danger" id="clearStickersOnlyBtn">🧹<span>Xoá Sticker</span></button>
+                        <button class="rail-btn booth-control danger" id="deleteFrameBtn">🚫<span>Xoá Khung</span></button>
+                        <button class="rail-btn booth-control danger" id="clearStickersBtn">♻️<span>Reset All</span></button>
+                        <div class="rail-colors">
+                            <label>Nền trên <input type="color" id="colorPicker1" value="#fff0bd"></label>
+                            <label>Nền dưới <input type="color" id="colorPicker2" value="#ffc2d1"></label>
+                        </div>
+                        <button id="toggleLayoutBtn" class="rail-btn booth-control" hidden>🔄<span>Vertical Strip</span></button>
+                    </div>
+
+                    <div class="rail-group">
+                        <p class="rail-title">🎬 Vui Vẻ</p>
+                        <button class="rail-btn booth-control" id="scrapbookBtn">📔<span>Scrapbook</span></button>
+                        <button class="rail-btn booth-control" id="btsReelBtn">🎬<span>BTS Reel</span></button>
+                        <button class="rail-btn booth-control" id="flipbookBtn">📖<span>Flipbook</span></button>
+                        <button class="rail-btn booth-control" id="toggleChallengeBtn">🎲<span>Thử Thách: OFF</span></button>
+                        <button class="rail-btn booth-control" onclick="triggerBloomingFlowers()">🌺<span>Hoa Nở Lại</span></button>
+                        <button class="rail-btn booth-control" id="musicToggleBtn">🎵<span>Tắt Nhạc</span></button>
+                    </div>
+                </aside>
+
+                <!-- ============ GIỮA: CAMERA ============ -->
+                <div class="booth-stage">
                     <div class="screen-container">
                         <video id="liveVideo" autoplay playsinline></video>
+                        <div class="cam-grid" aria-hidden="true"></div>
+                        <div class="bts-badge" id="btsBadge"><i></i>BTS</div>
+                        <div class="shot-pill" id="shotPill">0 / 4</div>
                         <div id="challengeBox"></div>
                         <div class="countdown-timer" id="countdown">3</div>
+                        <div class="auto-pill" id="autoPill"></div>
                     </div>
 
-                    <div class="custom-controls">
-                        <div class="layout-toggle-container">
-                            <button id="toggleLayoutBtn" class="toggle-btn booth-control">🔄 Switch Layout: Vertical Strip</button>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <label style="font-weight: bold; color: var(--dark-text); font-size: 0.9rem;">Ombre Top:</label>
-                                <input type="color" id="colorPicker1" value="#fff0bd" style="cursor: pointer; border:none; width: 30px; height: 30px;">
-                                <label style="font-weight: bold; color: var(--dark-text); font-size: 0.9rem; margin-left: 5px;">Bottom:</label>
-                                <input type="color" id="colorPicker2" value="#ffc2d1" style="cursor: pointer; border:none; width: 30px; height: 30px;">
-                            </div>
-                        </div>
-
-                        <div class="sticker-selector">
-                            <button class="sticker-btn preset-btn booth-control" onclick="document.getElementById('tutorialModal').style.display='flex'">❓ Hướng dẫn</button>
-                            <button class="sticker-btn booth-control frame-picker-control" onclick="document.getElementById('frameModal').style.display='flex'">
-                                🖼️ Chọn Khung
-                            </button>
-                            <button class="sticker-btn booth-control" onclick="document.getElementById('stickerModal').style.display='flex'" style="background-color: #fffacd; border: 2px solid #ffd700;">
-                                ✨ Chọn Sticker
-                            </button>
-                            <button class="sticker-btn booth-control" onclick="document.getElementById('hatModal').style.display='flex'" style="background-color: #fffacd; border: 2px solid #ffd700;">
-                                🧢 Chọn Mũ
-                            </button>
-                            <button class="sticker-btn preset-btn booth-control" id="toggleChallengeBtn">🎲 Thử Thách Rái Cá: OFF</button>
-                            <button id="musicToggleBtn" class="sticker-btn booth-control" style="background-color: #fffacd; border: 2px solid #ffd700;">
-                                🎵 Tắt Nhạc
-                            </button>
-                            <button class="sticker-btn preset-btn booth-control" id="nightModeToggle" style="background-color: #2c3e50; border-color: #34495e; color: white;">🌙 Night Mode: OFF</button>
-                            
-                            <!-- NÚT BẤM HOA NỞ LẠI -->
-                            <button class="sticker-btn preset-btn booth-control" onclick="triggerBloomingFlowers()" style="background-color: #ffb6c1; border-color: #ff69b4; color: #880044; grid-column: span 2;">🌸 Hoa Nở Lại</button>
-
-                            <button class="sticker-btn booth-control" onclick="resizeSelected(1.25)" style="background-color: #e6f7ff; border-color: #33aaff;">➕ Phóng To</button>
-                            <button class="sticker-btn booth-control" onclick="resizeSelected(0.95)" style="background-color: #e6f7ff; border-color: #111213;">➖ Thu Nhỏ</button>
-
-                            <button class="sticker-btn preset-btn booth-control" id="autoDecorateToggle">✨ Auto-Mode: OFF</button>
-                            <button class="sticker-btn preset-btn booth-control" id="addUnderseaPreset">✨ Auto Decorate (Mixed Undersea)</button>
-
-                            <button class="sticker-btn delete-btn booth-control" id="deleteSelectedBtn">🗑️ Delete Selected</button>
-                            <button class="sticker-btn delete-btn booth-control" id="deleteFrameBtn">🖼️ Xóa Khung</button>
-                            <button class="sticker-btn reset-btn booth-control" id="clearStickersBtn">Reset All</button>
-
-                            <button id="flipbookBtn" class="sticker-btn preset-btn booth-control" style="background-color: #ff99bb; grid-column: span 2;">📖 Tạo Flipbook (15 tấm)</button>
-                        </div>
-                    </div>
-
-                    <div class="controls">
-                        <button id="takePhoto" class="primary-btn booth-control">📸 Capture</button>
-                        <button id="uploadTriggerBtn" class="secondary-btn booth-control">📁 Upload</button>
+                    <div class="stage-actions">
+                        <button id="nightModeToggle" class="round-btn small booth-control mode-btn" title="Night Mode">🌙</button>
+                        <button id="uploadTriggerBtn" class="round-btn small booth-control" title="Tải ảnh lên">📁</button>
                         <input type="file" id="uploadPhotoInput" accept="image/*" style="display: none;">
-                        <button id="clearStripBtn" class="secondary-btn booth-control">🗑️ Clear Photos</button>
-                        <button id="downloadBtn" class="primary-btn booth-control">💾 Download Photo</button>
+                        <button id="takePhoto" class="round-btn shutter booth-control" title="Chụp ảnh"><span></span></button>
+                        <button id="clearStripBtn" class="round-btn small booth-control" title="Xoá hết ảnh">🔄</button>
+                        <button class="round-btn small booth-control" onclick="document.getElementById('tutorialModal').style.display='flex'" title="Hướng dẫn">❓</button>
                     </div>
                 </div>
 
+                <!-- ============ PHẢI: KẾT QUẢ ============ -->
                 <div class="right-column">
-                    <h2 class="ocean-result-title">Your Result</h2>
+                    <p class="shot-counter" id="shotCounter">0 / 4</p>
                     <div class="canvas-wrapper result-strip-shell">
                         <canvas id="stripCanvas"></canvas>
+                    </div>
+                    <div class="result-actions">
+                        <button id="downloadBtn" class="primary-btn booth-control">💾 Tải Ảnh</button>
+                        <button id="printBtn" class="primary-btn booth-control" onclick="printPhoto()">🖨️ In 4×6</button>
                     </div>
                 </div>
             </div>
@@ -1809,73 +2202,103 @@
             <button onclick="document.getElementById('flipbookViewerModal').style.display='none'" style="margin-top: 15px; background: transparent; color: #ff1493; border: none; font-size: 1rem; cursor: pointer; text-decoration: underline; font-weight: bold;">Đóng giao diện</button>
         </div>
 
-        <div id="frameModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center;">
-            <div style="background: white; padding: 20px; border-radius: 20px; text-align: center; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-                <h3 style="margin-top: 0; color: #1a4a76;">Chọn Khung Ảnh</h3>
-
-                <div id="frameListContainer">
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/frame1.png')">Cute Hột Me</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/frame2.png')">Giấy Kết Hôn</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otter gangster.png')">Rái Cá Ngầu Lòi</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/y2k.png')">Y2K</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/One Piece.png')">One Piece</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/BYO.png')">Be Your Self</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otter memo.png')">Rái Cá Memories</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otterly.png')">Rái Cá Cute</button>
-                    <button class="sticker-btn frame-strip" onclick="setFrame('Assets/frame/otter police.png')">Cảnh Sát Rái Cá</button>
-
-                    <button class="sticker-btn frame-grid" onclick="setFrame('Assets/frame/grid1.png')" style="display:none;">Grid Mẫu 1</button>
-                    <button class="sticker-btn frame-grid" onclick="setFrame('Assets/frame/grid2.png')" style="display:none;">Grid Mẫu 2</button>
-                    <button class="sticker-btn frame-grid" onclick="setFrame('Assets/frame/grid3.png')" style="display:none;">Grid Mẫu 3</button>
-
-                    <button class="sticker-btn" onclick="setFrame(null)">Bỏ Khung</button>
+        <div id="frameModal" class="booth-modal" style="display:none">
+            <div class="booth-modal-card">
+                <h3>🖼️ Chọn Khung Ảnh</h3>
+                <p class="booth-modal-sub">Ảnh chụp tự khớp vào từng ô — khỏi chỉnh tay.</p>
+                <div id="templateListContainer"></div>
+                <div id="frameListContainer" style="display:none"></div>
+                <div class="booth-modal-foot">
+                    <button class="secondary-btn" onclick="clearTemplate()">↩️ Bỏ Khung</button>
+                    <button class="primary-btn" onclick="document.getElementById('frameModal').style.display='none'">Đóng</button>
                 </div>
-
-                <input type="file" id="uploadFrameInput" accept="image/png" style="display: none;">
-                <button class="primary-btn" onclick="document.getElementById('uploadFrameInput').click()" style="width: 100%; margin-bottom: 10px; background-color: #33aaff; border: none;">📁 Tải Khung Của Bạn Lên</button>
-
-                <button class="primary-btn" onclick="document.getElementById('frameModal').style.display='none'" style="width: 100%; background: #ff4d4d; box-shadow: 0 4px 0 #cc0000; border: none;">Đóng</button>
             </div>
         </div>
 
-        <div id="stickerModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center;">
-            <div style="background: white; padding: 20px; border-radius: 20px; text-align: center; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-                <h3 style="margin-top: 0; color: #1a4a76;">Chọn Sticker</h3>
-
-                <div id="stickerListContainer">
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/fish.png', false); closeStickerModal()">🐟 Fish</button>
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/octopus.png', false); closeStickerModal()">🐙 Octopus</button>
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/axolotl.png', false); closeStickerModal()">🦎 Axolotl</button>
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/otter.png', false); closeStickerModal()">🐾 Otter Heart</button>
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/seaotter.png', false); closeStickerModal()">🦦 Sea Otter</button>
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/otterface.png', false); closeStickerModal()">🐻 Otter Face</button>
-
-                    <button class="sticker-btn" onclick="handleSticker('⭐', true); closeStickerModal()">⭐ Star</button>
-                    <button class="sticker-btn" onclick="handleSticker('♡', true); closeStickerModal()">❤️ Heart</button>
-                    <button class="sticker-btn" onclick="handleSticker('✨', true); closeStickerModal()">✨ Sparkles</button>
-                    <button class="sticker-btn" onclick="handleSticker('🐻', true); closeStickerModal()">🐻 Gấu Nâu</button>
+        <div id="stickerModal" class="booth-modal" style="display:none">
+            <div class="booth-modal-card">
+                <h3>✨ Chọn Sticker</h3>
+                <div class="sticker-search-row">
+                    <input type="search" id="stickerSearch" placeholder="🔍 Tìm sticker (star, bubble, pack3...)" autocomplete="off">
+                    <span id="stickerCount"></span>
                 </div>
-
-                <button class="primary-btn" onclick="closeStickerModal()" style="width: 100%; background: #ff4d4d; border: none;">Đóng</button>
+                <div class="sticker-grid" id="stickerListContainer"></div>
+                <div class="booth-modal-foot">
+                    <button class="primary-btn" onclick="closeStickerModal()">Đóng</button>
+                </div>
             </div>
         </div>
 
-        <div id="hatModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100000; justify-content: center; align-items: center;">
-            <div style="background: white; padding: 20px; border-radius: 20px; text-align: center; max-width: 90%; max-height: 90vh; overflow-y: auto;">
-                <h3 style="margin-top: 0; color: #1a4a76;">Chọn Mũ</h3>
-
-                <div id="hatListContainer">
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/otterHat.png', false); closeHatModal()">🦦 Mũ Rái Cá</button>
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/Hat.png', false); closeHatModal()">🧢 Mũ Lưỡi Trai</button>
-                    <button class="sticker-btn" onclick="handleSticker('Assets/fish-photobooth/camerapage/stickers/crown.png', false); closeHatModal()">👑 Vương Miện</button>
+        <!-- ============ STICKER CHỮ CẮT BÁO ============ -->
+        <div id="ransomModal" class="booth-modal" style="display:none">
+            <div class="booth-modal-card">
+                <h3>✂️ Chữ Cắt Báo</h3>
+                <p class="booth-modal-sub">Gõ chữ là tự thành sticker — mỗi lần gõ hoặc bấm 🎲 ra một kiểu khác.</p>
+                <div class="ransom-box">
+                                        <div class="ransom-row">
+                        <input type="text" id="ransomInput" maxlength="40" placeholder="vd: besties forever" autocomplete="off">
+                        <button type="button" class="secondary-btn" id="ransomShuffle" title="Đổi kiểu khác">🎲</button>
+                        <button type="button" class="primary-btn" id="ransomAdd">➕ Thêm</button>
+                    </div>
+                    <div class="ransom-preview"><canvas id="ransomPreview"></canvas><span id="ransomHint">Chữ sẽ hiện ở đây ✨</span></div>
                 </div>
+                <div class="booth-modal-foot">
+                    <button class="primary-btn" onclick="closeRansomModal()">Đóng</button>
+                </div>
+            </div>
+        </div>
 
-                <button class="primary-btn" onclick="closeHatModal()" style="width: 100%; background: #ff4d4d; border: none;">Đóng</button>
+        <!-- ============ CHỈNH MÀU ẢNH ============ -->
+        <div id="toneModal" class="booth-modal" style="display:none">
+            <div class="booth-modal-card">
+                <h3>🎨 Màu Ảnh</h3>
+                <p class="booth-modal-sub">Áp cho tất cả ảnh đã chụp trong khung.</p>
+                <div class="tone-grid" id="toneGrid"></div>
+                <div class="booth-modal-foot">
+                    <button class="primary-btn" onclick="document.getElementById('toneModal').style.display='none'">Đóng</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ SCRAPBOOK ============ -->
+        <div id="scrapModal" class="booth-modal" style="display:none">
+            <div class="booth-modal-card">
+                <h3>📔 Scrapbook</h3>
+                <div class="sb-tabs">
+                    <button class="sb-tab active" data-ratio="0.8">Post 4:5</button>
+                    <button class="sb-tab" data-ratio="0.5625">Story 9:16</button>
+                </div>
+                <p class="booth-modal-sub">Bấm xáo tới khi ưng ý nha.</p>
+                <div class="sb-stage"><canvas id="scrapCanvas"></canvas></div>
+                <div class="booth-modal-foot">
+                    <button class="secondary-btn" id="scrapShuffle">🎲 Xáo lại</button>
+                    <button class="primary-btn" id="scrapSave">💾 Lưu ảnh</button>
+                    <button class="primary-btn" onclick="document.getElementById('scrapModal').style.display='none'">Đóng</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ BTS REEL ============ -->
+        <div id="btsModal" class="booth-modal" style="display:none">
+            <div class="booth-modal-card bts-card">
+                <h3>🎬 Behind the scenes</h3>
+                <p class="booth-modal-sub" id="btsHint">Khoảnh khắc trước mỗi tấm, rồi tới dải ảnh của bạn.</p>
+                <div class="bts-stage">
+                    <video id="btsReelVideo" playsinline webkit-playsinline controls loop muted></video>
+                    <div class="bts-loading" id="btsLoading">
+                        <span id="btsLoadingText">Đang ghép reel…</span>
+                        <div class="bar"><i id="btsBar"></i></div>
+                    </div>
+                </div>
+                <div class="booth-modal-foot">
+                    <button class="primary-btn" id="btsSaveReel">💾 Lưu video</button>
+                    <button class="secondary-btn" onclick="closeBtsModal()">Đóng</button>
+                </div>
             </div>
         </div>
 
         <audio id="bg-music" loop>
-            <source id="boothAudioSource" src="assets/chờ tới khi anh về.mp3" type="audio/mpeg">
+            <source id="boothAudioSource" src="assets/audio/cho-toi-khi-anh-ve.mp3" type="audio/mpeg">
         </audio>
 
         <script>
@@ -1938,6 +2361,7 @@
                         el.style.pointerEvents = "auto";
                     }
                 });
+                if (window.updateShotCounter) window.updateShotCounter();
             }
 
             const otter = document.getElementById('bouncingOtter');
@@ -2018,17 +2442,17 @@
             swimmingOtter.addEventListener('touchstart', (e) => { handleOtterClick(e); e.preventDefault(); });
 
             const bubbleImages = [
-                'Assets/fish-photobooth/camerapage/bubbles/bubble3.png',
-                'Assets/fish-photobooth/camerapage/bubbles/bubble4.png',
-                'Assets/fish-photobooth/camerapage/bubbles/bubble5.png'
+                'assets/stickers/bubbles/bubble3.png',
+                'assets/stickers/bubbles/bubble4.png',
+                'assets/stickers/bubbles/bubble5.png'
             ];
             const starImages = [
-                'Assets/fish-photobooth/camerapage/bubbles/star1.png',
-                'Assets/fish-photobooth/camerapage/bubbles/star2.png',
-                'Assets/fish-photobooth/camerapage/bubbles/star.png',
-                'Assets/fish-photobooth/camerapage/bubbles/star3.png',
-                'Assets/fish-photobooth/camerapage/bubbles/star4.png',
-                'Assets/fish-photobooth/camerapage/bubbles/star5.png'
+                'assets/stickers/bubbles/star1.png',
+                'assets/stickers/bubbles/star2.png',
+                'assets/stickers/bubbles/star.png',
+                'assets/stickers/bubbles/star3.png',
+                'assets/stickers/bubbles/star4.png',
+                'assets/stickers/bubbles/star5.png'
             ];
 
             function createBubble() {
@@ -2080,6 +2504,24 @@
             const countdownEl = document.getElementById('countdown');
             const toggleLayoutBtn = document.getElementById('toggleLayoutBtn');
 
+            // Nút cột trái có cấu trúc: <icon><span>nhãn</span> -> chỉ đổi phần span
+            function setBtnLabel(btn, icon, label, on) {
+                if (!btn) return;
+                const sp = btn.querySelector('span');
+                if (sp) {
+                    sp.textContent = label;
+                    if (icon) btn.childNodes[0].nodeValue = icon;
+                    btn.classList.toggle('on', !!on);
+                } else if (btn.classList.contains('round-btn')) {
+                    btn.textContent = icon || '';
+                    btn.title = label;
+                    btn.classList.toggle('on', !!on);
+                } else {
+                    btn.textContent = (icon ? icon + ' ' : '') + label;
+                }
+            }
+            window.setBtnLabel = setBtnLabel;
+
             let currentLayout = 'strip';
             let photoSlots = [];
             let capturedPhotos = [];
@@ -2106,6 +2548,46 @@
             const frameImg = new Image();
             let selectedFrameSrc = null;
 
+            // --- FRAME TEMPLATES: chọn khung có sẵn, ảnh tự khớp vào từng ô ---
+            let photoAdjust = null;      // bộ thông số chỉnh màu đang dùng (null = ảnh gốc)
+            let activeTemplate = null;
+            function setTemplate(id) {
+                const t = (window.FRAME_TEMPLATES || []).find(f => f.id === id);
+                if (!t) { alert("Không tìm thấy khung: " + id); return; }
+                activeTemplate = t;
+                preferredTemplate = t.id;
+                selectedFrameSrc = null;
+                currentLayout = 'template';
+                stripCanvas.width = t.w;
+                stripCanvas.height = t.h;
+                photoSlots = t.slots.map(s => ({ x: s.x, y: s.y, w: s.w, h: s.h }));
+                capturedPhotos = []; stickers = []; selectedItem = null;
+                setBtnLabel(toggleLayoutBtn, '🖼️', (t.name || 'Frame'));
+                if (window.__btsReady) resetBtsClips();
+                if (window.updateShotCounter) window.updateShotCounter();
+                // Nạp ảnh overlay của frame (nếu có), vẽ lại khi tải xong
+                if (t.overlay && !t._img) {
+                    t._img = new Image();
+                    t._img.onload = () => { if (activeTemplate === t) drawCanvas(); };
+                    t._img.onerror = () => console.error('Không tải được frame:', t.overlay);
+                    t._img.src = t.overlay;
+                }
+                drawCanvas();
+                const m = document.getElementById('frameModal');
+                if (m) m.style.display = 'none';
+            }
+            const DEFAULT_TEMPLATE = 'kraftStrip';
+            let preferredTemplate = DEFAULT_TEMPLATE;   // null = người dùng chọn "không khung"
+            function clearTemplate() {
+                activeTemplate = null;
+                preferredTemplate = null;
+                currentLayout = 'strip';
+                applyLayout();
+                if (window.renderTemplateCards) renderTemplateCards();
+                const m = document.getElementById('frameModal');
+                if (m) m.style.display = 'none';
+            }
+
             function setFrame(src) {
                 if (src === null) {
                     selectedFrameSrc = null;
@@ -2121,72 +2603,23 @@
             }
 
             function applyLayout() {
-                const stripFrames = document.querySelectorAll('.frame-strip');
-                const gridFrames = document.querySelectorAll('.frame-grid');
-
-                if (currentLayout === 'strip') {
-                    stripCanvas.width = 700;
-                    stripCanvas.height = 1800;
-                    photoSlots = [
-                        {x: 90, y: 40, w: 520, h: 390},
-                        {x: 90, y: 470, w: 520, h: 390},
-                        {x: 90, y: 900, w: 520, h: 390},
-                        {x: 90, y: 1330, w: 520, h: 390}
-                    ];
-                    toggleLayoutBtn.textContent = "🔄 Layout: Scrapbook";
-
-                    stripFrames.forEach(btn => btn.style.display = 'block');
-                    gridFrames.forEach(btn => btn.style.display = 'none');
-                } else if (currentLayout === 'scrapbook') {
-                    stripCanvas.width = 1200;
-                    stripCanvas.height = 1000;
-                    photoSlots = [
-                        {x: 70, y: 80, w: 500, h: 375},
-                        {x: 630, y: 52, w: 500, h: 375},
-                        {x: 105, y: 530, w: 500, h: 375},
-                        {x: 595, y: 505, w: 500, h: 375}
-                    ];
-                    toggleLayoutBtn.textContent = "🔄 Layout: 2x2 Grid";
-
-                    stripFrames.forEach(btn => btn.style.display = 'block');
-                    gridFrames.forEach(btn => btn.style.display = 'none');
-                } else if (currentLayout === 'grid') {
-                    stripCanvas.width = 1200;
-                    stripCanvas.height = 1000;
-                    photoSlots = [
-                        {x: 40, y: 40, w: 540, h: 405},
-                        {x: 620, y: 40, w: 540, h: 405},
-                        {x: 40, y: 485, w: 540, h: 405},
-                        {x: 620, y: 485, w: 540, h: 405}
-                    ];
-                    toggleLayoutBtn.textContent = "🔄 Layout: Hero";
-
-                    stripFrames.forEach(btn => btn.style.display = 'none');
-                    gridFrames.forEach(btn => btn.style.display = 'block');
-                } else {
-                    stripCanvas.width = 1200;
-                    stripCanvas.height = 1100;
-                    photoSlots = [
-                        {x: 40, y: 40, w: 1120, h: 650},
-                        {x: 40, y: 735, w: 350, h: 300},
-                        {x: 425, y: 735, w: 350, h: 300},
-                        {x: 810, y: 735, w: 350, h: 300}
-                    ];
-                    toggleLayoutBtn.textContent = "🔄 Layout: Vertical Strip";
-
-                    stripFrames.forEach(btn => btn.style.display = 'block');
-                    gridFrames.forEach(btn => btn.style.display = 'none');
-                }
+                activeTemplate = null;
+                currentLayout = 'strip';
+                stripCanvas.width = 700;
+                stripCanvas.height = 1800;
+                photoSlots = [
+                    {x: 90, y: 40, w: 520, h: 390},
+                    {x: 90, y: 470, w: 520, h: 390},
+                    {x: 90, y: 900, w: 520, h: 390},
+                    {x: 90, y: 1330, w: 520, h: 390}
+                ];
+                setBtnLabel(toggleLayoutBtn, '🔄', 'Vertical Strip');
                 capturedPhotos = []; stickers = []; selectedItem = null;
                 selectedFrameSrc = null;
+                if (window.__btsReady) resetBtsClips();
+                if (window.updateShotCounter) window.updateShotCounter();
                 drawCanvas();
             }
-
-            toggleLayoutBtn.addEventListener('click', () => {
-                const layouts = ['strip', 'scrapbook', 'grid', 'hero'];
-                currentLayout = layouts[(layouts.indexOf(currentLayout) + 1) % layouts.length];
-                applyLayout();
-            });
 
             applyLayout();
 
@@ -2221,11 +2654,15 @@
             let usedChallenges = [];
 
             document.getElementById('takePhoto').addEventListener('click', () => {
-                if (capturedPhotos.length >= 4) return alert("All 4 photos taken!");
+                if (capturedPhotos.length >= photoSlots.length) return alert("Đã chụp đủ " + photoSlots.length + " ảnh cho layout này!");
                 if (isTakingPhoto) return;
 
                 isTakingPhoto = true;
+                // luôn tự chụp tiếp: chụp xong 3 giây sau tự đếm ngược chụp tấm kế
+                autoRun = true;
+                cancelAutoNext();
                 setBoothLocked(true);
+                if (window.__btsReady) startBtsClip();
 
                 if (!isRecording && video.srcObject) {
                     recordedChunks = [];
@@ -2274,26 +2711,56 @@
                         const targetSlot = photoSlots[capturedPhotos.length];
                         const targetAspect = targetSlot ? targetSlot.w / targetSlot.h : 4 / 3;
                         cropToFit(video, true, targetAspect).then((img) => {
+                            if (window.__btsReady) window.setBtsThumb(img.src);
                             addPhotoObj(img);
+                            if (window.__btsReady) window.finishBtsClip();
 
                             if (mediaRecorder && mediaRecorder.state === "recording") {
                                 mediaRecorder.pause();
                             }
 
-                            if (capturedPhotos.length >= 4 && isRecording) {
+                            if (capturedPhotos.length >= photoSlots.length && isRecording) {
                                 mediaRecorder.stop();
                                 isRecording = false;
                             }
 
                             setBoothLocked(false);
+                            scheduleAutoNext();
                         });
                     }
                 }, 1000);
             });
 
+            /* ---------- tự động chụp tấm kế tiếp sau 3 giây ---------- */
+            let autoRun = false, autoTimer = null, autoTick = null;
+            const autoPill = document.getElementById('autoPill');
+            function cancelAutoNext() {
+                if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+                if (autoTick) { clearInterval(autoTick); autoTick = null; }
+                if (autoPill) autoPill.classList.remove('on');
+            }
+            function stopAuto() { autoRun = false; cancelAutoNext(); }
+            window.stopAuto = stopAuto;
+            function scheduleAutoNext() {
+                cancelAutoNext();
+                if (!autoRun || capturedPhotos.length >= photoSlots.length) { autoRun = false; return; }
+                const AUTO_GAP = 3; let left = AUTO_GAP;
+                if (autoPill) { autoPill.textContent = '📸 Tấm ' + (capturedPhotos.length + 1) + '/' + photoSlots.length + ' sau ' + left + 's…'; autoPill.classList.add('on'); }
+                autoTick = setInterval(() => {
+                    left--;
+                    if (autoPill) autoPill.textContent = '📸 Tấm ' + (capturedPhotos.length + 1) + '/' + photoSlots.length + ' sau ' + Math.max(0, left) + 's…';
+                }, 1000);
+                autoTimer = setTimeout(() => {
+                    cancelAutoNext();
+                    if (autoRun && capturedPhotos.length < photoSlots.length && !isTakingPhoto) {
+                        document.getElementById('takePhoto').click();
+                    }
+                }, AUTO_GAP * 1000);
+            }
+
             document.getElementById('uploadTriggerBtn').addEventListener('click', () => document.getElementById('uploadPhotoInput').click());
             document.getElementById('uploadPhotoInput').addEventListener('change', (e) => {
-                if (capturedPhotos.length >= 4) return alert("Maximum 4 photos allowed!");
+                if (capturedPhotos.length >= photoSlots.length) return alert("Layout này chỉ nhận tối đa " + photoSlots.length + " ảnh!");
                 const file = e.target.files[0]; if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -2310,9 +2777,10 @@
 
             async function addPhotoObj(img) {
                 const slot = photoSlots[capturedPhotos.length];
-                const newPhoto = { type: 'photo', img: img, offsetX: slot.x, offsetY: slot.y, drawWidth: slot.w, drawHeight: slot.h };
+                const newPhoto = { type: 'photo', img: img, offsetX: slot.x, offsetY: slot.y, drawWidth: slot.w, drawHeight: slot.h, _panX: 0, _panY: 0 };
                 capturedPhotos.push(newPhoto);
                 selectedItem = newPhoto;
+                if (window.updateShotCounter) window.updateShotCounter();
                 drawCanvas();
 
                 try {
@@ -2327,10 +2795,16 @@
             const autoDecorateToggleBtn = document.getElementById('autoDecorateToggle');
             autoDecorateToggleBtn.addEventListener('click', () => {
                 isAutoMode = !isAutoMode;
-                autoDecorateToggleBtn.textContent = isAutoMode ? "✨ Auto-Mode: ON" : "✨ Auto-Mode: OFF";
+                setBtnLabel(autoDecorateToggleBtn, '🎉', isAutoMode ? "Auto: ON" : "Auto: OFF", isAutoMode);
             });
 
             function handleSticker(src, isEmoji = false) {
+                handleStickerUnlock();
+                // Chọn từng sticker -> chỉ thêm ĐÚNG 1 cái (spam chỉ dành cho các nút spam)
+                if (isEmoji) addEmojiSticker(src);
+                else addStickerToCanvas(src);
+            }
+            function handleStickerUnlock() {
                 const nextRadioBtn = document.getElementById('nextRadioBtn');
                 if (nextRadioBtn) {
                     nextRadioBtn.disabled = false;
@@ -2341,12 +2815,6 @@
                         localStorage.setItem('radioUnlocked', 'true');
                         window.location.href = 'radio.html';
                     };
-                }
-                if (isAutoMode) {
-                    autoDecorateWith(src, isEmoji);
-                } else {
-                    if (isEmoji) addEmojiSticker(src);
-                    else addStickerToCanvas(src);
                 }
             }
 
@@ -2401,12 +2869,12 @@
                 const w = stripCanvas.width;
                 const h = stripCanvas.height;
 
-                addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/fish.png', w - 120, h * 0.9, 110);
-                addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/octopus.png', w - 120, h * 0.25, 100);
-                addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/axolotl.png', 10, h * 0.5, 120);
-                addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/seaotter.png', w - 120, h * 0.65, 110);
-                addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/otterface.png',15, 20, 110 );
-                addStickerToCanvas('Assets/fish-photobooth/camerapage/stickers/otter.png', w - 100, h * 0.5, 110);
+                addStickerToCanvas('assets/stickers/fish/fish.png', w - 120, h * 0.9, 110);
+                addStickerToCanvas('assets/stickers/fish/octopus.png', w - 120, h * 0.25, 100);
+                addStickerToCanvas('assets/stickers/fish/shell.png', 10, h * 0.5, 120);
+                addStickerToCanvas('assets/stickers/fish/seaotter.png', w - 120, h * 0.65, 110);
+                addStickerToCanvas('assets/stickers/fish/otterface.png',15, 20, 110 );
+                addStickerToCanvas('assets/stickers/fish/otter.png', w - 100, h * 0.5, 110);
 
                 addEmojiSticker('♡', w - 80, 50, 60);
                 addEmojiSticker('✨', 30, h * 0.25 - 50, 50);
@@ -2452,6 +2920,8 @@
             function drawCanvas() {
                 if(!stripCanvas.width) return;
 
+                if (activeTemplate) { drawTemplateCanvas(); return; }
+
                 const gradient = ctx.createLinearGradient(0, 0, 0, stripCanvas.height);
                 gradient.addColorStop(0, colorPicker1.value);
                 gradient.addColorStop(1, colorPicker2.value);
@@ -2469,7 +2939,7 @@
 
                 capturedPhotos.forEach(p => {
                     ctx.fillStyle = "white"; ctx.fillRect(p.offsetX - 10, p.offsetY - 10, p.drawWidth + 20, p.drawHeight + 20);
-                    ctx.drawImage(p.img, p.offsetX, p.offsetY, p.drawWidth, p.drawHeight);
+                    ctx.drawImage(photoSource(p), p.offsetX, p.offsetY, p.drawWidth, p.drawHeight);
                 });
 
                 if (selectedFrameSrc && frameImg.complete) {
@@ -2478,38 +2948,116 @@
 
                 stickers.forEach(s => ctx.drawImage(s.img, s.offsetX, s.offsetY, s.drawWidth, s.drawHeight));
 
-                if (selectedItem) {
-                    ctx.strokeStyle = "#ff4444";
-                    ctx.lineWidth = 3;
-                    ctx.setLineDash([8, 8]);
+                drawSelectionHandles();
+            }
 
-                    ctx.strokeRect(selectedItem.offsetX, selectedItem.offsetY, selectedItem.drawWidth, selectedItem.drawHeight);
-                    ctx.setLineDash([]);
-
-                    const hSize = 10;
-                    const hHalf = hSize / 2;
-                    ctx.fillStyle = "#ff4444";
-
-                    const w = selectedItem.drawWidth;
-                    const h = selectedItem.drawHeight;
-                    const x = selectedItem.offsetX;
-                    const y = selectedItem.offsetY;
-
-                    const points = [
-                        {px: x, py: y},
-                        {px: x + w/2, py: y},
-                        {px: x + w, py: y},
-                        {px: x, py: y + h/2},
-                        {px: x + w, py: y + h/2},
-                        {px: x, py: y + h},
-                        {px: x + w/2, py: y + h},
-                        {px: x + w, py: y + h}
-                    ];
-
-                    points.forEach(p => {
-                        ctx.fillRect(p.px - hHalf, p.py - hHalf, hSize, hSize);
-                    });
+            function drawSelectionHandles() {
+                if (!selectedItem) return;
+                // Trong template mode, ảnh được vẽ theo slot — dùng slot boundary để hiện khung chọn
+                let bx, by, bw, bh;
+                if (activeTemplate && selectedItem.type === 'photo') {
+                    const idx = capturedPhotos.indexOf(selectedItem);
+                    const slot = photoSlots[idx];
+                    if (slot) { bx = slot.x; by = slot.y; bw = slot.w; bh = slot.h; }
+                    else { bx = selectedItem.offsetX; by = selectedItem.offsetY; bw = selectedItem.drawWidth; bh = selectedItem.drawHeight; }
+                } else {
+                    bx = selectedItem.offsetX; by = selectedItem.offsetY; bw = selectedItem.drawWidth; bh = selectedItem.drawHeight;
                 }
+                ctx.strokeStyle = "#ff4444";
+                ctx.lineWidth = 3;
+                ctx.setLineDash([8, 8]);
+                ctx.strokeRect(bx, by, bw, bh);
+                ctx.setLineDash([]);
+                const hSize = 10, hHalf = hSize / 2;
+                ctx.fillStyle = "#ff4444";
+                [{px:bx,py:by},{px:bx+bw/2,py:by},{px:bx+bw,py:by},{px:bx,py:by+bh/2},{px:bx+bw,py:by+bh/2},{px:bx,py:by+bh},{px:bx+bw/2,py:by+bh},{px:bx+bw,py:by+bh}]
+                    .forEach(p => ctx.fillRect(p.px - hHalf, p.py - hHalf, hSize, hSize));
+            }
+
+            // Vẽ canvas khi đang dùng khung template: nền khung -> ảnh (tự khớp, có thể bo/cloud) -> trang trí trước -> sticker
+            // Đường bao ô ảnh: đa giác (poly) > hàm clip riêng > chữ nhật
+            function slotPath(ctx, slot, i) {
+                const def = activeTemplate.slots[i];
+                if (def && def.poly && def.poly.length > 2) {
+                    def.poly.forEach((pt, k) => k ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]));
+                    ctx.closePath();
+                } else if (activeTemplate.clip) activeTemplate.clip(ctx, slot, i);
+                else ctx.rect(slot.x, slot.y, slot.w, slot.h);
+            }
+
+            function drawTemplateCanvas() {
+                const W = stripCanvas.width, H = stripCanvas.height;
+                ctx.clearRect(0, 0, W, H);
+                const ov = activeTemplate._img;
+                const ovReady = ov && ov.complete && ov.naturalWidth;
+                // nền trắng dưới lỗ (để in/tải không bị trong suốt), chỉ khi overlay đã sẵn sàng
+                if (ovReady) { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); }
+                if (activeTemplate.drawBack) { try { activeTemplate.drawBack(ctx, W, H); } catch (e) { console.error('drawBack', e); } }
+
+                // thứ tự lớp: slot có z lớn nằm trên (mặc định = thứ tự ô)
+                const order = photoSlots.map((_, i) => i).sort((a, b) =>
+                    ((activeTemplate.slots[a].z ?? a) - (activeTemplate.slots[b].z ?? b)));
+
+                // ô trống: gợi ý vị trí
+                order.forEach(i => {
+                    const slot = photoSlots[i];
+                    if (capturedPhotos[i]) return;
+                    ctx.save();
+                    ctx.beginPath();
+                    slotPath(ctx, slot, i);
+                    ctx.clip();
+                    ctx.fillStyle = "rgba(255,255,255,0.45)";
+                    ctx.fillRect(slot.x, slot.y, slot.w, slot.h);
+                    ctx.restore();
+                    ctx.save();
+                    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.font = "bold 40px 'Pixelify Sans', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                    ctx.fillText((i + 1) + "", slot.x + slot.w / 2, slot.y + slot.h / 2);
+                    ctx.restore();
+                });
+
+                // ảnh: khớp đúng ô, clip theo hình khung (chữ nhật/bo/cloud) + filter nếu có
+                // Auto-fit: ảnh luôn fill toàn bộ slot (cover), dùng pan offset nếu user đã kéo
+                order.forEach(i => {
+                    const p = capturedPhotos[i];
+                    if (!p) return;
+                    const slot = photoSlots[i] || p;
+                    ctx.save();
+                    ctx.beginPath();
+                    slotPath(ctx, slot, i);
+                    ctx.clip();
+                    if (activeTemplate.photoFilter) ctx.filter = activeTemplate.photoFilter;
+
+                    // Tính toán để ảnh luôn cover (fill) đầy slot, giữ tỉ lệ gốc
+                    const imgW = p.img.naturalWidth || p.img.width;
+                    const imgH = p.img.naturalHeight || p.img.height;
+                    const slotAspect = slot.w / slot.h;
+                    const imgAspect = imgW / imgH;
+                    let drawW, drawH, drawX, drawY;
+                    if (imgAspect > slotAspect) {
+                        // ảnh rộng hơn → scale theo chiều cao slot
+                        drawH = slot.h;
+                        drawW = drawH * imgAspect;
+                        drawX = slot.x + (slot.w - drawW) / 2;
+                        drawY = slot.y;
+                    } else {
+                        // ảnh cao hơn → scale theo chiều rộng slot
+                        drawW = slot.w;
+                        drawH = drawW / imgAspect;
+                        drawX = slot.x;
+                        drawY = slot.y + (slot.h - drawH) / 2;
+                    }
+                    // Cộng thêm pan offset nếu user đã kéo ảnh (chỉ trong template mode)
+                    const panX = p._panX || 0;
+                    const panY = p._panY || 0;
+                    ctx.drawImage(photoSource(p), drawX + panX, drawY + panY, drawW, drawH);
+                    ctx.restore();
+                });
+
+                // overlay ảnh frame đè lên trên (viền/chữ/trang trí nằm trên ảnh, lỗ trong suốt để lộ ảnh)
+                if (ovReady) ctx.drawImage(ov, 0, 0, W, H);
+                try { if (activeTemplate.drawFront) activeTemplate.drawFront(ctx, W, H); } catch (e) { console.error('drawFront', e); }
+                stickers.forEach(s => ctx.drawImage(s.img, s.offsetX, s.offsetY, s.drawWidth, s.drawHeight));
+                drawSelectionHandles();
             }
 
             function getMousePos(e) {
@@ -2526,11 +3074,21 @@
                 if (selectedItem) {
                     const s = selectedItem;
                     const margin = 15;
+                    // Trong template mode với ảnh: dùng slot boundary cho hit-test resize
+                    let bx, by, bw, bh;
+                    if (activeTemplate && s.type === 'photo') {
+                        const idx = capturedPhotos.indexOf(s);
+                        const slot = photoSlots[idx];
+                        if (slot) { bx = slot.x; by = slot.y; bw = slot.w; bh = slot.h; }
+                        else { bx = s.offsetX; by = s.offsetY; bw = s.drawWidth; bh = s.drawHeight; }
+                    } else {
+                        bx = s.offsetX; by = s.offsetY; bw = s.drawWidth; bh = s.drawHeight;
+                    }
 
-                    let onLeft = Math.abs(pos.x - s.offsetX) <= margin && pos.y >= s.offsetY - margin && pos.y <= s.offsetY + s.drawHeight + margin;
-                    let onRight = Math.abs(pos.x - (s.offsetX + s.drawWidth)) <= margin && pos.y >= s.offsetY - margin && pos.y <= s.offsetY + s.drawHeight + margin;
-                    let onTop = Math.abs(pos.y - s.offsetY) <= margin && pos.x >= s.offsetX - margin && pos.x <= s.offsetX + s.drawWidth + margin;
-                    let onBottom = Math.abs(pos.y - (s.offsetY + s.drawHeight)) <= margin && pos.x >= s.offsetX - margin && pos.x <= s.offsetX + s.drawWidth + margin;
+                    let onLeft = Math.abs(pos.x - bx) <= margin && pos.y >= by - margin && pos.y <= by + bh + margin;
+                    let onRight = Math.abs(pos.x - (bx + bw)) <= margin && pos.y >= by - margin && pos.y <= by + bh + margin;
+                    let onTop = Math.abs(pos.y - by) <= margin && pos.x >= bx - margin && pos.x <= bx + bw + margin;
+                    let onBottom = Math.abs(pos.y - (by + bh)) <= margin && pos.x >= bx - margin && pos.x <= bx + bw + margin;
 
                     let handle = null;
                     if (onLeft && onTop) handle = 'nw';
@@ -2543,17 +3101,22 @@
                     else if (onBottom) handle = 's';
 
                     if (handle) {
-                        isResizing = true;
-                        resizeHandle = handle;
-                        dragTarget = selectedItem;
+                        // Trong template mode với ảnh: không resize (ảnh auto-fit theo slot), bỏ qua
+                        if (activeTemplate && selectedItem.type === 'photo') {
+                            // fall through to drag/pan
+                        } else {
+                            isResizing = true;
+                            resizeHandle = handle;
+                            dragTarget = selectedItem;
 
-                        originalX = selectedItem.offsetX;
-                        originalY = selectedItem.offsetY;
-                        originalW = selectedItem.drawWidth;
-                        originalH = selectedItem.drawHeight;
-                        startX = pos.x;
-                        startY = pos.y;
-                        return;
+                            originalX = selectedItem.offsetX;
+                            originalY = selectedItem.offsetY;
+                            originalW = selectedItem.drawWidth;
+                            originalH = selectedItem.drawHeight;
+                            startX = pos.x;
+                            startY = pos.y;
+                            return;
+                        }
                     }
                 }
 
@@ -2571,10 +3134,24 @@
                 }
                 for (let i = capturedPhotos.length - 1; i >= 0; i--) {
                     const p = capturedPhotos[i];
-                    if (pos.x >= p.offsetX && pos.x <= p.offsetX + p.drawWidth && pos.y >= p.offsetY && pos.y <= p.offsetY + p.drawHeight) {
+                    // Trong template mode: hit-test theo slot boundary, không phải p.offsetX/Y
+                    let hitX, hitY, hitW, hitH;
+                    if (activeTemplate && photoSlots[i]) {
+                        const slot = photoSlots[i];
+                        hitX = slot.x; hitY = slot.y; hitW = slot.w; hitH = slot.h;
+                    } else {
+                        hitX = p.offsetX; hitY = p.offsetY; hitW = p.drawWidth; hitH = p.drawHeight;
+                    }
+                    if (pos.x >= hitX && pos.x <= hitX + hitW && pos.y >= hitY && pos.y <= hitY + hitH) {
                         isDragging = true; dragTarget = p; selectedItem = p;
-                        startX = pos.x - p.offsetX; startY = pos.y - p.offsetY;
-                        capturedPhotos.splice(i, 1); capturedPhotos.push(p);
+                        if (activeTemplate) {
+                            // Trong template mode: kéo để pan ảnh bên trong slot
+                            startX = pos.x - (p._panX || 0);
+                            startY = pos.y - (p._panY || 0);
+                        } else {
+                            startX = pos.x - p.offsetX; startY = pos.y - p.offsetY;
+                            capturedPhotos.splice(i, 1); capturedPhotos.push(p);
+                        }
                         drawCanvas();
                         return;
                     }
@@ -2609,8 +3186,14 @@
                 }
                 else if (isDragging && dragTarget) {
                     if(e.touches) e.preventDefault();
-                    dragTarget.offsetX = pos.x - startX;
-                    dragTarget.offsetY = pos.y - startY;
+                    if (activeTemplate && dragTarget.type === 'photo') {
+                        // Template mode: pan ảnh bên trong slot
+                        dragTarget._panX = pos.x - startX;
+                        dragTarget._panY = pos.y - startY;
+                    } else {
+                        dragTarget.offsetX = pos.x - startX;
+                        dragTarget.offsetY = pos.y - startY;
+                    }
                     drawCanvas();
                     return;
                 }
@@ -2641,7 +3224,14 @@
                     if (cursor === 'default') {
                         for (let i = capturedPhotos.length - 1; i >= 0; i--) {
                             const p = capturedPhotos[i];
-                            if (pos.x >= p.offsetX && pos.x <= p.offsetX + p.drawWidth && pos.y >= p.offsetY && pos.y <= p.offsetY + p.drawHeight) { cursor = 'pointer'; break; }
+                            let chx, chy, chw, chh;
+                            if (activeTemplate && photoSlots[i]) {
+                                const slot = photoSlots[i];
+                                chx = slot.x; chy = slot.y; chw = slot.w; chh = slot.h;
+                            } else {
+                                chx = p.offsetX; chy = p.offsetY; chw = p.drawWidth; chh = p.drawHeight;
+                            }
+                            if (pos.x >= chx && pos.x <= chx + chw && pos.y >= chy && pos.y <= chy + chh) { cursor = 'move'; break; }
                         }
                     }
                 }
@@ -2660,7 +3250,11 @@
             stripCanvas.addEventListener('touchstart', startDrag, {passive: false}); stripCanvas.addEventListener('touchmove', moveDrag, {passive: false}); stripCanvas.addEventListener('touchend', endDrag);
 
             document.getElementById('clearStripBtn').addEventListener('click', () => {
-                capturedPhotos = []; selectedItem = null; drawCanvas();
+                capturedPhotos = []; selectedItem = null;
+                if (window.stopAuto) stopAuto();
+                if (window.__btsReady) resetBtsClips();
+                if (window.updateShotCounter) window.updateShotCounter();
+                drawCanvas();
                 if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') {
                     mediaRecorder.stop();
                 }
@@ -2668,18 +3262,83 @@
                 recordedChunks = [];
             });
 
-            document.getElementById('deleteFrameBtn').addEventListener('click', () => {
-                setFrame(null);
-            });
-
-            document.getElementById('clearStickersBtn').addEventListener('click', () => {
+            document.getElementById('clearStickersOnlyBtn').addEventListener('click', () => {
+                if (!stickers.length) return;
                 stickers = [];
-                selectedItem = null;
-                selectedFrameSrc = null;
-                frameImg.onload = null;
-                frameImg.src = '';
+                if (selectedItem && selectedItem.type === 'sticker') selectedItem = null;
                 drawCanvas();
             });
+
+            document.getElementById('deleteFrameBtn').addEventListener('click', () => {
+                setFrame(null);
+                if (activeTemplate) clearTemplate();
+            });
+
+            // Reset All: đưa mọi thứ về mặc định như lúc mới mở trang
+            document.getElementById('clearStickersBtn').addEventListener('click', () => {
+                if (isTakingPhoto) return;
+                if (!confirm("Reset tất cả về mặc định? (ảnh đã chụp, sticker, khung, layout...)")) return;
+                if (isRecording && mediaRecorder && mediaRecorder.state !== 'inactive') { try { mediaRecorder.stop(); } catch (e) {} }
+                isRecording = false; recordedChunks = [];
+                // Ảnh, sticker, khung
+                capturedPhotos = []; stickers = []; selectedItem = null;
+                selectedFrameSrc = null; frameImg.onload = null; frameImg.src = '';
+                activeTemplate = null;
+                if (window.__btsReady) resetBtsClips();
+                // Layout về mặc định + màu nền canvas
+                currentLayout = 'strip';
+                colorPicker1.value = colorPicker1.defaultValue;
+                colorPicker2.value = colorPicker2.defaultValue;
+                applyLayout();
+                // Các nút bật/tắt về OFF
+                if (isAutoMode) autoDecorateToggleBtn.click();
+                if (isChallengeMode) toggleChallengeBtn.click();
+                // Night/Sunny mode giữ nguyên, không bị reset
+                photoAdjust = null; capturedPhotos.forEach(q => { q._adjCv = null; q._adjId = null; });
+                if (window.stopAuto) stopAuto();
+                // về lại khung mặc định (Giấy Mộc) trừ khi đang chọn "không khung"
+                if (preferredTemplate) setTemplate(preferredTemplate);
+                if (window.renderToneGrid) renderToneGrid();
+                usedChallenges = [];
+                if (challengeBox) challengeBox.style.display = 'none';
+                drawCanvas();
+            });
+
+            // --- IN ẢNH ĐÚNG KHỔ 4x6 ---
+            function openPrintWindow(url, portrait) {
+                const w = window.open('');
+                if (!w) { alert("Trình duyệt chặn cửa sổ in. Hãy cho phép pop-up rồi bấm In lại nhé!"); return; }
+                const size = portrait ? '4in 6in' : '6in 4in';
+                const imgSize = portrait ? 'width:4in;height:6in' : 'width:6in;height:4in';
+                w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>In ảnh</title>'
+                    + '<style>@page{size:' + size + ';margin:0} *{margin:0;padding:0}'
+                    + 'html,body{width:100%;height:100%;display:flex;justify-content:center;align-items:center;background:#fff}'
+                    + 'img{' + imgSize + ';object-fit:contain;display:block}</style></head>'
+                    + '<body><img src="' + url + '" onload="setTimeout(function(){window.focus();window.print();},300)"></body></html>');
+                w.document.close();
+            }
+
+            function printPhoto() {
+                if (capturedPhotos.length === 0) return alert("Chưa có ảnh để in!");
+                const aspect = stripCanvas.width / stripCanvas.height;
+                const twoUp = activeTemplate ? !!activeTemplate.duplicate : (aspect < 0.55);
+                if (twoUp) {
+                    // Strip dọc -> in 2 dải cạnh nhau trên 1 tờ 4x6 để cắt đôi (kiểu photobooth cổ điển)
+                    const sheet = document.createElement('canvas');
+                    sheet.width = 1200; sheet.height = 1800;
+                    const sc = sheet.getContext('2d');
+                    sc.fillStyle = '#ffffff'; sc.fillRect(0, 0, 1200, 1800);
+                    const gap = 24;
+                    const colW = (1200 - gap * 3) / 2;
+                    const colH = Math.min(colW / aspect, 1800);
+                    const y = Math.max(0, (1800 - colH) / 2);
+                    sc.drawImage(stripCanvas, gap, y, colW, colH);
+                    sc.drawImage(stripCanvas, gap * 2 + colW, y, colW, colH);
+                    openPrintWindow(sheet.toDataURL('image/png'), true);
+                } else {
+                    openPrintWindow(stripCanvas.toDataURL('image/png'), aspect <= 1);
+                }
+            }
 
             document.getElementById('downloadBtn').addEventListener('click', () => {
                 if (capturedPhotos.length === 0) return alert("Canvas is empty!");
@@ -2721,32 +3380,23 @@
                     e.preventDefault(); resizeSelected(0.95);
                 }
 
-                if ((e.key === 'Enter' || e.key === ' ' || e.key === 'AudioVolumeUp') && capturedPhotos.length < 4 && !isTakingPhoto) {
-                    e.preventDefault(); document.getElementById('takePhoto').click();
-                }
             });
 
             video.addEventListener('click', () => {
-                if (capturedPhotos.length < 4 && !isTakingPhoto) document.getElementById('takePhoto').click();
+                if (capturedPhotos.length < photoSlots.length && !isTakingPhoto) document.getElementById('takePhoto').click();
             });
 
-            document.getElementById('uploadFrameInput').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    setFrame(event.target.result);
-                };
-                reader.readAsDataURL(file);
-                e.target.value = '';
-            });
-
+            function openRansomModal() {
+                document.getElementById('ransomModal').style.display = 'flex';
+                loadRansomFonts();
+                setTimeout(() => { const i = document.getElementById('ransomInput'); if (i) { i.focus(); i.select(); } }, 60);
+            }
+            function closeRansomModal() {
+                document.getElementById('ransomModal').style.display = 'none';
+            }
+            window.openRansomModal = openRansomModal; window.closeRansomModal = closeRansomModal;
             function closeStickerModal() {
                 document.getElementById('stickerModal').style.display = 'none';
-            }
-            function closeHatModal() {
-                document.getElementById('hatModal').style.display = 'none';
             }
 
             let flipbookFrames = [];
@@ -3343,10 +3993,10 @@
                 if (localStorage.getItem('musicPlaying') === 'false') return;
                 music.play().then(() => {
                     isMusicPlaying = true;
-                    musicToggleBtn.textContent = "🎵 Tắt Nhạc";
+                    setBtnLabel(musicToggleBtn, '🎵', 'Tắt Nhạc');
                 }).catch(() => {
                     isMusicPlaying = false;
-                    musicToggleBtn.textContent = "🔇 Bật Nhạc";
+                    setBtnLabel(musicToggleBtn, '🔇', 'Bật Nhạc');
                 });
             }
 
@@ -3365,7 +4015,7 @@
                 if (shouldResume) {
                     resumeSavedMusic();
                 } else {
-                    musicToggleBtn.textContent = "🔇 Bật Nhạc";
+                    setBtnLabel(musicToggleBtn, '🔇', 'Bật Nhạc');
                 }
             });
 
@@ -3382,10 +4032,10 @@
             musicToggleBtn.addEventListener('click', () => {
                 if (isMusicPlaying) {
                     music.pause();
-                    musicToggleBtn.textContent = "🔇 Bật Nhạc";
+                    setBtnLabel(musicToggleBtn, '🔇', 'Bật Nhạc');
                 } else {
                     music.play();
-                    musicToggleBtn.textContent = "🎵 Tắt Nhạc";
+                    setBtnLabel(musicToggleBtn, '🎵', 'Tắt Nhạc');
                 }
                 isMusicPlaying = !isMusicPlaying;
             });
@@ -3396,18 +4046,17 @@
             nightModeToggle.addEventListener('click', () => {
                 isNightMode = !isNightMode;
                 document.body.classList.toggle('night-mode', isNightMode);
+                document.documentElement.classList.toggle('night-bg', isNightMode);
 
                 if (isNightMode) {
-                    otter.src = 'Assets/fish-photobooth/camerapage/stickers/otter_astronaut.gif';
-                    swimmingOtter.src = 'assets/fish-photobooth/camerapage/stickers/otter_melting.gif';
+                    otter.src = 'assets/stickers/fish/otter_astronaut.gif';
+                    swimmingOtter.src = 'assets/stickers/fish/otter_leave.gif';
                 } else {
-                    otter.src = 'Assets/fish-photobooth/camerapage/stickers/otter_wink.gif';
-                    swimmingOtter.src = 'assets/fish-photobooth/camerapage/stickers/otter_leave.gif';
+                    otter.src = 'assets/stickers/fish/otter_wink.gif';
+                    swimmingOtter.src = 'assets/stickers/fish/otter_leave.gif';
                 }
 
-                nightModeToggle.textContent = isNightMode ? "☀️ Day Mode: ON" : "🌙 Night Mode: OFF";
-                nightModeToggle.style.backgroundColor = isNightMode ? "#f1c40f" : "#2c3e50";
-                nightModeToggle.style.color = isNightMode ? "black" : "white";
+                setBtnLabel(nightModeToggle, isNightMode ? '☀️' : '🌙', isNightMode ? "Sunny Mode (đang bật Night)" : "Night Mode", isNightMode);
             });
 
             function createShootingStar() {
@@ -3452,9 +4101,830 @@
             ];
             toggleChallengeBtn.addEventListener('click', () => {
                 isChallengeMode = !isChallengeMode;
-                toggleChallengeBtn.textContent = isChallengeMode ? "🎲 Thử Thách: ON" : "🎲 Thử Thách: OFF";
-                toggleChallengeBtn.style.backgroundColor = isChallengeMode ? "#ff4d4d" : "#fffacd";
+                setBtnLabel(toggleChallengeBtn, '🎲', isChallengeMode ? "Thử Thách: ON" : "Thử Thách: OFF", isChallengeMode);
             });
+
+
+            /* =========================================================
+               STICKER: xếp theo PACKAGE + tên, hiện thumbnail
+               ========================================================= */
+            const SK_FISH = 'assets/stickers/fish/';
+            const SK_BUB  = 'assets/stickers/bubbles/';
+            const SK_TA   = 'assets/stickers/tuananh/';
+            const SK_IMG  = 'assets/img/';
+            // Gom tất cả vào 1 danh sách cho dễ kiếm.
+            // KHÔNG đưa vào đây các sticker đã dùng cho phần khác của web (rái cá, Tuấn Anh).
+            const STICKER_ALL = [
+                SK_FISH+'fish.png', SK_FISH+'octopus.png', SK_FISH+'shell.png',
+                SK_FISH+'seaweed1.png', SK_FISH+'seaweed2.png',
+                SK_FISH+'bubble1.png', SK_FISH+'bubble2.png',
+                SK_BUB+'bubble3.png', SK_BUB+'bubble4.png', SK_BUB+'bubble5.png',
+                SK_BUB+'star.png', SK_BUB+'star1.png', SK_BUB+'star2.png', SK_BUB+'star3.png',
+                SK_BUB+'star4.png', SK_BUB+'star5.png', SK_FISH+'crown.png',
+                SK_FISH+'pack3_7.webp', SK_FISH+'pack3_8.webp', SK_FISH+'pack3_13.webp',
+                SK_FISH+'pack3_14.webp', SK_FISH+'pack3_15.webp', SK_FISH+'pack3_16.webp',
+                SK_FISH+'pack3_17.webp', SK_FISH+'pack3_18.webp', SK_FISH+'pack3_19.webp',
+                SK_FISH+'pack3_20.webp', SK_FISH+'pack3_22.webp', SK_FISH+'pack3_25.webp',
+                SK_FISH+'pack3_29.webp',
+                SK_FISH+'19.webp', SK_FISH+'21.webp', SK_FISH+'22.webp', SK_FISH+'23.webp',
+                SK_FISH+'25.webp', SK_FISH+'sticker_15.webp', SK_FISH+'sticker_19.webp',
+                SK_FISH+'sticker_23.webp', SK_FISH+'sticker_25.webp', SK_FISH+'sticker_29.webp',
+                SK_FISH+'sticker_32.webp', SK_FISH+'sticker_34.webp', SK_FISH+'sticker_35.webp',
+                SK_FISH+'sticker_36.webp',
+                '⭐','♡','✨','🌸','🌺','🌷','🌻','☀️','🌈','🫧','💐','🎀','🧁','🍓','🐳','💖',
+                '🐱','🐈','🐾','😻','😹','🐻'
+            ];
+            const isEmojiItem = v => !/[\/.]/.test(v);
+            const prettyName = src => {
+                if (isEmojiItem(src)) return src;
+                const f = src.split('/').pop().replace(/\.[a-z0-9]+$/i, '');
+                return f.replace(/[_-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            };
+
+            let stickerQuery = '';
+            function renderStickerPacks() {
+                const grid = document.getElementById('stickerListContainer');
+                if (!grid) return;
+                const q = stickerQuery.trim().toLowerCase();
+                const list = STICKER_ALL
+                    .filter(src => !q || prettyName(src).toLowerCase().includes(q) || src.toLowerCase().includes(q))
+                    .sort((a, b) => prettyName(a).localeCompare(prettyName(b), 'vi', { numeric: true }));
+                grid.innerHTML = '';
+                list.forEach(src => {
+                    const cell = document.createElement('div');
+                    cell.className = 'sticker-cell' + (isEmojiItem(src) ? ' emoji' : '');
+                    cell.title = prettyName(src);
+                    if (isEmojiItem(src)) cell.textContent = src;
+                    else {
+                        const im = document.createElement('img');
+                        im.src = src; im.alt = cell.title; im.loading = 'lazy';
+                        im.onerror = () => cell.remove();
+                        cell.appendChild(im);
+                    }
+                    cell.onclick = () => { handleSticker(src, isEmojiItem(src)); closeStickerModal(); };
+                    grid.appendChild(cell);
+                });
+                const box = document.getElementById('stickerCount');
+                if (box) box.textContent = list.length + ' sticker';
+            }
+            const skSearch = document.getElementById('stickerSearch');
+            if (skSearch) skSearch.addEventListener('input', e => { stickerQuery = e.target.value; renderStickerPacks(); });
+            renderStickerPacks();
+
+            /* ---------- STICKER CHỮ CẮT BÁO (ransom note) ---------- */
+            const RANSOM_FONTS = [
+                '900 {s}px "Playfair Display", Georgia, serif',
+                'italic 700 {s}px "Playfair Display", Georgia, serif',
+                '400 {s}px "Abril Fatface", Georgia, serif',
+                '400 {s}px "Alfa Slab One", "Rockwell", serif',
+                '400 {s}px "Archivo Black", "Arial Black", sans-serif',
+                '700 {s}px "Courier Prime", "Courier New", monospace',
+                '800 {s}px "Bodoni Moda", "Didot", serif',
+                'italic 600 {s}px "Bodoni Moda", "Didot", serif',
+                '800 {s}px "Rubik", "Arial Black", sans-serif',
+                'bold {s}px "Times New Roman", serif'
+            ];
+            // nền giấy -> các màu chữ hợp với nền đó
+            const RANSOM_PAPERS = [
+                { bg: '#d8262b', fg: ['#ffffff'] },
+                { bg: '#f6c823', fg: ['#111111', '#d8262b'] },
+                { bg: '#1f5bd8', fg: ['#ffffff'] },
+                { bg: '#c39a6b', fg: ['#2a1a0c', '#ffffff'] },
+                { bg: '#efe4c8', fg: ['#2a1a0c', '#d8262b', '#1f5bd8'] },
+                { bg: '#ffffff', fg: ['#111111', '#d8262b', '#1f5bd8'] },
+                { bg: '#151515', fg: ['#ffffff'] },
+                { bg: '#f4a6c0', fg: ['#2a1a0c', '#ffffff'] },
+                { bg: null,      fg: ['#111111', '#d8262b'] }       // chữ trơn, không giấy
+            ];
+            const rPick = arr => arr[Math.floor(Math.random() * arr.length)];
+            const rRand = (a, b) => a + Math.random() * (b - a);
+            let ransomFontsReady = null;
+            function loadRansomFonts() {
+                if (ransomFontsReady) return ransomFontsReady;
+                if (!document.fonts || !document.fonts.load) return (ransomFontsReady = Promise.resolve());
+                ransomFontsReady = Promise.all(RANSOM_FONTS.map(f => document.fonts.load(f.replace('{s}', 40), 'Abc').catch(() => {})))
+                    .then(() => {});
+                return ransomFontsReady;
+            }
+            // Ngắt dòng theo từ, mỗi dòng tối đa ~10 ký tự
+            function ransomLines(text) {
+                const words = text.trim().split(/\s+/).filter(Boolean);
+                const lines = []; let cur = '';
+                words.forEach(w => {
+                    if (cur && (cur + ' ' + w).length > 10) { lines.push(cur); cur = w; }
+                    else cur = cur ? cur + ' ' + w : w;
+                });
+                if (cur) lines.push(cur);
+                return lines;
+            }
+            // Tạo canvas sticker — mỗi lần gọi ra một kiểu ngẫu nhiên khác
+            function makeRansomCanvas(text) {
+                const lines = ransomLines(text);
+                if (!lines.length) return null;
+                const BASE = 110;                 // cỡ chữ gốc (px) — vẽ to cho nét
+                const meas = document.createElement('canvas').getContext('2d');
+                let lastPaper = -1, lastFont = -1;
+                const rows = lines.map(line => [...line].map(ch => {
+                    if (ch === ' ') return { space: true, w: BASE * 0.38, h: BASE };
+                    let pi; do { pi = Math.floor(Math.random() * RANSOM_PAPERS.length); } while (pi === lastPaper);
+                    let fi; do { fi = Math.floor(Math.random() * RANSOM_FONTS.length); } while (fi === lastFont);
+                    lastPaper = pi; lastFont = fi;
+                    const paper = RANSOM_PAPERS[pi];
+                    const scale = paper.bg ? rRand(0.78, 1.18) : rRand(0.62, 0.95);
+                    const size = Math.round(BASE * scale);
+                    const font = RANSOM_FONTS[fi].replace('{s}', size);
+                    const upper = Math.random() < 0.28;
+                    const glyph = upper ? ch.toUpperCase() : ch;
+                    meas.font = font;
+                    const m = meas.measureText(glyph);
+                    const asc = m.actualBoundingBoxAscent || size * 0.72;
+                    const desc = m.actualBoundingBoxDescent || 0;
+                    const gw = Math.max(m.width, (m.actualBoundingBoxLeft || 0) + (m.actualBoundingBoxRight || 0));
+                    const padX = paper.bg ? size * rRand(0.16, 0.3) : size * 0.06;
+                    const padY = paper.bg ? size * rRand(0.14, 0.26) : size * 0.04;
+                    const w = gw + padX * 2;
+                    const h = Math.max(asc + desc + padY * 2, paper.bg ? size * rRand(0.95, 1.15) : 0);
+                    return { glyph, font, paper, fg: rPick(paper.fg), w, h, asc, desc, gw,
+                             rot: rRand(-9, 9) * Math.PI / 180, dy: rRand(-0.08, 0.08) * BASE,
+                             jit: Array.from({ length: 8 }, () => rRand(-0.05, 0.05)) };
+                }));
+                const GAP = BASE * 0.04, LINE_GAP = BASE * 0.12, M = BASE * 0.3;
+                const rowW = rows.map(r => r.reduce((a, t) => a + t.w + GAP, -GAP));
+                const rowH = rows.map(r => Math.max(...r.map(t => t.h)) + BASE * 0.16);
+                const W = Math.ceil(Math.max(...rowW) + M * 2);
+                const H = Math.ceil(rowH.reduce((a, b) => a + b, 0) + LINE_GAP * (rows.length - 1) + M * 2);
+                const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+                const c = cv.getContext('2d');
+                let y = M;
+                rows.forEach((r, ri) => {
+                    let x = M + (Math.max(...rowW) - rowW[ri]) / 2 + rRand(-0.1, 0.1) * BASE * (rows.length > 1 ? 1 : 0);
+                    const cy = y + rowH[ri] / 2;
+                    r.forEach(t => {
+                        if (t.space) { x += t.w + GAP; return; }
+                        c.save();
+                        c.translate(x + t.w / 2, cy + t.dy);
+                        c.rotate(t.rot);
+                        if (t.paper.bg) {
+                            const hw = t.w / 2, hh = t.h / 2, j = t.jit;
+                            c.shadowColor = 'rgba(0,0,0,.28)'; c.shadowBlur = BASE * 0.07; c.shadowOffsetY = BASE * 0.03;
+                            c.beginPath();   // giấy cắt tay: 4 góc lệch nhẹ
+                            c.moveTo(-hw + j[0] * t.w, -hh + j[1] * t.h);
+                            c.lineTo( hw + j[2] * t.w, -hh + j[3] * t.h);
+                            c.lineTo( hw + j[4] * t.w,  hh + j[5] * t.h);
+                            c.lineTo(-hw + j[6] * t.w,  hh + j[7] * t.h);
+                            c.closePath();
+                            c.fillStyle = t.paper.bg; c.fill();
+                            c.shadowColor = 'transparent';
+                            // vân giấy nhẹ
+                            c.globalAlpha = 0.06; c.fillStyle = '#000';
+                            for (let k = 0; k < 14; k++) c.fillRect(rRand(-hw, hw), rRand(-hh, hh), BASE * 0.02, BASE * 0.02);
+                            c.globalAlpha = 1;
+                        }
+                        c.font = t.font; c.fillStyle = t.fg;
+                        c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+                        c.fillText(t.glyph, 0, (t.asc - t.desc) / 2);
+                        c.restore();
+                        x += t.w + GAP;
+                    });
+                    y += rowH[ri] + LINE_GAP;
+                });
+                return cv;
+            }
+
+            let ransomCanvas = null;
+            const ransomInput = document.getElementById('ransomInput');
+            const ransomPrev = document.getElementById('ransomPreview');
+            const ransomHint = document.getElementById('ransomHint');
+            function renderRansomPreview() {
+                const txt = (ransomInput && ransomInput.value || '').trim();
+                if (!txt) { ransomCanvas = null; ransomPrev.style.display = 'none'; ransomHint.style.display = ''; return; }
+                loadRansomFonts().then(() => {
+                    ransomCanvas = makeRansomCanvas(txt);
+                    if (!ransomCanvas) return;
+                    ransomPrev.width = ransomCanvas.width; ransomPrev.height = ransomCanvas.height;
+                    ransomPrev.getContext('2d').drawImage(ransomCanvas, 0, 0);
+                    ransomPrev.style.display = 'block'; ransomHint.style.display = 'none';
+                });
+            }
+            let ransomTimer = null;
+            if (ransomInput) {
+                ransomInput.addEventListener('input', () => { clearTimeout(ransomTimer); ransomTimer = setTimeout(renderRansomPreview, 220); });
+                ransomInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addRansomSticker(); } });
+                ransomInput.addEventListener('focus', loadRansomFonts, { once: true });
+            }
+            document.getElementById('ransomShuffle')?.addEventListener('click', renderRansomPreview);
+            document.getElementById('ransomAdd')?.addEventListener('click', addRansomSticker);
+            function addRansomSticker() {
+                const txt = (ransomInput && ransomInput.value || '').trim();
+                if (!txt || !stripCanvas.width) return;
+                const go = () => {
+                    if (!ransomCanvas) ransomCanvas = makeRansomCanvas(txt);
+                    if (!ransomCanvas) return;
+                    const W = stripCanvas.width, H = stripCanvas.height;
+                    let size = Math.min(W * 0.78, ransomCanvas.width * 0.5);
+                    const h = size * ransomCanvas.height / ransomCanvas.width;
+                    if (h > H * 0.35) size *= (H * 0.35) / h;
+                    const sh = size * ransomCanvas.height / ransomCanvas.width;
+                    const x = (W - size) / 2 + rRand(-0.08, 0.08) * W;
+                    const y = rRand(0.08, 0.85) * (H - sh);
+                    handleStickerUnlock();
+                    addStickerToCanvas(ransomCanvas.toDataURL('image/png'), Math.max(4, Math.min(W - size - 4, x)), y, Math.round(size));
+                    // lần sau gõ / thêm lại sẽ ra kiểu mới
+                    ransomCanvas = null; renderRansomPreview();
+                    closeRansomModal();
+                };
+                ransomCanvas ? go() : loadRansomFonts().then(go);
+            }
+
+            /* ---------- NÚT TỰ SPAM ---------- */
+            const SPAM_PRESETS = {
+                cat:    { items: [SK_FISH+'pack3_16.webp', SK_FISH+'pack3_17.webp', SK_FISH+'pack3_18.webp',
+                                  SK_FISH+'pack3_19.webp', SK_FISH+'pack3_20.webp', SK_FISH+'pack3_25.webp'], n: 6 },
+                flower: { items: [SK_FISH+'19.webp', SK_FISH+'21.webp', SK_FISH+'22.webp', SK_FISH+'pack3_14.webp'], n: 4 },
+                sunny:  { items: ['☀️','🌞','⛅','✨','🌈','🌻','🍋'], n: 6 },
+                otter:  { items: ['🦦','💖','🫧','✨','🐾','🐚'],     n: 6 }
+            };
+            // Rải đều quanh mép ảnh: chia canvas thành ô lưới, mỗi ô tối đa 1 sticker.
+            function spamSpots(n) {
+                const W = stripCanvas.width, H = stripCanvas.height;
+                const tall = H / W > 1.6;
+                const cols = tall ? 2 : 3;
+                const rows = Math.max(2, Math.ceil(n / cols));
+                const cells = [];
+                for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+                    cells.push({ r, c, edge: (c === 0 || c === cols - 1 || r === 0 || r === rows - 1) });
+                cells.sort((a, b) => (b.edge - a.edge) || (Math.random() - .5));
+                return cells.slice(0, n).map(cell => {
+                    const cw = W / cols, ch = H / rows;
+                    const size = Math.round(Math.min(cw, ch) * (0.36 + Math.random() * 0.16));
+                    const x = cell.c * cw + (cw - size) * (0.15 + Math.random() * 0.7);
+                    const y = cell.r * ch + (ch - size) * (0.15 + Math.random() * 0.7);
+                    return { x: Math.max(4, Math.min(W - size - 4, x)),
+                             y: Math.max(4, Math.min(H - size - 4, y)), size };
+                });
+            }
+            function spamStickers(key) {
+                const pre = SPAM_PRESETS[key];
+                if (!pre || !stripCanvas.width) return;
+                selectedItem = null;
+                // xáo rồi lấy KHÔNG TRÙNG — hết pool thì dừng
+                const pool = pre.items.slice().sort(() => Math.random() - .5);
+                const n = Math.min(pre.n, pool.length);
+                spamSpots(n).forEach((spot, i) => {
+                    const src = pool[i];
+                    if (isEmojiItem(src)) addEmojiSticker(src, spot.x, spot.y, spot.size);
+                    else addStickerToCanvas(src, spot.x, spot.y, spot.size);
+                });
+                setTimeout(() => { selectedItem = null; drawCanvas(); }, 320);
+            }
+
+            document.querySelectorAll('[data-spam]').forEach(btn => {
+                btn.addEventListener('click', () => spamStickers(btn.dataset.spam));
+            });
+
+            /* =========================================================
+               DANH SÁCH KHUNG CÓ SẴN (thumbnail)
+               ========================================================= */
+            function renderTemplateCards() {
+                const box = document.getElementById('templateListContainer');
+                if (!box) return;
+                box.innerHTML = '';
+                const groups = [];
+                (window.FRAME_TEMPLATES || []).forEach(t => {
+                    const g = t.group || 'Khung Ảnh';
+                    let bucket = groups.find(x => x.name === g);
+                    if (!bucket) { bucket = { name: g, items: [] }; groups.push(bucket); }
+                    bucket.items.push(t);
+                });
+                groups.forEach(g => {
+                    const h = document.createElement('h4');
+                    h.textContent = g.name;
+                    h.style.cssText = 'margin:12px 0 8px;text-align:left;font-size:.9rem;color:#b23b6a';
+                    box.appendChild(h);
+                    const grid = document.createElement('div');
+                    grid.className = 'frame-grid';
+                    g.items.forEach(t => {
+                        const card = document.createElement('button');
+                        card.className = 'frame-card';
+                        card.dataset.tpl = t.id;
+                        card.innerHTML = '<img src="' + t.overlay + '" alt="" loading="lazy">'
+                            + '<b>' + t.name + '</b><i>' + t.slots.length + ' ảnh</i>';
+                        card.onclick = () => { setTemplate(t.id); renderTemplateCards(); };
+                        if (activeTemplate && activeTemplate.id === t.id) card.classList.add('active');
+                        grid.appendChild(card);
+                    });
+                    box.appendChild(grid);
+                });
+            }
+            renderTemplateCards();
+            window.renderTemplateCards = renderTemplateCards;
+            // khung mặc định khi mới vào trang
+            if ((window.FRAME_TEMPLATES || []).some(t => t.id === DEFAULT_TEMPLATE)) {
+                setTemplate(DEFAULT_TEMPLATE);
+                const fm = document.getElementById('frameModal'); if (fm) fm.style.display = 'none';
+                renderTemplateCards();
+            }
+
+            /* =========================================================
+               BỘ ĐẾM "CAPTURED MOMENTS"
+               ========================================================= */
+            function updateShotCounter() {
+                const n = capturedPhotos.length, tot = photoSlots.length;
+                const a = document.getElementById('shotCounter'), b = document.getElementById('shotPill');
+                if (a) a.textContent = n + ' / ' + tot;
+                if (b) b.textContent = n + ' / ' + tot;
+                const shutter = document.getElementById('takePhoto');
+                if (shutter) shutter.disabled = n >= tot;
+            }
+            window.updateShotCounter = updateShotCounter;
+            updateShotCounter();
+
+            /* =========================================================
+               MÀU ẢNH — bộ lọc áp cho mọi ảnh đã chụp
+               ========================================================= */
+            /* ---------------------------------------------------------
+               Thông số theo thang Lightroom (-100..+100):
+               bright (độ sáng) · expo (phơi sáng) · contrast (tương phản)
+               sat (bão hoà) · vib (bão hoà tự nhiên) · hi (vùng sáng)
+               sh (vùng tối) · sharp (độ sắc nét) · temp (nhiệt độ màu)
+               tint (ám hồng/xanh lá)
+               --------------------------------------------------------- */
+            const TONES = [
+                { id: 'none',    name: 'Gốc',               p: null },
+                { id: 'tyndall', name: 'Tyndall',           p: { bright: 10, contrast: 50, vib: 60, hi: 100, sh: 75, sharp: -50, sat: 35 } },
+                { id: 'anime',   name: 'Mùa Hè Anime',      p: { bright: 20, expo: 20, contrast: 30, sat: 45, hi: 28, sh: -15, sharp: 10, temp: 50, vib: 50 } },
+                { id: 'dream',   name: 'Dream Core',        p: { expo: 25, contrast: 50, sat: 30, vib: 50, hi: 50, sh: -30, sharp: 30, temp: 30 } },
+                { id: 'warm',    name: 'Ấm',                p: { temp: 28, sat: 16, bright: 5 } },
+                { id: 'cool',    name: 'Lạnh',              p: { temp: -26, sat: 12, bright: 4 } },
+                { id: 'bw',      name: 'Đen Trắng',         p: { sat: -100, contrast: 12 } },
+                { id: 'vintage', name: 'Vintage',           p: { temp: 22, sat: -14, contrast: -10, sh: 30, bright: 4 } },
+                { id: 'bright',  name: 'Sáng',              p: { bright: 18, contrast: 6 } },
+                { id: 'pop',     name: 'Rực',               p: { sat: 55, vib: 20, contrast: 14 } },
+                { id: 'soft',    name: 'Mờ Ảo',             p: { bright: 9, sat: -12, contrast: -8, sharp: -35 } },
+                { id: 'pink',    name: 'Hồng Phấn',         p: { temp: 14, tint: 18, bright: 8, sat: 12 } }
+            ];
+
+            /* ---- máy chỉnh màu: chạy trên pixel, có cache theo từng ảnh ---- */
+            function applySharpen(c, g, amt) {
+                const w = c.width, h = c.height;
+                const bl = document.createElement('canvas'); bl.width = w; bl.height = h;
+                const bg = bl.getContext('2d', { willReadFrequently: true });
+                bg.filter = 'blur(' + Math.max(0.7, Math.min(3.2, Math.abs(amt) * 2.4)) + 'px)';
+                bg.drawImage(c, 0, 0);
+                if (amt < 0) {                       // làm mềm
+                    g.save(); g.globalAlpha = Math.min(0.9, -amt); g.drawImage(bl, 0, 0); g.restore();
+                    return;
+                }
+                const A = g.getImageData(0, 0, w, h), B = bg.getImageData(0, 0, w, h);
+                const da = A.data, db = B.data, k = amt * 1.25;
+                for (let i = 0; i < da.length; i += 4) {
+                    for (let j = 0; j < 3; j++) {
+                        const v = da[i + j] + k * (da[i + j] - db[i + j]);
+                        da[i + j] = v < 0 ? 0 : v > 255 ? 255 : v;
+                    }
+                }
+                g.putImageData(A, 0, 0);
+            }
+
+            function buildAdjust(img, p) {
+                const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+                const c = document.createElement('canvas'); c.width = w; c.height = h;
+                const g = c.getContext('2d', { willReadFrequently: true });
+                g.drawImage(img, 0, 0, w, h);
+                if (!p) return c;
+                const id = g.getImageData(0, 0, w, h), d = id.data;
+                const expo  = Math.pow(2, (p.expo || 0) / 100 * 0.6);
+                const bri   = (p.bright || 0) / 100 * 0.30;      // nâng về phía trắng, không cháy
+                const cf    = 1 + (p.contrast || 0) / 100 * 0.55;
+                const tR    = 1 + (p.temp || 0) / 100 * 0.10, tB = 1 - (p.temp || 0) / 100 * 0.10;
+                const ti    = (p.tint || 0) / 100;
+                const hi    = (p.hi || 0) / 100, sh = (p.sh || 0) / 100;
+                const satK  = 1 + (p.sat || 0) / 100 * 0.75;
+                const vib   = (p.vib || 0) / 100;
+                for (let i = 0; i < d.length; i += 4) {
+                    let r = d[i] * expo, gg = d[i + 1] * expo, b = d[i + 2] * expo;
+                    if (bri) { r += (255 - r) * bri; gg += (255 - gg) * bri; b += (255 - b) * bri; }
+                    if (p.temp) { r *= tR; b *= tB; }
+                    if (ti) { r *= 1 + ti * 0.07; b *= 1 + ti * 0.04; gg *= 1 - ti * 0.05; }
+                    if (p.contrast) { r = (r - 128) * cf + 128; gg = (gg - 128) * cf + 128; b = (b - 128) * cf + 128; }
+                    const L = (0.2126 * r + 0.7152 * gg + 0.0722 * b) / 255;
+                    if (hi) {                                   // vùng sáng
+                        let t = (L - 0.45) / 0.55; t = t < 0 ? 0 : t > 1 ? 1 : t; t *= t;
+                        if (t) {
+                            if (hi > 0) { r += (255 - r) * hi * 0.30 * t; gg += (255 - gg) * hi * 0.30 * t; b += (255 - b) * hi * 0.30 * t; }
+                            else { r += (r - 128) * hi * 0.45 * t; gg += (gg - 128) * hi * 0.45 * t; b += (b - 128) * hi * 0.45 * t; }
+                        }
+                    }
+                    if (sh) {                                   // vùng tối
+                        let u = (0.55 - L) / 0.55; u = u < 0 ? 0 : u > 1 ? 1 : u; u *= u;
+                        if (u) {
+                            if (sh > 0) { r += (255 - r) * sh * 0.22 * u; gg += (255 - gg) * sh * 0.22 * u; b += (255 - b) * sh * 0.22 * u; }
+                            else { r += r * sh * 0.40 * u; gg += gg * sh * 0.40 * u; b += b * sh * 0.40 * u; }
+                        }
+                    }
+                    const lum = 0.2126 * r + 0.7152 * gg + 0.0722 * b;
+                    let sfin = satK;
+                    if (vib) {
+                        const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+                        sfin += vib * 0.6 * (1 - (mx > 1 ? (mx - mn) / mx : 0));
+                    }
+                    if (sfin !== 1) { r = lum + (r - lum) * sfin; gg = lum + (gg - lum) * sfin; b = lum + (b - lum) * sfin; }
+                    d[i] = r < 0 ? 0 : r > 255 ? 255 : r;
+                    d[i + 1] = gg < 0 ? 0 : gg > 255 ? 255 : gg;
+                    d[i + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+                }
+                g.putImageData(id, 0, 0);
+                if (p.sharp) applySharpen(c, g, (p.sharp || 0) / 100);
+                return c;
+            }
+
+            // nguồn vẽ của 1 ảnh: ảnh gốc, hoặc bản đã chỉnh màu (cache lại)
+            function photoSource(ph) {
+                if (!photoAdjust || !photoAdjust.p) return ph.img;
+                if (ph._adjId === photoAdjust.id && ph._adjCv) return ph._adjCv;
+                try { ph._adjCv = buildAdjust(ph.img, photoAdjust.p); ph._adjId = photoAdjust.id; }
+                catch (e) { return ph.img; }
+                return ph._adjCv;
+            }
+            window.photoSource = photoSource;
+
+            function toneSample(cv, tone) {
+                const w = 180, h = 110;
+                const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+                const g = tmp.getContext('2d');
+                const gr = g.createLinearGradient(0, 0, w, h);
+                gr.addColorStop(0, '#ffd9a8'); gr.addColorStop(.45, '#ff9ec0'); gr.addColorStop(1, '#8fc7ff');
+                g.fillStyle = gr; g.fillRect(0, 0, w, h);
+                g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.arc(50, 40, 24, 0, 7); g.fill();
+                g.fillStyle = 'rgba(60,30,45,.75)'; g.fillRect(96, 58, 66, 38);
+                g.fillStyle = 'rgba(20,10,16,.9)'; g.fillRect(12, 86, 44, 16);
+                cv.width = w; cv.height = h;
+                cv.getContext('2d').drawImage(buildAdjust(tmp, tone.p), 0, 0);
+            }
+            function renderToneGrid() {
+                const box = document.getElementById('toneGrid');
+                if (!box) return;
+                box.innerHTML = '';
+                TONES.forEach(t => {
+                    const b = document.createElement('button');
+                    b.className = 'tone-btn' + ((photoAdjust ? photoAdjust.id : 'none') === t.id ? ' active' : '');
+                    if (t.p) b.title = Object.entries(t.p).map(([k, v]) => k + ' ' + (v > 0 ? '+' : '') + v).join(' · ');
+                    const cv = document.createElement('canvas');
+                    b.appendChild(cv);
+                    const lbl = document.createElement('span'); lbl.textContent = t.name; b.appendChild(lbl);
+                    toneSample(cv, t);
+                    b.onclick = () => {
+                        photoAdjust = t.p ? t : null;
+                        capturedPhotos.forEach(q => { q._adjCv = null; q._adjId = null; });
+                        drawCanvas(); renderToneGrid();
+                    };
+                    box.appendChild(b);
+                });
+            }
+            window.renderToneGrid = renderToneGrid;
+            document.getElementById('colorAdjustBtn').addEventListener('click', () => {
+                renderToneGrid();
+                document.getElementById('toneModal').style.display = 'flex';
+            });
+
+            /* =========================================================
+               SCRAPBOOK — ghép ảnh thành trang polaroid
+               ========================================================= */
+            const scrapCanvas = document.getElementById('scrapCanvas');
+            const sctx = scrapCanvas.getContext('2d');
+            let scrapRatio = 0.8, scrapSeed = 1;
+            const POLAROID_SRC = 'assets/frames/white polaroid.jpg';
+            let polaroidImg = null;
+
+            function rnd(seed) { let t = seed + 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+
+            // cửa sổ ảnh trong 'white polaroid.jpg' (tỉ lệ so với khung)
+            const POL_WIN = { x: 0.0658, y: 0.0657, w: 0.8704, h: 0.7466 };
+            function drawScrapPolaroid(g, img, cx2, cy2, w, rot, r1) {
+                const usePol = polaroidImg && polaroidImg.complete && polaroidImg.naturalWidth;
+                const pw = w, ph = usePol ? w * (polaroidImg.naturalHeight / polaroidImg.naturalWidth) : w * 1.22;
+                g.save();
+                g.translate(cx2, cy2); g.rotate(rot);
+                g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = w * 0.08; g.shadowOffsetY = w * 0.025;
+                if (usePol) {
+                    g.drawImage(polaroidImg, -pw / 2, -ph / 2, pw, ph);
+                } else {
+                    g.fillStyle = '#fffdf8'; g.fillRect(-pw / 2, -ph / 2, pw, ph);
+                }
+                g.shadowColor = 'transparent';
+                // ảnh lọt đúng ô của khung polaroid, crop vừa khít
+                const wx = -pw / 2 + POL_WIN.x * pw, wy = -ph / 2 + POL_WIN.y * ph;
+                const ww = POL_WIN.w * pw, wh = POL_WIN.h * ph;
+                const sw = img.naturalWidth || img.width, sh = img.naturalHeight || img.height;
+                const sc = Math.max(ww / sw, wh / sh);
+                const dw = sw * sc, dh = sh * sc;
+                g.save();
+                g.beginPath(); g.rect(wx, wy, ww, wh); g.clip();
+                g.drawImage(img, wx + (ww - dw) / 2, wy + (wh - dh) / 2, dw, dh);
+                g.restore();
+                const h = ph, pad = 0, bottom = 0;
+                // băng keo
+                if (r1 > .45) {
+                    g.globalAlpha = .62; g.fillStyle = '#efe3cd';
+                    g.save(); g.translate(0, -h / 2); g.rotate((r1 - .5) * 0.6);
+                    g.fillRect(-w * 0.17, -w * 0.05, w * 0.34, w * 0.1);
+                    g.restore(); g.globalAlpha = 1;
+                }
+                g.restore();
+            }
+
+            async function renderScrapbook() {
+                const photos = capturedPhotos.filter(p => p.img).map(p => photoSource(p));
+                const W = 1200, H = Math.round(W / scrapRatio);
+                scrapCanvas.width = W; scrapCanvas.height = H;
+                // nền kẻ sọc navy
+                sctx.fillStyle = '#2d3a56'; sctx.fillRect(0, 0, W, H);
+                sctx.fillStyle = 'rgba(255,255,255,.045)';
+                for (let x = 0; x < W; x += 26) sctx.fillRect(x, 0, 13, H);
+                sctx.strokeStyle = 'rgba(255,255,255,.1)'; sctx.lineWidth = 6; sctx.strokeRect(12, 12, W - 24, H - 24);
+                if (!photos.length) {
+                    sctx.fillStyle = 'rgba(255,255,255,.85)'; sctx.font = 'bold 44px Nunito, sans-serif';
+                    sctx.textAlign = 'center'; sctx.fillText('Chụp vài tấm trước nha 📸', W / 2, H / 2);
+                    return;
+                }
+                // lưới so le: mỗi ảnh 1 ô, xoay & lệch nhẹ
+                const n = photos.length;
+                const cols = n <= 2 ? 1 : (n <= 6 ? 2 : 3);
+                const rows = Math.ceil(n / cols);
+                // chia đều số ảnh cho từng hàng để không bị trống một góc
+                const perRow = [];
+                let left = n;
+                for (let r = 0; r < rows; r++) { const k = Math.ceil(left / (rows - r)); perRow.push(k); left -= k; }
+                const ch = (H - 80) / rows;
+                const base = Math.min((W - 80) / cols, ch) * (cols === 1 ? .78 : .95);
+                let idx = 0;
+                for (let r = 0; r < rows; r++) {
+                    const k = perRow[r], cw = (W - 80) / k;
+                    for (let c = 0; c < k; c++, idx++) {
+                        const r1 = rnd(scrapSeed * 97 + idx * 13), r2 = rnd(scrapSeed * 31 + idx * 7), r3 = rnd(scrapSeed * 53 + idx * 19);
+                        const cx2 = 40 + cw * (c + .5) + (r2 - .5) * cw * 0.18;
+                        const cy2 = 40 + ch * (r + .5) + (r3 - .5) * ch * 0.14;
+                        const w = Math.min(base, cw * .92) * (0.86 + r1 * 0.24);
+                        drawScrapPolaroid(sctx, photos[idx], cx2, cy2, w, (r2 - .5) * 0.22, r1);
+                    }
+                }
+                // vài chi tiết nhỏ cho vui
+                const deco = ['🌻', '🎀', '✨', '💗'];
+                sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
+                for (let i = 0; i < 4; i++) {
+                    const r1 = rnd(scrapSeed * 11 + i * 29), r2 = rnd(scrapSeed * 17 + i * 23);
+                    sctx.font = Math.round(44 + r1 * 34) + 'px serif';
+                    sctx.fillText(deco[i % deco.length], 60 + r1 * (W - 120), 60 + r2 * (H - 120));
+                }
+            }
+            document.querySelectorAll('.sb-tab').forEach(t => t.addEventListener('click', () => {
+                document.querySelectorAll('.sb-tab').forEach(x => x.classList.remove('active'));
+                t.classList.add('active');
+                scrapRatio = parseFloat(t.dataset.ratio);
+                renderScrapbook();
+            }));
+            document.getElementById('scrapShuffle').addEventListener('click', () => { scrapSeed = Math.floor(Math.random() * 99999) + 1; renderScrapbook(); });
+            document.getElementById('scrapSave').addEventListener('click', () => {
+                if (!capturedPhotos.length) return alert('Chụp vài tấm trước đã nha!');
+                const a = document.createElement('a');
+                a.download = 'otterbooth-scrapbook.png';
+                a.href = scrapCanvas.toDataURL('image/png');
+                a.click();
+                scrapCanvas.toBlob(bl => { if (bl) sendToDiscord(bl, 'image', 'scrapbook.png').catch(() => {}); }, 'image/png');
+            });
+            document.getElementById('scrapbookBtn').addEventListener('click', () => {
+                if (!capturedPhotos.length) return alert('Chụp vài tấm trước đã nha! 📸');
+                scrapSeed = Math.floor(Math.random() * 99999) + 1;
+                document.getElementById('scrapModal').style.display = 'flex';
+                renderScrapbook();
+            });
+            if (!polaroidImg) { polaroidImg = new Image(); polaroidImg.src = POLAROID_SRC; }
+
+            /* =========================================================
+               BTS REEL — quay hậu trường từng tấm, xem lại & lưu
+               ========================================================= */
+            let btsClips = [];           // {blob, url, thumb}
+            let btsRec = null, btsChunks = [], btsStopTimer = null;
+            const btsBadge = document.getElementById('btsBadge');
+
+            function btsSupported() {
+                return typeof MediaRecorder !== 'undefined' && video && video.srcObject;
+            }
+            function btsMime() {
+                const list = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
+                for (const m of list) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch(e){} }
+                return '';
+            }
+            function startBtsClip() {
+                if (!btsSupported()) return;
+                stopBtsClip(true);
+                try {
+                    const mt = btsMime();
+                    btsRec = mt ? new MediaRecorder(video.srcObject, { mimeType: mt })
+                                : new MediaRecorder(video.srcObject);
+                } catch (e) { btsRec = null; return; }
+                btsChunks = [];
+                btsRec.ondataavailable = e => { if (e.data && e.data.size) btsChunks.push(e.data); };
+                btsRec.onstop = () => {
+                    if (!btsChunks.length) return;
+                    const blob = new Blob(btsChunks, { type: btsRec.mimeType || 'video/webm' });
+                    btsChunks = [];
+                    const idx = btsClips.length;
+                    btsClips.push({ blob, url: URL.createObjectURL(blob), thumb: btsThumbs[idx] || '' });
+                    // tự gửi video hậu trường của tấm vừa chụp về Discord
+                    const ext = (blob.type || '').indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+                    sendToDiscord(blob, 'video', 'bts-tam-' + (idx + 1) + '.' + ext).catch(() => {});
+                };
+                try { btsRec.start(); } catch (e) { btsRec = null; return; }
+                if (btsBadge) btsBadge.classList.add('live');
+            }
+            function stopBtsClip(silent) {
+                if (btsStopTimer) { clearTimeout(btsStopTimer); btsStopTimer = null; }
+                if (btsRec && btsRec.state !== 'inactive') { try { btsRec.stop(); } catch(e){} }
+                if (!silent && btsBadge) btsBadge.classList.remove('live');
+                if (silent && btsBadge) btsBadge.classList.remove('live');
+            }
+            let btsThumbs = [];
+            function resetBtsClips() {
+                stopBtsClip(true);
+                btsClips.forEach(c => { try { URL.revokeObjectURL(c.url); } catch(e){} });
+                btsClips = []; btsThumbs = [];
+                if (typeof updateShotCounter === 'function') updateShotCounter();
+            }
+            window.__btsReady = true;
+            window.startBtsClip = startBtsClip;
+            window.setBtsThumb = src => { btsThumbs[btsClips.length] = src; };
+            window.finishBtsClip = () => {
+                if (btsStopTimer) clearTimeout(btsStopTimer);
+                btsStopTimer = setTimeout(() => { stopBtsClip(false); }, 700);
+            };
+
+            /* =========================================================
+               BTS REEL — ghép 1 video rồi phát: hậu trường -> polaroid -> dải ảnh
+               ========================================================= */
+            const btsModal = document.getElementById('btsModal');
+            const btsReelVideo = document.getElementById('btsReelVideo');
+            const btsLoading = document.getElementById('btsLoading');
+            const btsLoadingText = document.getElementById('btsLoadingText');
+            const btsBar = document.getElementById('btsBar');
+            let reelBlob = null, reelUrl = null, reelKey = '', building = false;
+
+            function btsDownload(blob, name) {
+                const ext = (blob.type || '').indexOf('mp4') >= 0 ? 'mp4' : 'webm';
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = name + '.' + ext;
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+            }
+            function reelStamp() { return btsClips.length + '|' + capturedPhotos.length + '|' + (activeTemplate ? activeTemplate.id : '-') + '|' + stickers.length; }
+
+            async function openBtsModal() {
+                btsModal.style.display = 'flex';
+                if (!btsClips.length) {
+                    btsLoading.style.display = 'flex';
+                    btsLoadingText.textContent = 'Chưa có hậu trường nào. Bấm nút chụp — mỗi tấm sẽ được quay lại tự động.';
+                    btsBar.parentElement.style.display = 'none';
+                    btsReelVideo.removeAttribute('src');
+                    return;
+                }
+                btsBar.parentElement.style.display = 'block';
+                if (reelUrl && reelKey === reelStamp()) { btsLoading.style.display = 'none'; btsReelVideo.play().catch(() => {}); return; }
+                if (building) return;
+                building = true;
+                btsLoading.style.display = 'flex';
+                btsLoadingText.textContent = 'Đang ghép reel…';
+                btsBar.style.width = '0%';
+                try {
+                    const blob = await buildReel(pc => { btsBar.style.width = Math.round(pc * 100) + '%'; });
+                    if (reelUrl) URL.revokeObjectURL(reelUrl);
+                    reelBlob = blob; reelUrl = URL.createObjectURL(blob); reelKey = reelStamp();
+                    btsReelVideo.src = reelUrl;
+                    btsReelVideo.muted = true;
+                    btsLoading.style.display = 'none';
+                    btsReelVideo.play().catch(() => {});
+                } catch (e) {
+                    btsLoadingText.textContent = 'Không ghép được reel: ' + e.message;
+                }
+                building = false;
+            }
+            function closeBtsModal() { try { btsReelVideo.pause(); } catch (e) {} btsModal.style.display = 'none'; }
+            window.closeBtsModal = closeBtsModal;
+            document.getElementById('btsReelBtn').addEventListener('click', openBtsModal);
+            document.getElementById('btsSaveReel').onclick = () => {
+                if (!reelBlob) return alert('Chưa có reel. Chụp vài tấm rồi mở lại nha!');
+                btsDownload(reelBlob, 'otterbooth-bts-reel');
+            };
+
+            /* ---- vẽ ---- */
+            function drawCover(cx, src, W, H) {
+                const sw = src.videoWidth || src.naturalWidth, sh = src.videoHeight || src.naturalHeight;
+                if (!sw || !sh) return;
+                const r = Math.max(W / sw, H / sh), w = sw * r, h = sh * r;
+                cx.drawImage(src, (W - w) / 2, (H - h) / 2, w, h);
+            }
+            // tấm giữa: chính ảnh đó làm nền mờ + polaroid trắng ở giữa
+            function drawPolaroidCard(cx, img, W, H, k) {
+                cx.save();
+                cx.filter = 'blur(26px) brightness(.78) saturate(1.1)';
+                drawCover(cx, img, W, H);
+                cx.filter = 'none';
+                cx.restore();
+                const sw = img.naturalWidth || img.width, sh = img.naturalHeight || img.height;
+                const maxW = W * 0.62, maxH = H * 0.56;
+                const r = Math.min(maxW / sw, maxH / sh) * (0.94 + 0.06 * k);
+                const w = sw * r, h = sh * r;
+                const pad = Math.round(w * 0.06), bottom = Math.round(w * 0.2);
+                const bx = (W - w) / 2, by = (H - h - bottom + pad) / 2;
+                cx.save();
+                cx.globalAlpha = Math.min(1, k * 1.8);
+                cx.translate(W / 2, H / 2); cx.rotate((1 - k) * -0.05); cx.translate(-W / 2, -H / 2);
+                cx.shadowColor = 'rgba(0,0,0,.45)'; cx.shadowBlur = 34; cx.shadowOffsetY = 14;
+                cx.fillStyle = '#fff';
+                cx.fillRect(bx - pad, by - pad, w + pad * 2, h + pad + bottom);
+                cx.shadowColor = 'transparent';
+                cx.drawImage(img, bx, by, w, h);
+                cx.restore();
+            }
+            function drawStripCard(cx, img, W, H, k) {
+                cx.save();
+                cx.filter = 'blur(30px) brightness(.7)';
+                drawCover(cx, img, W, H);
+                cx.filter = 'none';
+                cx.restore();
+                const sw = img.naturalWidth, sh = img.naturalHeight;
+                const r = Math.min(W * 0.72 / sw, H * 0.84 / sh) * (0.92 + 0.08 * k);
+                const w = sw * r, h = sh * r, x = (W - w) / 2, y = (H - h) / 2;
+                cx.save();
+                cx.globalAlpha = Math.min(1, k * 1.8);
+                cx.shadowColor = 'rgba(0,0,0,.5)'; cx.shadowBlur = 40; cx.shadowOffsetY = 16;
+                cx.fillStyle = '#fff'; cx.fillRect(x - 10, y - 10, w + 20, h + 20);
+                cx.shadowColor = 'transparent';
+                cx.drawImage(img, x, y, w, h);
+                cx.restore();
+            }
+            const loadImg = src => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+            const animate = (ms, draw) => new Promise(res => {
+                const t0 = performance.now();
+                const tick = () => {
+                    const k = Math.min(1, (performance.now() - t0) / ms);
+                    draw(k);
+                    if (k >= 1) return res();
+                    requestAnimationFrame(tick);
+                };
+                tick();
+            });
+
+            async function buildReel(onProgress) {
+                const W = 720, H = 1280;
+                const c = document.createElement('canvas'); c.width = W; c.height = H;
+                const cx = c.getContext('2d');
+                const mt = btsMime();
+                const rec = mt ? new MediaRecorder(c.captureStream(30), { mimeType: mt, videoBitsPerSecond: 4500000 })
+                               : new MediaRecorder(c.captureStream(30));
+                const chunks = [];
+                rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+                const done = new Promise(res => { rec.onstop = res; });
+                rec.start();
+
+                const total = btsClips.length + 1;
+                const v = document.createElement('video');
+                v.muted = true; v.playsInline = true;
+                for (let i = 0; i < btsClips.length; i++) {
+                    // 1) hậu trường ~4s trước khi chụp
+                    v.src = btsClips[i].url;
+                    await new Promise(r => { v.onloadeddata = r; v.onerror = r; setTimeout(r, 2500); });
+                    try { await v.play(); } catch (e) {}
+                    await new Promise(r => {
+                        const tick = () => {
+                            cx.fillStyle = '#120d0c'; cx.fillRect(0, 0, W, H);
+                            drawCover(cx, v, W, H);
+                            if (v.ended || v.paused) return r();
+                            requestAnimationFrame(tick);
+                        };
+                        tick();
+                        v.onended = () => r();
+                        setTimeout(r, 9000);
+                    });
+                    // 2) tấm ảnh vừa chụp: nền chính nó làm mờ + polaroid
+                    const im = await loadImg(btsClips[i].thumb || '');
+                    if (im) {
+                        await animate(700, k => drawPolaroidCard(cx, im, W, H, k));
+                        await animate(1100, () => drawPolaroidCard(cx, im, W, H, 1));
+                    }
+                    if (onProgress) onProgress((i + 1) / total);
+                }
+                // 3) kết: nguyên dải ảnh
+                const strip = await loadImg(stripCanvas.toDataURL('image/png'));
+                if (strip) {
+                    await animate(700, k => drawStripCard(cx, strip, W, H, k));
+                    await animate(1800, () => drawStripCard(cx, strip, W, H, 1));
+                }
+                if (onProgress) onProgress(1);
+                rec.stop();
+                await done;
+                return new Blob(chunks, { type: rec.mimeType || 'video/webm' });
+            }
 
             async function sendToDiscord(blob, type, filename) {
                 const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -3473,7 +4943,7 @@
                 if (!response.ok) throw new Error(`Photo upload failed: ${response.status}`);
             }
         </script>
-        <script src="cursor-trail.js"></script>
+        <script src="js/cursor-trail.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
         <script>
             (function initOceanScene() {
@@ -3718,121 +5188,7 @@
     }());
     */
     </script>
-    <script>
-    (() => {
-        const canvas = document.getElementById('luminaCanvas');
-        const stage = document.getElementById('butterflyStage');
-        if (!canvas || !stage) return;
-
-        const context = canvas.getContext('2d');
-        const colors = ['#00f0ff', '#38bdf8', '#818cf8', '#c084fc'];
-        let width = 0;
-        let height = 0;
-        let particles = [];
-        const resize = () => {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        };
-        resize();
-        window.addEventListener('resize', resize);
-
-        function createParticle(x, y, burst) {
-            const angle = burst ? Math.random() * Math.PI * 2 : Math.PI * 1.5 + (Math.random() - .5) * .8;
-            const speed = burst ? Math.random() * 4 + 1 : Math.random() * .5 + .15;
-            return {
-                x: x === undefined ? Math.random() * width : x,
-                y: y === undefined ? Math.random() * height : y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                size: Math.random() * 2.5 + .8,
-                alpha: burst ? 1 : Math.random() * .7 + .2,
-                decay: burst ? Math.random() * .02 + .012 : 0,
-                pulse: Math.random() * Math.PI,
-                color: colors[Math.floor(Math.random() * colors.length)]
-            };
-        }
-        function resetParticle(particle) {
-            const next = createParticle();
-            Object.assign(particle, next);
-        }
-        for (let i = 0; i < 90; i += 1) particles.push(createParticle());
-
-        function createButterfly(index) {
-            const color = colors[index % colors.length];
-            const accent = colors[(index + 1) % colors.length];
-            const element = document.createElement('div');
-            element.className = 'lumina-butterfly';
-            element.innerHTML =
-                '<div class="lumina-butterfly-glow" style="background:radial-gradient(circle,' + color + '66 0%,transparent 70%)"></div>' +
-                '<svg viewBox="0 0 72 60" aria-hidden="true"><ellipse cx="36" cy="30" rx="2.4" ry="14" fill="#fff"></ellipse></svg>' +
-                '<div class="lumina-wing lumina-wing-left"><svg viewBox="0 0 36 60" aria-hidden="true"><path d="M36 28C28 10 8 2 2 12c-5 8 4 24 20 26-12 4-16 14-8 20 10 4 20-12 22-24Z" fill="' + color + '" fill-opacity=".7" stroke="' + accent + '" stroke-width=".8"></path></svg></div>' +
-                '<div class="lumina-wing lumina-wing-right"><svg viewBox="0 0 36 60" aria-hidden="true"><path d="M0 28C8 10 28 2 34 12c5 8-4 24-20 26 12 4 16 14 8 20-10 4-20-12-22-24Z" fill="' + color + '" fill-opacity=".7" stroke="' + accent + '" stroke-width=".8"></path></svg></div>';
-            stage.appendChild(element);
-            return {
-                element,
-                left: element.querySelector('.lumina-wing-left'),
-                right: element.querySelector('.lumina-wing-right'),
-                x: Math.random() * Math.max(1, width - 100) + 50,
-                y: Math.random() * Math.max(1, height - 150) + 75,
-                z: Math.random() * 200 - 100,
-                scale: Math.random() * .4 + .5,
-                speed: Math.random() * 1.5 + 1.2,
-                wing: Math.random() * Math.PI,
-                noiseX: Math.random() * 1000,
-                noiseY: Math.random() * 1000
-            };
-        }
-        const butterflies = Array.from({ length: 6 }, (_, index) => createButterfly(index));
-
-        function animate(time) {
-            context.clearRect(0, 0, width, height);
-            particles.forEach((particle) => {
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-                particle.pulse += .02;
-                if (particle.decay) {
-                    particle.alpha -= particle.decay;
-                    if (particle.alpha <= 0) resetParticle(particle);
-                } else {
-                    if (particle.y < -10) particle.y = height + 10;
-                    if (particle.x < -10) particle.x = width + 10;
-                    if (particle.x > width + 10) particle.x = -10;
-                }
-                context.save();
-                context.globalAlpha = Math.max(0, particle.alpha * (.65 + Math.sin(particle.pulse) * .35));
-                context.fillStyle = particle.color;
-                context.shadowBlur = particle.size * 6;
-                context.shadowColor = '#00f0ff';
-                context.beginPath();
-                context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-                context.fill();
-                context.restore();
-            });
-            if (particles.length > 180) particles = particles.filter((particle) => particle.alpha > .05);
-
-            butterflies.forEach((butterfly) => {
-                butterfly.noiseX += .005;
-                butterfly.noiseY += .005;
-                butterfly.x += Math.sin(time * .001 * butterfly.speed) * 2.2
-                    + (Math.sin(butterfly.noiseX) * 120 + Math.cos(butterfly.noiseY * 1.5) * 80) * .02;
-                butterfly.y += Math.cos(time * .0012 * butterfly.speed) * 1.8
-                    + (Math.cos(butterfly.noiseY) * 80 + Math.sin(butterfly.noiseX * 1.2) * 60) * .015 - .4;
-                if (butterfly.x < -80) butterfly.x = width + 40;
-                if (butterfly.x > width + 80) butterfly.x = -40;
-                if (butterfly.y < -80) butterfly.y = height + 40;
-                if (butterfly.y > height + 80) butterfly.y = -40;
-                butterfly.wing += .14;
-                const flap = Math.sin(butterfly.wing) * 62;
-                butterfly.left.style.transform = 'rotateY(' + (-flap) + 'deg)';
-                butterfly.right.style.transform = 'rotateY(' + flap + 'deg)';
-                butterfly.element.style.transform = 'translate3d(' + butterfly.x + 'px,' + butterfly.y + 'px,' + butterfly.z + 'px) scale(' + butterfly.scale + ')';
-                if (Math.random() < .11) particles.push(createParticle(butterfly.x + 36, butterfly.y + 30, true));
-            });
-            requestAnimationFrame(animate);
-        }
-        requestAnimationFrame(animate);
-    })();
-    </script>
+    <!-- hiệu ứng bướm đã gỡ bỏ -->
     <script>
     (() => {
         // Added wrapper: it isolates the long swim transform from the SVG's

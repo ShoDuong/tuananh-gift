@@ -1023,7 +1023,7 @@
 </script>
 
 <audio id="radioAudio" preload="metadata">
-  <source id="audioSource" src="assets/so many cute things in the world.mp3" type="audio/mpeg">
+  <source id="audioSource" src="assets/audio/so-many-cute-things.mp3" type="audio/mpeg">
 </audio>
 <!-- BEGIN: InteractivePlayerUIHandlers -->
 <script data-purpose="music-player-logic">
@@ -1042,12 +1042,12 @@
   const totalLabel = document.getElementById("total-time-label");
   let isPlaying = false;
   const tracks = [
-    { title: "So Many Cute Things In The World", artist: "Acoustic Classroom", src: "assets/so many cute things in the world.mp3" },
-    { title: "Chờ Tới Khi Anh Về", artist: "Guitar Gỗ 2012", src: "assets/chờ tới khi anh về.mp3" },
-    { title: "Người Im Lặng Gặp Người Hay Nói", artist: "Bàn 4 Tổ 2", src: "assets/HIEUTHUHAI - Người Im Lặng Gặp Người Hay Nói (Studio Live Session).mp3" },
-    { title: "IDNAT", artist: "Tình Hà Say Hi", src: "assets/IM ĐỢI NGƯỜI ANH THƯƠNG - Wren Evans, CAPTAIN BOY, IVAN, Thể Thiên  TINH HÀ SAY HI [PERFORMANCE].mp3" },
-    { title: "Giải Cứu Thế Giới — Demo", artist: "Hạ Cuối 12A", src: "assets/Demo Giải Cứu Thế Giới - Sáng tác của tác giả TRID MINH.mp3" },
-    { title: "Giải Cứu Thế Giới — Bản chính thức", artist: "Hạ Cuối 12A", src: "assets/Giải cứu Thế Giới.mp3" }
+    { title: "So Many Cute Things In The World", artist: "Acoustic Classroom", src: "assets/audio/so-many-cute-things.mp3" },
+    { title: "Chờ Tới Khi Anh Về", artist: "Guitar Gỗ 2012", src: "assets/audio/cho-toi-khi-anh-ve.mp3" },
+    { title: "Người Im Lặng Gặp Người Hay Nói", artist: "Bàn 4 Tổ 2", src: "assets/audio/nguoi-im-lang-gap-nguoi-hay-noi.mp3" },
+    { title: "IDNAT", artist: "Tình Hà Say Hi", src: "assets/audio/im-doi-nguoi-anh-thuong.mp3" },
+    { title: "Giải Cứu Thế Giới — Demo", artist: "Hạ Cuối 12A", src: "assets/audio/demo-giai-cuu-the-gioi.mp3" },
+    { title: "Giải Cứu Thế Giới — Bản chính thức", artist: "Hạ Cuối 12A", src: "assets/audio/giai-cuu-the-gioi.mp3" }
   ];
   let selectedIndex = 0;
   const formatTime = (value) => Number.isFinite(value) ? `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}` : "0:00";

@@ -39,20 +39,6 @@ if (title) {
 }
 
 // ===============================
-// Message area under otter/cat
-// ===============================
-if (finalText) {
-    finalText.style.display = "block";
-    finalText.textContent = "";
-    finalText.style.fontFamily = "'Pixelify Sans', sans-serif";
-    finalText.style.fontSize = "1.2rem";
-    finalText.style.color = "#d35f74";
-    finalText.style.margin = "8px 0 12px 0";
-    finalText.style.minHeight = "32px";
-    finalText.style.textAlign = "center";
-}
-
-// ===============================
 // Click otter to kiss
 // ===============================
 function playOtterKiss() {
@@ -63,12 +49,12 @@ function playOtterKiss() {
     catImg.src = "";
 
     setTimeout(() => {
-        catImg.src = "otter_kiss.gif";
+        catImg.src = "assets/img/otter_kiss.gif";
     }, 20);
 
     setTimeout(() => {
         if (!yesClicked) {
-            catImg.src = "otter_heart.gif";
+            catImg.src = "assets/img/otter_heart.gif";
         }
 
         otterKissing = false;
@@ -92,410 +78,29 @@ if (catImg) {
 const tuanAnhStickers = [
     {
         name: "Sticker 1",
-        preview: "Assets/tuananh_sticker/tuananh_sticker_1.png",
-        download: "Assets/tuananh_sticker/tuananh_sticker_1.gif",
+        preview: "assets/stickers/tuananh/tuananh_sticker_1.png",
+        download: "assets/stickers/tuananh/tuananh_sticker_1.gif",
         emoji: "🥺"
     },
     {
         name: "Sticker 2",
-        preview: "Assets/tuananh_sticker/tuananh_sticker_2.png",
-        download: "Assets/tuananh_sticker/tuananh_sticker_2.gif",
+        preview: "assets/stickers/tuananh/tuananh_sticker_2.png",
+        download: "assets/stickers/tuananh/tuananh_sticker_2.gif",
         emoji: "🕺"
     },
     {
         name: "Sticker 3",
-        preview: "Assets/tuananh_sticker/tuananh_sticker_3.png",
-        download: "Assets/tuananh_sticker/tuananh_sticker_3.gif",
+        preview: "assets/stickers/tuananh/tuananh_sticker_3.png",
+        download: "assets/stickers/tuananh/tuananh_sticker_3.gif",
         emoji: "😉"
     },
     {
         name: "Sticker 4",
-        preview: "Assets/tuananh_sticker/tuananh_sticker_4.png",
-        download: "Assets/tuananh_sticker/tuananh_sticker_4.gif",
+        preview: "assets/stickers/tuananh/tuananh_sticker_4.png",
+        download: "assets/stickers/tuananh/tuananh_sticker_4.gif",
         emoji: "💖"
     }
 ];
-
-// ===============================
-// Inject CSS
-// ===============================
-const style = document.createElement("style");
-
-style.textContent = `
-    .floating-heart {
-        position: fixed;
-        bottom: -30px;
-        font-size: 24px;
-        animation: floatUp 3s linear forwards;
-        pointer-events: none;
-        z-index: 9999;
-    }
-
-    @keyframes floatUp {
-        from {
-            transform: translateY(0) scale(1) rotate(0deg);
-            opacity: 1;
-        }
-        to {
-            transform: translateY(-100vh) scale(1.6) rotate(20deg);
-            opacity: 0;
-        }
-    }
-
-    @keyframes cuteTextPop {
-        0% {
-            transform: scale(0.7);
-            opacity: 0;
-        }
-        70% {
-            transform: scale(1.08);
-            opacity: 1;
-        }
-        100% {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-
-    .shake-cute {
-        animation: shakeCute 0.35s ease;
-    }
-
-    @keyframes shakeCute {
-        0% { transform: rotate(0deg); }
-        25% { transform: rotate(4deg); }
-        50% { transform: rotate(-4deg); }
-        75% { transform: rotate(3deg); }
-        100% { transform: rotate(0deg); }
-    }
-
-    #easter-egg-bubble {
-    position: absolute;
-    top: 92px;
-    right: 38px;
-    background: #fff7fb;
-    border: 2px solid #ffb6d5;
-    border-radius: 18px;
-    padding: 9px 13px;
-    max-width: 150px;
-    font-family: 'Pixelify Sans', sans-serif;
-    color: #d35f74;
-    font-size: 0.9rem;
-    line-height: 1.15;
-    text-align: center;
-    cursor: pointer;
-    z-index: 10;
-    box-shadow: 0 8px 18px rgba(255, 105, 180, 0.22);
-    animation: easterBubbleFloat 1.2s ease-in-out infinite alternate;
-}
-
-#easter-egg-bubble::after {
-    content: "";
-    position: absolute;
-    bottom: -9px;
-    left: 24px;
-    width: 15px;
-    height: 15px;
-    background: #fff7fb;
-    border-right: 2px solid #ffb6d5;
-    border-bottom: 2px solid #ffb6d5;
-    transform: rotate(45deg);
-}
-
-#easter-egg-bubble:hover {
-    transform: scale(1.06);
-    background: #ffeaf3;
-    color: #ff1493;
-}
-
-@keyframes easterBubbleFloat {
-    from {
-        transform: translateY(0) rotate(-1deg);
-    }
-    to {
-        transform: translateY(-5px) rotate(1deg);
-    }
-}
-
-    @keyframes easterWiggle {
-        from {
-            transform: rotate(-1deg) scale(1);
-        }
-        to {
-            transform: rotate(1deg) scale(1.04);
-        }
-    }
-
- .achievement-box {
-    position: absolute;
-    top: 36%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff0f5;
-    border: 3px solid #ff69b4;
-    border-radius: 20px;
-    padding: 16px 22px;
-    font-family: 'Pixelify Sans', sans-serif;
-    color: #d35f74;
-    font-size: 1.05rem;
-    box-shadow: 0 10px 25px rgba(255, 105, 180, 0.28);
-    z-index: 100000;
-    text-align: center;
-    min-width: 230px;
-    animation: achievementPopCenter 0.45s ease, achievementFloatCenter 1.2s ease infinite alternate;
-}
-
-@keyframes achievementPopCenter {
-    from {
-        transform: translate(-50%, -50%) scale(0.65);
-        opacity: 0;
-    }
-    to {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-    }
-}
-
-@keyframes achievementFloatCenter {
-    from {
-        transform: translate(-50%, -50%) translateY(0);
-    }
-    to {
-        transform: translate(-50%, -50%) translateY(-5px);
-    }
-}
-
-    @keyframes achievementSlide {
-        from {
-            transform: translateX(120%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes achievementFloat {
-        from {
-            transform: translateY(0);
-        }
-        to {
-            transform: translateY(-4px);
-        }
-    }
-
-    .loading-love-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(255, 240, 245, 0.96);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        z-index: 100001;
-        font-family: 'Pixelify Sans', sans-serif;
-        color: #d35f74;
-        text-align: center;
-        padding: 20px;
-    }
-
-    .loading-love-box {
-        background: white;
-        border: 3px solid #ff69b4;
-        border-radius: 24px;
-        padding: 26px 32px;
-        box-shadow: 0 14px 35px rgba(255, 105, 180, 0.25);
-        max-width: 360px;
-        width: 90%;
-    }
-
-    .loading-love-title {
-        font-size: 1.5rem;
-        margin-bottom: 14px;
-    }
-
-    .loading-bar {
-        width: 100%;
-        height: 18px;
-        border-radius: 999px;
-        background: #ffe4ef;
-        overflow: hidden;
-        border: 2px solid #ffc0cb;
-    }
-
-    .loading-fill {
-        width: 0%;
-        height: 100%;
-        background: linear-gradient(90deg, #ff69b4, #ff1493);
-        border-radius: 999px;
-        transition: width 0.4s ease;
-    }
-
-    .loading-percent {
-        margin-top: 10px;
-        font-size: 1.1rem;
-    }
-
-    .sticker-quiz-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(255, 240, 245, 0.97);
-        display: none;
-        justify-content: center;
-        align-items: center;
-        z-index: 100002;
-        padding: 18px;
-        box-sizing: border-box;
-    }
-
-    .sticker-quiz-box {
-        background: white;
-        border: 3px solid #ff69b4;
-        border-radius: 26px;
-        padding: 22px;
-        width: min(92vw, 560px);
-        box-shadow: 0 14px 40px rgba(255, 105, 180, 0.28);
-        font-family: 'Pixelify Sans', sans-serif;
-        color: #d35f74;
-        text-align: center;
-    }
-
-    .sticker-quiz-title {
-        font-size: 1.6rem;
-        margin-bottom: 6px;
-    }
-
-    .sticker-quiz-subtitle {
-        color: #555;
-        font-size: 1rem;
-        margin-bottom: 18px;
-    }
-
-    .sticker-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-    }
-
-    .sticker-card {
-        --tilt-x: 0deg;
-        --tilt-y: 0deg;
-        --foil-x: 50%;
-        --foil-y: 50%;
-        position: relative;
-        overflow: hidden;
-        border: 2px solid #ffc0cb;
-        background: #fff7fb;
-        border-radius: 20px;
-        padding: 12px;
-        cursor: pointer;
-        transform: perspective(700px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
-        transform-style: preserve-3d;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        will-change: transform;
-    }
-
-    .sticker-card::before {
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background:
-            radial-gradient(circle at var(--foil-x) var(--foil-y), rgba(255, 255, 255, .85), transparent 22%),
-            linear-gradient(120deg, transparent 20%, rgba(255, 133, 193, .35), rgba(147, 221, 255, .35), rgba(255, 223, 138, .4), transparent 80%);
-        content: "";
-        mix-blend-mode: screen;
-        opacity: .72;
-        pointer-events: none;
-        transform: translateZ(24px);
-    }
-
-    .sticker-card:hover {
-        box-shadow: 0 16px 28px rgba(255, 105, 180, 0.35), 0 0 22px rgba(137, 220, 255, .38);
-    }
-
-    .sticker-card:focus-visible {
-        outline: 3px solid #7bdff2;
-        outline-offset: 3px;
-    }
-
-    .sticker-card img {
-        width: 100%;
-        max-width: 150px;
-        height: 120px;
-        object-fit: contain;
-        display: block;
-        margin: 0 auto 8px auto;
-    }
-
-    .sticker-card-name {
-        font-size: 0.95rem;
-    }
-
-    .sticker-card-fallback {
-        height: 120px;
-        display: none;
-        justify-content: center;
-        align-items: center;
-        font-size: 3rem;
-    }
-
-    .skip-sticker-btn {
-        margin-top: 18px;
-        padding: 10px 22px;
-        border: none;
-        border-radius: 999px;
-        background: #ffe4ef;
-        color: #d35f74;
-        font-family: 'Pixelify Sans', sans-serif;
-        font-size: 1rem;
-        cursor: pointer;
-        box-shadow: 0 8px 18px rgba(255, 105, 180, 0.2);
-        transition: transform 0.2s ease, background 0.2s ease;
-    }
-
-    .skip-sticker-btn:hover {
-        transform: scale(1.05);
-        background: #ffd1e3;
-    }
-
-    .no-btn.yes-mode {
-        cursor: pointer;
-        filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.6));
-    }
-
-    @media (max-width: 600px) {
-        .achievement-box {
-            top: 14px;
-            right: 14px;
-            left: 14px;
-            text-align: center;
-        }
-
-        .sticker-grid {
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .sticker-quiz-title {
-            font-size: 1.25rem;
-        }
-
-        .sticker-card img {
-            height: 95px;
-        }
-
-        #easter-egg-bubble {
-    top: 82px;
-    right: 24px;
-    max-width: 120px;
-    font-size: 0.78rem;
-    padding: 8px 10px;
-}
-    }
-`;
-
-document.head.appendChild(style);
 
 // ===============================
 // Easter egg click text
@@ -746,7 +351,7 @@ function turnNoIntoYes() {
 
     noTurnedIntoYes = true;
 
-    noBtn.src = "yes.png";
+    noBtn.src = "assets/img/yes.png";
     noBtn.alt = "Yes";
     noBtn.classList.add("yes-mode");
 
@@ -763,6 +368,10 @@ function turnNoIntoYes() {
     launchMiniConfetti();
 }
 
+const NO_TRIES_BEFORE_YES = 8;
+const NO_DODGE_COOLDOWN = 450;
+let lastNoDodge = 0;
+
 function moveNoButton() {
     // Nếu No đã thành Yes rồi thì hover KHÔNG làm gì hết.
     // Phải click mới chạy handleYesClick().
@@ -770,25 +379,48 @@ function moveNoButton() {
         return;
     }
 
+    // Nút chạy dưới con trỏ có thể bắn mouseover liên tục — chỉ tính 1 lần mỗi nhịp
+    const now = Date.now();
+    if (now - lastNoDodge < NO_DODGE_COOLDOWN) return;
+    lastNoDodge = now;
+
     noTouchCount++;
 
-    if (noTouchCount >= 7) {
+    if (noTouchCount >= NO_TRIES_BEFORE_YES) {
         turnNoIntoYes();
         return;
     }
 
     const isMobile = window.innerWidth <= 600;
 
-    const min = isMobile ? 40 : 160;
-    const max = isMobile ? 90 : 240;
+    const min = isMobile ? 50 : 90;
+    const max = isMobile ? 110 : 170;
 
-    const distance = Math.random() * (max - min) + min;
-    const angle = Math.random() * Math.PI * 2;
+    // Giữ nút No luôn nằm trong khung thư và không đè lên nút Yes
+    const area = letterWindow.getBoundingClientRect();
+    const wrap = noBtn.parentElement.getBoundingClientRect();
+    const yesRect = yesBtn.getBoundingClientRect();
+    const pad = 12;
 
-    const moveX = Math.cos(angle) * distance;
-    const moveY = Math.sin(angle) * distance;
+    let moveX = 0;
+    let moveY = 0;
 
-    noBtn.style.transition = "transform 0.3s ease";
+    for (let attempt = 0; attempt < 12; attempt++) {
+        const distance = Math.random() * (max - min) + min;
+        const angle = Math.random() * Math.PI * 2;
+
+        moveX = Math.min(Math.max(Math.cos(angle) * distance, area.left + pad - wrap.left), area.right - pad - wrap.right);
+        moveY = Math.min(Math.max(Math.sin(angle) * distance, area.top + 70 - wrap.top), area.bottom - pad - wrap.bottom);
+
+        const overlapsYes =
+            wrap.left + moveX < yesRect.right + 10 &&
+            wrap.right + moveX > yesRect.left - 10 &&
+            wrap.top + moveY < yesRect.bottom + 10 &&
+            wrap.bottom + moveY > yesRect.top - 10;
+
+        if (!overlapsYes) break;
+    }
+
     noBtn.style.transform = `translate(${moveX}px, ${moveY}px)`;
 
     showNoMessage();
@@ -987,7 +619,7 @@ function handleYesClick() {
     }
 
     if (catImg) {
-        catImg.src = "cat_dance.gif";
+        catImg.src = "assets/img/cat_dance.gif";
     }
 
     if (easterEggText) {

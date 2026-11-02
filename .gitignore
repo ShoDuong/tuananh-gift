@@ -1,2 +1,8 @@
-# Local Netlify folder
+# Local Netlify dev server (includes local Postgres dump)
 .netlify
+
+# Secrets (Discord webhook URL, etc.)
+.env
+
+# Node
+node_modules/
