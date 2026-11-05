@@ -45,7 +45,14 @@
       slots: [{ x: 69, y: 305, w: 669, h: 627 }] },
     { id: 'receipt', name: '🧾 Hóa Đơn', group: '📸 Khung 1 Ảnh', overlay: base + 'Receipt.webp', key: true, w: 514, h: 1200,
       slots: [{ x: 33, y: 197, w: 449, h: 561 }] },
-
+    { id: 'theatreTicket', name: '🎭 Vé Rạp Phim', group: '🎞️ Khung 2–3 Ảnh', overlay: base + 'theather.webp', w: 398, h: 1200,
+      slots: [{ x: 25, y: 29, w: 349, h: 255 }, { x: 25, y: 306, w: 349, h: 256 }, { x: 25, y: 584, w: 349, h: 255 }] },
+    { id: 'redCamera', name: '📷 Máy Ảnh Đỏ', group: '🎞️ Khung 2–3 Ảnh', overlay: base + 'Gemini_Generated_Image_jc3t86jc3t86jc3t.webp', key: true, w: 410, h: 1200,
+      slots: [{ x: 15, y: 317, w: 257, h: 213 }, { x: 38, y: 628, w: 252, h: 179 }, { x: 30, y: 919, w: 284, h: 231 }] },
+    { id: 'doggoSnow', name: '🐶 Doggo Tuyết', group: '🖼️ Khung 4+ Ảnh', overlay: base + '695b91d10ae9f.webp', w: 396, h: 1200,
+      slots: [{ x: 34, y: 51, w: 328, h: 236 }, { x: 37, y: 322, w: 325, h: 238 }, { x: 34, y: 594, w: 327, h: 247 }, { x: 54, y: 896, w: 302, h: 221 }] },
+    { id: 'slayCollage', name: '🗞️ Slay Báo Cắt', group: '🖼️ Khung 4+ Ảnh', overlay: base + 'Gemini_Generated_Image_xhe7tkxhe7tkxhe7.webp', key: true, w: 675, h: 1200,
+      slots: [{ x: 147, y: 308, w: 187, h: 208 }, { x: 155, y: 541, w: 185, h: 210 }, { x: 162, y: 771, w: 185, h: 211 }, { x: 353, y: 253, w: 174, h: 211 }, { x: 362, y: 485, w: 155, h: 209 }, { x: 369, y: 717, w: 142, h: 210 }] },
     /* ---------- KHUNG RÁI CÁ: các file .png cũ nằm ngoài assets/frames/ ---------- */
     { id: 'f_cute', name: '🍬 Cute Hột Me', group: '🦦 Khung Rái Cá', overlay: old + 'frame1.png', w: 724, h: 2172,
       slots: [{ x: 81, y: 201, w: 563, h: 389 }, { x: 80, y: 639, w: 564, h: 387 }, { x: 81, y: 1079, w: 563, h: 389 }, { x: 81, y: 1518, w: 563, h: 489 }] },

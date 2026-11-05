@@ -72,13 +72,13 @@ Mỗi template:
 Ảnh nguồn gốc (có hình mẫu) được lưu ở `assets/_unused/frame-sources/`.
 
 ## Khung có sẵn
-Danh sách khung = 16 file trong `assets/frames/templates/` + 10 khung Rái Cá trong `assets/frames/`, khai báo ở `js/frames.js`,
+Danh sách khung = 20 file trong `assets/frames/templates/` + 10 khung Rái Cá trong `assets/frames/`, khai báo ở `js/frames.js`,
 chia nhóm theo số ảnh trong bảng chọn khung:
 
 | Nhóm | Khung |
 |---|---|
-| 🎞️ 2–3 ảnh | Giấy Mộc (mặc định) · Mây Doodle · Sao Đỏ · Bướm Polaroid · Nhung Đỏ · Gingham Đỏ |
-| 🖼️ 4+ ảnh | Sinh Nhật Film · Film Strip · Collage Sinh Nhật · Denim Sao · Vải Đỏ · Polaroid Chồng |
+| 🎞️ 2–3 ảnh | Giấy Mộc (mặc định) · Mây Doodle · Sao Đỏ · Bướm Polaroid · Nhung Đỏ · Gingham Đỏ · Vé Rạp Phim · Máy Ảnh Đỏ |
+| 🖼️ 4+ ảnh | Sinh Nhật Film · Film Strip · Collage Sinh Nhật · Denim Sao · Vải Đỏ · Polaroid Chồng · Doggo Tuyết · Slay Báo Cắt (6 ảnh) |
 | 📸 1 ảnh | Gingham Xanh · Sinh Nhật 1 Ảnh · Wanted · Hóa Đơn |
 | 🦦 Khung Rái Cá (`assets/frames/*.png`) | Cute Hột Me · Giấy Kết Hôn · Khung Trơn · Be Yourself · Y2K · One Piece · Rái Cá Ngầu · Rái Cá Memories · Cảnh Sát Rái Cá · Rái Cá Cute |
 
@@ -115,10 +115,12 @@ Mở `tools/frame-maker.html` (double-click là chạy, không cần server):
   Chỉ có nút Lưu video và Đóng.
 - **Discord**: sau MỖI tấm chụp, tự gửi ảnh (`photo-N.png`) và video hậu trường
   (`bts-tam-N.webm`) qua `netlify/functions/send-photo`.
+- **Nghiêng sticker & chữ**: chọn 1 sticker/chữ trên ảnh rồi kéo núm ↻ trên đầu nó, hoặc dùng ô **Nghiêng** (slider −180°…180°, nút ↺ ↻ 5°, nút 0°) ở cột Chỉnh Ảnh. Add Cute Text có thanh **Nghiêng chữ** (−45°…45°, bấm đúp để về 0°) áp lúc thêm chữ.
 - **Sticker**: 1 danh sách chung + ô tìm kiếm, 6 cái mỗi hàng, không có GIF, và không lặp lại
   các sticker đã dùng ở phần khác của web (rái cá, Tuấn Anh).
 - **🔤 Add Cute Text** (luôn hiện ngay dưới các cột nút bên trái, có sẵn chữ mẫu): gõ chữ → tự tạo sticker kiểu chữ cắt báo; mỗi lần gõ / bấm 🎲 ra kiểu khác. Bấm ➕ Thêm hoặc Enter để dán vào ảnh.
 - Chọn từng sticker chỉ thêm 1 cái; chỉ các nút spam mới rải nhiều.
 - **Nút spam** (mỗi ô lưới 1 con, không trùng nhau): Biển Cả · Cat Gang (pack3 16–20, 25) ·
   Flower (19, 21, 22, pack3_14) · Sunny · Otter Party.
+- **Điện thoại** (màn hình ≤ 760px): xếp 1 cột dọc — camera + nút chụp → dải ảnh → các nút lưới 4 cột → Add Cute Text; popup hiện từ dưới lên. CSS nằm ở khối `<style id="booth-mobile">`, desktop không đổi.
 - Phóng to tổng thể bằng biến CSS `--booth-zoom` (mặc định `.8`).
