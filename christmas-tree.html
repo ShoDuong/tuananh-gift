@@ -1,0 +1,2660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Merry Christmas 🎄</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#141a28;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%;}
+  #ui{position:fixed;inset:0;pointer-events:none;z-index:5;font-family:'Nunito',system-ui,-apple-system,sans-serif;}
+  #nextBtn{position:absolute;left:50%;bottom:9.5vh;transform:translateX(-50%) translateY(14px);
+    pointer-events:none;opacity:0;transition:opacity .7s ease,transform .7s ease;
+    padding:15px 30px;border:0;border-radius:999px;cursor:pointer;
+    background:linear-gradient(135deg,#ff8fab,#d94f76);color:#fff;
+    font:700 17px 'Nunito',system-ui,sans-serif;letter-spacing:.3px;
+    box-shadow:0 10px 30px rgba(217,79,118,.5);}
+  #nextBtn.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+  #nextBtn:active{transform:translateX(-50%) scale(.96);}
+  #skip{position:absolute;right:16px;top:14px;pointer-events:none;opacity:0;transition:opacity .5s;
+    padding:8px 15px;border:1px solid rgba(255,255,255,.3);border-radius:999px;cursor:pointer;
+    background:rgba(255,255,255,.1);color:#eef2f8;font:600 13px 'Nunito',system-ui,sans-serif;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  #skip.show{opacity:.85;pointer-events:auto;}
+  #fadeOut{position:fixed;inset:0;z-index:20;background:#fff8f6;opacity:0;pointer-events:none;transition:opacity .7s ease;}
+  #fadeOut.on{opacity:1;}
+  #muteBtn{position:absolute;left:16px;top:14px;pointer-events:none;opacity:0;transition:opacity .5s;
+    width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.3);cursor:pointer;
+    background:rgba(255,255,255,.1);font-size:17px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  #muteBtn.show{opacity:.85;pointer-events:auto;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="fadeOut"></div>
+<div id="ui">
+  <button id="muteBtn" type="button" title="Tắt / bật nhạc">🔊</button>
+  <button id="nextBtn" type="button">🎂 Vào tiệc sinh nhật</button>
+</div>
+<script>
+'use strict';
+
+var _q = new URLSearchParams(location.search);
+var NEXT_PAGE = 'index1.html';
+var NEXT_LABEL = '🎂 Vào tiệc sinh nhật';
+
+var COLS = 124;
+var cv = document.getElementById('c');
+var ctx = cv.getContext('2d');
+var off = document.createElement('canvas');
+var octx = off.getContext('2d');
+var bl = document.createElement('canvas');
+var bctx = bl.getContext('2d');
+var bl2 = document.createElement('canvas');
+var b2ctx = bl2.getContext('2d');
+
+var PW, W, H, CW, CH, ROWS, AR, DPR, SIZE, CX0, COLS_T, LEFT;
+
+var chBuf, colBuf, dpBuf;
+
+function layout() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = window.innerWidth; H = window.innerHeight;
+  PW = Math.min(W, H * 9 / 16);
+  CW = PW / COLS;
+  CH = CW * 1.62;
+  AR = CW / CH;
+  ROWS = Math.floor(H / CH);
+  COLS_T = Math.ceil(W / CW);
+  LEFT = Math.floor((COLS_T - COLS) / 2);
+  SIZE = COLS_T * ROWS;
+  chBuf = new Uint16Array(SIZE);
+  colBuf = new Array(SIZE);
+  dpBuf = new Float32Array(SIZE);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  off.width = cv.width; off.height = cv.height;
+  bl.width = Math.max(1, Math.round(cv.width / 4));
+  bl.height = Math.max(1, Math.round(cv.height / 4));
+  bl2.width = Math.max(1, Math.round(cv.width / 10));
+  bl2.height = Math.max(1, Math.round(cv.height / 10));
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  octx.font = '700 ' + (CH * 0.95).toFixed(2) + 'px Menlo, Consolas, "DejaVu Sans Mono", monospace';
+  octx.textAlign = 'center';
+  octx.textBaseline = 'middle';
+  CX0 = LEFT + COLS / 2;
+  makeGrad();
+}
+
+var grad;
+function makeGrad() {
+  grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#04050a');
+  grad.addColorStop(0.55, '#080b15');
+  grad.addColorStop(0.86, '#0e1322');
+  grad.addColorStop(1, '#141a28');
+}
+
+function put(x, y, ch, col, z) {
+  x = x | 0; y = y | 0;
+  if (x < 0 || x >= COLS_T || y < 0 || y >= ROWS) return;
+  var i = y * COLS_T + x;
+  if (chBuf[i] !== 0 && z < dpBuf[i]) return;
+  chBuf[i] = ch.charCodeAt(0);
+  colBuf[i] = col;
+  dpBuf[i] = z;
+}
+function occupied(x, y) {
+  x = x | 0; y = y | 0;
+  if (x < 0 || x >= COLS_T || y < 0 || y >= ROWS) return true;
+  return chBuf[y * COLS_T + x] !== 0;
+}
+
+/* ---------- random ---------- */
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+var rnd = mulberry32(19871203);
+
+function hash3(a, b, c) {
+  var h = (a * 374761393 + b * 668265263 + c * 2147483647) | 0;
+  h = Math.imul(h ^ h >>> 13, 1274126177);
+  return ((h ^ h >>> 16) >>> 0) / 4294967296;
+}
+
+/* ---------- easing ---------- */
+function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function at(t, s, d) { return clamp01((t - s) / d); }
+function smooth(v) { v = clamp01(v); return v * v * (3 - 2 * v); }
+function easeInOut15(v) {
+  v = clamp01(v);
+  return v < 0.5 ? Math.pow(2 * v, 1.5) / 2 : 1 - Math.pow(2 - 2 * v, 1.5) / 2;
+}
+function backOut(v) {
+  v = clamp01(v);
+  var s = 1.9;
+  var p = v - 1;
+  return 1 + p * p * ((s + 1) * p + s);
+}
+
+/* ---------- colour helpers ---------- */
+var colCache = new Map();
+function hsl(h, s, l) {
+  h = h | 0; s = s | 0; l = l | 0;
+  if (h < 0) h = 0; if (h > 360) h = 360;
+  if (s < 0) s = 0; if (s > 100) s = 100;
+  if (l < 0) l = 0; if (l > 100) l = 100;
+  var k = (h * 101 + s) * 101 + l;
+  var v = colCache.get(k);
+  if (v === undefined) { v = 'hsl(' + h + ',' + s + '%,' + l + '%)'; colCache.set(k, v); }
+  return v;
+}
+function rgba(r, g, b, a) {
+  return 'rgba(' + (r | 0) + ',' + (g | 0) + ',' + (b | 0) + ',' + a.toFixed(2) + ')';
+}
+
+/* ---------- geometry constants ---------- */
+var FLOOR_F = 0.845, BASE_F = 0.698, TIP_F = 0.273;
+var MAXR = 0.37 * COLS;
+var DISC_RX = 0.80 * COLS;
+
+function rowFloor() { return FLOOR_F * ROWS; }
+function rowBase() { return BASE_F * ROWS; }
+function treeH() { return (BASE_F - TIP_F) * ROWS; }
+function tilt() { return 0.17 * AR; }
+
+/* ---------- tree point cloud ---------- */
+var TIERS = 6;
+var TR = [1.08, 0.80, 0.62, 0.46, 0.32, 0.19];
+var TB = [0.00, 0.185, 0.355, 0.515, 0.665, 0.815];
+var TT = [0.305, 0.465, 0.605, 0.735, 0.865, 1.0];
+var LOBES = [13, 12, 10, 9, 7, 6];
+var GLYPH = ['8', '&', '%', '#', '@'];
+
+var NB = 24000;
+var t_f = new Float32Array(NB), t_r = new Float32Array(NB), t_a = new Float32Array(NB);
+var t_sh = new Float32Array(NB), t_dr = new Float32Array(NB);
+var t_gl = new Uint8Array(NB), t_fr = new Uint8Array(NB), t_hj = new Float32Array(NB);
+var t_rf = new Float32Array(NB), t_tier = new Uint8Array(NB);
+var t_col = new Uint8Array(NB), t_hit = new Float32Array(NB);
+var TREE_LIGHTS = [[354, 92], [46, 94], [212, 92], [286, 82], [328, 92], [186, 88], [0, 0], [120, 85]];
+var SOUP_DARK = 'xv=o%', SOUP_MID = '&8#Wx%', SOUP_BRIGHT = '@MW0#o';
+
+AR = 1 / 1.62;
+
+var lobeLen = [], lobeBri = [], lobeDroop = [];
+for (var ti = 0; ti < TIERS; ti++) {
+  var L = LOBES[ti], ll = [], lb = [], ld = [];
+  for (var k = 0; k < L; k++) {
+    ll.push(0.70 + rnd() * 0.42);
+    lb.push(0.82 + rnd() * 0.36);
+    ld.push(0.6 + rnd() * 0.9);
+  }
+  lobeLen.push(ll); lobeBri.push(lb); lobeDroop.push(ld);
+}
+
+var LX = -0.80, LZ = 0.60;
+
+function tierRadiusAt(ti, u) {
+  return TR[ti] * MAXR * (1 - 0.70 * u * u * 0.9 - 0.10 * u);
+}
+
+(function buildTree() {
+  var weights = [], tot = 0;
+  for (var i = 0; i < TIERS; i++) { var w = TR[i] * TR[i] * (TT[i] - TB[i]); weights.push(w); tot += w; }
+  var p = 0;
+  for (var n = 0; n < NB; n++) {
+    var pick = rnd() * tot, acc = 0, ti = 0;
+    for (var j = 0; j < TIERS; j++) { acc += weights[j]; if (pick <= acc) { ti = j; break; } }
+    var u = Math.pow(rnd(), 0.75);
+    var f = TB[ti] + (TT[ti] - TB[ti]) * u;
+    var a = rnd() * Math.PI * 2;
+    var L = LOBES[ti];
+    var li = Math.floor(a / (Math.PI * 2) * L) % L;
+    var lfrac = (a / (Math.PI * 2) * L) % 1;
+    var lobeShape = 0.74 + 0.26 * Math.sin(Math.PI * lfrac);
+    var tierR = tierRadiusAt(ti, u);
+    var core = rnd() < 0.30;
+    var rf, ringB = 0;
+    if (core) {
+      rf = Math.pow(rnd(), 0.6) * 0.72;
+    } else {
+      var ring = Math.floor(rnd() * 4);
+      ringB = (ring + 0.5) / 4;
+      rf = Math.pow(rnd(), 0.42) * 0.99;
+      rf = rf * 0.72 + ringB * 0.28;
+    }
+    rf = Math.min(rf, 1);
+    var r = tierR * rf * lobeLen[ti][li] * lobeShape;
+    var droop = Math.pow(rf, 2.1) * (2.0 + 4.6 * TR[ti]) * lobeDroop[ti][li] * AR * 3.2;
+
+    var sh = 0.16 + 0.58 * Math.pow(rf, 1.15);
+    sh *= lobeBri[ti][li];
+    sh *= (0.30 + 0.70 * Math.pow(1 - u, 0.55));
+    if (u > 0.55) sh *= 0.30 + 0.30 * (1 - (u - 0.55) / 0.45);
+    if (core) sh *= 0.42;
+    sh *= 0.80 + 0.40 * (0.5 + 0.5 * Math.sin(a * (10 + ti * 3) + li * 2.1));
+    sh = Math.max(0.02, Math.min(1, sh));
+
+    t_f[n] = f; t_r[n] = r; t_a[n] = a; t_sh[n] = sh; t_dr[n] = droop;
+    t_rf[n] = rf; t_tier[n] = ti;
+    t_hj[n] = (rnd() - 0.5) * 16;
+    var frost = (rf > 0.80 && rnd() < 0.42 && Math.sin(a * 7 + li) > 0.1) ? 1 : 0;
+    t_fr[n] = frost;
+    p++;
+  }
+})();
+
+/* ---------- lights ---------- */
+var HUES = [318, 282, 228, 190, 150, 56, 38];
+function rampHue(u) {
+  u = u - Math.floor(u);
+  var seq = HUES.length * 2 - 2;
+  var x = u * seq;
+  var i = Math.floor(x), fr = x - i;
+  var ia = i < HUES.length ? i : seq - i;
+  var ib = (i + 1) < HUES.length ? (i + 1) : seq - (i + 1);
+  if (ia < 0) ia = 0; if (ib < 0) ib = 0;
+  if (ia >= HUES.length) ia = HUES.length - 1;
+  if (ib >= HUES.length) ib = HUES.length - 1;
+  return HUES[ia] + (HUES[ib] - HUES[ia]) * fr;
+}
+
+var NL = 4200;
+var l_f = new Float32Array(NL), l_r = new Float32Array(NL), l_a = new Float32Array(NL);
+var l_h = new Float32Array(NL), l_g = new Uint8Array(NL), l_ph = new Float32Array(NL);
+var l_on = new Uint8Array(NL);
+var NLreal = 0;
+(function buildLights() {
+  for (var ti = 0; ti < TIERS; ti++) {
+    var cnt = Math.round(NL * (TR[ti] / 3.47) * 0.92);
+    for (var k = 0; k < cnt && NLreal < NL; k++) {
+      var a = rnd() * Math.PI * 2;
+      var seg = Math.floor(a / (Math.PI * 2) * 26);
+      if (hash3(seg, ti, 7) < 0.26) continue;
+      var u = 0.03 + rnd() * 0.10;
+      var tierR = tierRadiusAt(ti, u);
+      var gold = rnd() < 0.13;
+      var rf = gold ? 0.80 + rnd() * 0.08 : 0.92 + rnd() * 0.08;
+      var L = LOBES[ti];
+      var li = Math.floor(a / (Math.PI * 2) * L) % L;
+      var lfrac = (a / (Math.PI * 2) * L) % 1;
+      var lobeShape = 0.74 + 0.26 * Math.sin(Math.PI * lfrac);
+      var r = tierR * rf * lobeLen[ti][li] * lobeShape;
+      var droop = Math.pow(rf, 2.1) * (2.0 + 4.6 * TR[ti]) * lobeDroop[ti][li] * AR * 3.2;
+      l_f[NLreal] = TB[ti] + (TT[ti] - TB[ti]) * u;
+      l_r[NLreal] = r;
+      l_a[NLreal] = a;
+      l_h[NLreal] = gold ? 42 : rampHue(a / (Math.PI * 2));
+      l_g[NLreal] = gold ? 1 : 0;
+      l_ph[NLreal] = rnd() * Math.PI * 2;
+      NLreal++;
+    }
+  }
+})();
+
+/* ---------- baubles ---------- */
+var baubles = [];
+var BAUBLE_COLS = [[354, 82, 42], [44, 70, 50], [208, 80, 50], [322, 78, 56], [278, 60, 52], [190, 70, 48], [0, 0, 70]];
+(function buildBaubles() {
+  for (var ti = 0; ti < TIERS; ti++) {
+    var n = 7 + Math.floor(rnd() * 4) - Math.floor(ti * 0.8);
+    for (var k = 0; k < n; k++) {
+      var a = rnd() * Math.PI * 2;
+      var u = k % 3 === 0 ? 0.25 + rnd() * 0.3 : 0.02 + rnd() * 0.08;
+      var tierR = tierRadiusAt(ti, u);
+      var L = LOBES[ti];
+      var li = Math.floor(a / (Math.PI * 2) * L) % L;
+      var rf = 0.72 + rnd() * 0.18;
+      var r = tierR * rf * lobeLen[ti][li];
+      var droop = Math.pow(rf, 2.1) * (2.0 + 4.6 * TR[ti]) * lobeDroop[ti][li] * AR * 3.2;
+      var pal = BAUBLE_COLS[Math.floor(rnd() * BAUBLE_COLS.length)];
+      baubles.push({ f: TB[ti] + (TT[ti] - TB[ti]) * u, r: r * (u > 0.2 ? 1.04 : 1), a: a, dr: droop + 2.2, l: pal[2] + rnd() * 10, h: pal[0], s: pal[1], big: rnd() < 0.35 });
+    }
+  }
+})();
+
+/* ---------- gifts ---------- */
+var GIFT_DEF = [
+  { w: 9.5, h: 7.0, d: 9.5, box: [354, 74], rib: 44, dist: 0.95, ang: 0.35 },
+  { w: 6.0, h: 5.0, d: 6.0, box: [44, 62], rib: 354, dist: 1.08, ang: 1.62 },
+  { w: 12.0, h: 4.4, d: 7.5, box: [150, 54], rib: 44, dist: 0.90, ang: 2.88 },
+  { w: 5.2, h: 10.0, d: 5.2, box: [212, 62], rib: 44, dist: 1.05, ang: 4.05 },
+  { w: 8.0, h: 6.0, d: 8.0, box: [312, 62], rib: 44, dist: 0.98, ang: 5.25 }
+];
+var gifts = [];
+(function buildGifts() {
+  for (var gi = 0; gi < GIFT_DEF.length; gi++) {
+    var d = GIFT_DEF[gi];
+    var n = 2400;
+    var px = new Float32Array(n), py = new Float32Array(n), pz = new Float32Array(n);
+    var ps = new Float32Array(n), pg = new Uint8Array(n), pr = new Uint8Array(n);
+    for (var i = 0; i < n; i++) {
+      var face = rnd();
+      var x, y, z, nx = 0, ny = 0, nz = 0;
+      if (face < 0.22) { x = -d.w / 2; y = rnd() * d.h; z = (rnd() - 0.5) * d.d; nx = -1; }
+      else if (face < 0.44) { x = d.w / 2; y = rnd() * d.h; z = (rnd() - 0.5) * d.d; nx = 1; }
+      else if (face < 0.60) { z = -d.d / 2; y = rnd() * d.h; x = (rnd() - 0.5) * d.w; nz = -1; }
+      else if (face < 0.76) { z = d.d / 2; y = rnd() * d.h; x = (rnd() - 0.5) * d.w; nz = 1; }
+      else { y = d.h; x = (rnd() - 0.5) * d.w; z = (rnd() - 0.5) * d.d; ny = 1; }
+      var ribbon = 0;
+      if (ny === 1) { if (Math.abs(x) < d.w * 0.09 || Math.abs(z) < d.d * 0.09) ribbon = 1; }
+      else if (nx !== 0) { if (Math.abs(z) < d.d * 0.09) ribbon = 1; }
+      else { if (Math.abs(x) < d.w * 0.09) ribbon = 1; }
+      if (i > n - 170) {
+        var ba = rnd() * Math.PI * 2, brr = 0.9 + rnd() * 0.9;
+        x = Math.cos(ba) * brr + (rnd() - 0.5) * 0.4;
+        z = Math.sin(ba) * brr * 0.6;
+        y = d.h + 0.7 + Math.abs(Math.sin(ba)) * 0.9;
+        ribbon = 1; ny = 1;
+      }
+      px[i] = x; py[i] = y; pz[i] = z;
+      ps[i] = ny === 1 ? 1.0 : (nx !== 0 ? (nx < 0 ? 0.92 : 0.22) : (nz > 0 ? 0.62 : 0.16));
+      pr[i] = ribbon;
+      pg[i] = Math.floor(rnd() * 5);
+    }
+    gifts.push({ d: d, n: n, px: px, py: py, pz: pz, ps: ps, pr: pr, pg: pg });
+  }
+})();
+
+
+/* ---------- người tuyết đi từ ngoài vào, đứng cạnh cây và vẫy tay ---------- */
+var SM_T0 = 12.0, SM_WALK = 2.3;
+var SM = null;
+function buildSnowman() {
+  var X = [], Y = [], Z = [], NX = [], NY = [], NZ = [], K = [];
+  function push(x, y, z, nx, ny, nz, k) { X.push(x); Y.push(y); Z.push(z); NX.push(nx); NY.push(ny); NZ.push(nz); K.push(k); }
+  function sph(n, cx, cy, cz, r, k) {
+    for (var i = 0; i < n; i++) {
+      var a = rnd() * 2 - 1, b = rnd() * Math.PI * 2, q = Math.sqrt(1 - a * a);
+      var nx = q * Math.cos(b), ny = a, nz = q * Math.sin(b);
+      push(cx + nx * r, cy + ny * r, cz + nz * r, nx, ny, nz, k);
+    }
+  }
+  function tube(n, r0, r1, y0, y1, k, cap) {
+    for (var i = 0; i < n; i++) {
+      var a = rnd() * Math.PI * 2;
+      if (cap && rnd() < 0.25) {
+        var rr = r1 * Math.sqrt(rnd());
+        push(Math.cos(a) * rr, y1, Math.sin(a) * rr, 0, 1, 0, k);
+        continue;
+      }
+      var f = rnd(), r = r0 + (r1 - r0) * f;
+      push(Math.cos(a) * r, y0 + (y1 - y0) * f, Math.sin(a) * r, Math.cos(a), 0, Math.sin(a), k);
+    }
+  }
+  sph(2200, 0, 0.55, 0, 0.56, 0);
+  sph(1600, 0, 1.33, 0, 0.41, 0);
+  sph(1200, 0, 1.97, 0, 0.30, 0);
+  tube(500, 0.27, 0.27, 2.17, 2.19, 4);
+  tube(700, 0.17, 0.165, 2.19, 2.56, 4, true);
+  tube(900, 0.33, 0.30, 1.64, 1.76, 3);
+  for (var i = 0; i < 160; i++) {
+    var f = rnd(), a = rnd() * Math.PI * 2, r = 0.055 * (1 - f);
+    push(Math.cos(a) * r, 1.95 + Math.sin(a) * r, 0.28 + f * 0.30, Math.cos(a), Math.sin(a), 0, 2);
+  }
+  var coal = [[-0.105, 2.05, 0.265, 0.045], [0.105, 2.05, 0.265, 0.045],
+  [0, 1.46, 0.39, 0.05], [0, 1.30, 0.41, 0.052], [0, 1.13, 0.385, 0.05]];
+  for (var s = 0; s < 6; s++) {
+    var aa = -0.85 + 1.7 * s / 5;
+    coal.push([0.14 * Math.sin(aa), 1.86 - 0.045 * Math.cos(aa), 0.27 - 0.03 * Math.abs(Math.sin(aa)), 0.026]);
+  }
+  for (var c = 0; c < coal.length; c++) sph(c < 2 ? 70 : 45, coal[c][0], coal[c][1], coal[c][2], coal[c][3], 1);
+  SM = {
+    n: X.length, x: new Float32Array(X), y: new Float32Array(Y), z: new Float32Array(Z),
+    nx: new Float32Array(NX), ny: new Float32Array(NY), nz: new Float32Array(NZ), k: new Uint8Array(K)
+  };
+}
+buildSnowman();
+
+var SM_RAMP = '.:-=+*#%@';
+function drawSnowman(t) {
+  if (t < SM_T0) return;
+  var S = 22 * (PW / COLS) / CW;
+  var tw = clamp01((t - SM_T0) / SM_WALK);
+  var e = 1 - Math.pow(1 - tw, 2);
+  var startX = COLS_T + 16, endX = CX0 + 40;
+  var sx = startX + (endX - startX) * e;
+  var walking = tw < 1;
+  var stepPh = (t - SM_T0) * 2.1;
+  var hop = walking ? Math.abs(Math.sin(stepPh * Math.PI)) * 0.13 : 0.015 * Math.abs(Math.sin(t * 3.6));
+  var lean = walking ? 0.07 * Math.sin(stepPh * Math.PI) - 0.06 : 0.04 * Math.sin(t * 1.5);
+  var turn = smooth(clamp01((t - (SM_T0 + SM_WALK - 0.25)) / 0.6));
+  var yaw = -0.85 * (1 - turn) + (0.22 + 0.08 * Math.sin(t * 0.6)) * turn;
+  var wave = smooth(clamp01((t - (SM_T0 + SM_WALK + 0.1)) / 0.45));
+  var blink = (t % 4.2) > 4.03 ? 0.15 : 1;
+  var c = Math.cos(yaw), s = Math.sin(yaw);
+  var base = rowFloor() + 4;
+
+  /* tuyết văng sau chân khi đi */
+  if (walking) {
+    for (var k = 0; k < 14; k++) {
+      var ph = (stepPh * 0.5 + hash3(k, 3, 9)) % 1;
+      var px = sx + 9 + ph * 10 + (hash3(k, 4, 9) - 0.5) * 6;
+      var py = base - Math.sin(ph * Math.PI) * 3 - 0.5;
+      put(px, py, ph < 0.4 ? '*' : '.', rgba(240, 246, 255, 1 - ph), 690);
+    }
+  }
+
+  for (var i = 0; i < SM.n; i++) {
+    var x = SM.x[i], y = SM.y[i], z = SM.z[i], kk = SM.k[i];
+    if (kk === 1 && i < SM.n && y > 2.0 && blink < 1) y = 2.05 + (y - 2.05) * blink;
+    x += lean * y;
+    y += hop;
+    var X = x * c + z * s, Zd = -x * s + z * c;
+    var nX = SM.nx[i] * c + SM.nz[i] * s, nZ = -SM.nx[i] * s + SM.nz[i] * c;
+    var b = clamp01(0.45 + 0.6 * (nX * -0.8 + SM.ny[i] * 0.45 + nZ * 0.55));
+    var col, ch;
+    if (kk === 0) {
+      col = hsl(212, 30 - 18 * b, 40 + 56 * b);
+      ch = SM_RAMP.charAt(Math.min(8, 3 + Math.floor(b * 6)));
+    } else if (kk === 1) {
+      col = hsl(225, 14, 13 + 10 * b); ch = '@';
+    } else if (kk === 2) {
+      col = hsl(26, 95, 42 + 22 * b); ch = b > 0.5 ? '#' : '%';
+    } else if (kk === 3) {
+      var aa = Math.atan2(SM.z[i], SM.x[i]);
+      col = Math.sin(aa * 9) > 0.2 ? hsl(354, 78, 34 + 26 * b) : hsl(40, 40, 70 + 22 * b);
+      ch = '#';
+    } else {
+      var band = y - hop > 2.2 && y - hop < 2.29 && SM.ny[i] === 0;
+      col = band ? hsl(350, 75, 38 + 22 * b) : hsl(228, 14, 10 + 22 * b);
+      ch = band ? '=' : '#';
+    }
+    put(sx + X * S, base - y * S * AR, ch, col, 700 + Zd * S);
+  }
+
+  /* hai tay que */
+  var TW = hsl(30, 58, 52);
+  for (var side = -1; side <= 1; side += 2) {
+    var a1, a2, fing = 0;
+    var sw = walking ? Math.sin(stepPh * Math.PI * 2 + (side > 0 ? 0 : Math.PI)) : 0;
+    var r1 = -0.45 + 0.22 * sw, r2 = -0.2 + 0.18 * sw;
+    if (side > 0 && wave > 0) {
+      var wv = Math.sin(t * 7.2);
+      var w1 = 0.95 + 0.12 * Math.sin(t * 3.6), w2 = 1.55 + 0.55 * wv;
+      a1 = r1 + (w1 - r1) * wave; a2 = r2 + (w2 - r2) * wave; fing = wv * wave;
+    } else {
+      a1 = r1 + 0.05 * Math.sin(t * 1.4); a2 = r2 + 0.05 * Math.sin(t * 1.4 + 1);
+    }
+    var shx = side * 0.36, shy = 1.40 + hop;
+    var ex = shx + side * Math.cos(a1) * 0.42, ey = shy + Math.sin(a1) * 0.42;
+    var hx = ex + side * Math.cos(a2) * 0.36, hy = ey + Math.sin(a2) * 0.36;
+    var segs = [[shx, shy, ex, ey], [ex, ey, hx, hy]];
+    var tip = Math.atan2(hy - ey, side * (hx - ex));
+    for (var f = -1; f <= 1; f++) {
+      var fa = tip + f * 0.55 + fing * 0.15, fl = f === 0 ? 0.14 : 0.1;
+      segs.push([hx, hy, hx + side * Math.cos(fa) * fl, hy + Math.sin(fa) * fl]);
+    }
+    for (var g = 0; g < segs.length; g++) {
+      var q = segs[g];
+      var p0x = q[0] + lean * q[1], p1x = q[2] + lean * q[3];
+      var X0 = p0x * c + 0.02 * s, X1 = p1x * c + 0.02 * s;
+      var gx0 = sx + X0 * S, gy0 = base - q[1] * S * AR;
+      var gx1 = sx + X1 * S, gy1 = base - q[3] * S * AR;
+      var dx = gx1 - gx0, dy = gy1 - gy0;
+      var steps = Math.max(2, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) * 1.5));
+      var ang = Math.atan2(-dy / AR, dx);
+      var deg = ((ang * 180 / Math.PI) + 360) % 180;
+      var glyph = deg < 22 || deg > 158 ? '-' : deg < 68 ? '/' : deg < 112 ? '|' : '\\';
+      for (var st = 0; st <= steps; st++) {
+        put(gx0 + dx * st / steps, gy0 + dy * st / steps, glyph, TW, 705 + side * -0.5 * S * s);
+        if (g < 2) put(gx0 + dx * st / steps + 1, gy0 + dy * st / steps, glyph, TW, 704 + side * -0.5 * S * s);
+      }
+    }
+  }
+}
+
+
+/* ================= QUẢ CẦU TUYẾT RƠI ================= */
+var NBALL = 18;
+var sb_x = new Float32Array(NBALL), sb_y = new Float32Array(NBALL), sb_v = new Float32Array(NBALL),
+  sb_s = new Uint8Array(NBALL), sb_p = new Float32Array(NBALL), sb_f = new Uint8Array(NBALL);
+for (var i = 0; i < NBALL; i++) {
+  sb_x[i] = rnd(); sb_y[i] = rnd(); sb_v[i] = 0.035 + rnd() * 0.05;
+  sb_s[i] = rnd() < 0.45 ? 2 : (rnd() < 0.6 ? 1 : 0); sb_p[i] = rnd() * 6.28; sb_f[i] = rnd() < 0.4 ? 1 : 0;
+}
+function drawSnowballs(t) {
+  for (var i = 0; i < NBALL; i++) {
+    var y = ((sb_y[i] + t * sb_v[i]) % 1.08 - 0.04) * ROWS;
+    var x = (sb_x[i] + Math.sin(t * 0.7 + sb_p[i]) * 0.02) * COLS_T;
+    var z = sb_f[i] ? 880 : -500;
+    var tw = 0.75 + 0.25 * Math.sin(t * 3 + sb_p[i]);
+    if (sb_s[i] === 2) {
+      put(x - 1, y, '(', hsl(205, 40, 78 * tw), z);
+      put(x, y, '@', hsl(205, 30, 96 * tw), z);
+      put(x + 1, y, ')', hsl(205, 40, 78 * tw), z);
+      put(x - 1, y + 1, "'", hsl(210, 45, 60 * tw), z);
+      put(x, y + 1, '-', hsl(210, 45, 66 * tw), z);
+      put(x + 1, y + 1, "'", hsl(210, 45, 60 * tw), z);
+      if (Math.sin(t * 5 + sb_p[i] * 3) > 0.92) put(x - 1, y - 1, '*', '#ffffff', z + 1);
+    } else if (sb_s[i] === 1) {
+      put(x, y, 'O', hsl(205, 35, 90 * tw), z);
+    } else {
+      put(x, y, 'o', hsl(205, 30, 84 * tw), z);
+    }
+  }
+}
+
+/* ================= XE TUẦN LỘC CỦA ÔNG GIÀ NOEL (vẽ bằng đường nét SDF, bay vòng) ================= */
+var SLEIGH_T0 = 11.5, SLEIGH_EVERY = 14, SSC = 1.45, DSC = 0.92;
+var SL_RAMP = '+*##%%@@';
+function sdBoxR(px, py, cx, cy, hx, hy, r) {
+  var qx = Math.abs(px - cx) - hx + r, qy = Math.abs(py - cy) - hy + r;
+  var ox = Math.max(qx, 0), oy = Math.max(qy, 0);
+  return Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(qx, qy), 0) - r;
+}
+function sdCirc(px, py, cx, cy, r) { var dx = px - cx, dy = py - cy; return Math.sqrt(dx * dx + dy * dy) - r; }
+
+/* các phần của xe + ông già Noel, xếp từ trước ra sau. Mỗi phần trả khoảng cách có dấu. */
+var SL_PARTS = [
+  { k: 'runner', f: function (x, y) {
+      var d = sdSeg(x, y, -12, 6.2, 11, 6.2, 0.5, 0.5);
+      d = Math.min(d, sdSeg(x, y, 11, 6.2, 13.6, 4.8, 0.5, 0.48));
+      d = Math.min(d, sdSeg(x, y, 13.6, 4.8, 14.3, 2.7, 0.48, 0.45));
+      d = Math.min(d, sdSeg(x, y, 14.3, 2.7, 13.1, 1.3, 0.45, 0.4));
+      d = Math.min(d, sdSeg(x, y, -8, 6.2, -7.2, 3.4, 0.42, 0.42));
+      d = Math.min(d, sdSeg(x, y, 5.5, 6.2, 5, 3.4, 0.42, 0.42));
+      return d; } },
+  { k: 'mitten', f: function (x, y) { return sdCirc(x, y, 7.1, -4.0, 0.95); } },
+  { k: 'arm', f: function (x, y) { return sdSeg(x, y, 2.8, -5.6, 6.5, -4.2, 1.05, 0.9); } },
+  { k: 'cuff', f: function (x, y) { return sdSeg(x, y, 5.9, -4.4, 6.3, -4.3, 0.95, 0.95); } },
+  { k: 'body', f: function (x, y) {
+      var d = sdBoxR(x, y, -1, 0.9, 10, 2.7, 1.3);
+      d = Math.min(d, sdBoxR(x, y, -9.6, -1.6, 2.2, 5.1, 1.2));
+      d = Math.min(d, sdCirc(x, y, 9.6, 0.3, 2.4));
+      return d; } },
+  { k: 'eye', f: function (x, y) { return sdCirc(x, y, 3.1, -10.1, 0.4); } },
+  { k: 'nose', f: function (x, y) { return sdCirc(x, y, 4.15, -9.4, 0.6); } },
+  { k: 'mous', f: function (x, y) { return sdEll(x, y, 3.4, -8.75, 1.4, 0.62, -0.1); } },
+  { k: 'beard', f: function (x, y) { return sdEll(x, y, 2.5, -7.7, 2.45, 2.15, 0.15); } },
+  { k: 'trim', f: function (x, y) { return sdSeg(x, y, 0.1, -11.2, 4.2, -10.9, 0.8, 0.8); } },
+  { k: 'pom', f: function (x, y) { return sdCirc(x, y, -2.1, -14.9, 0.95); } },
+  { k: 'hat', f: function (x, y) { return sdSeg(x, y, 1.9, -11.4, -1.5, -14.5, 1.95, 0.55); } },
+  { k: 'face', f: function (x, y) { return sdCirc(x, y, 2.3, -9.5, 2.05); } },
+  { k: 'coat', f: function (x, y) { return sdEll(x, y, 1, -3.9, 3.9, 3.9, 0); } },
+  { k: 'gift1', f: function (x, y) { return sdBoxR(x, y, -9.4, -9.6, 1.7, 1.6, 0.3); } },
+  { k: 'gift2', f: function (x, y) { return sdBoxR(x, y, -6.2, -9.1, 1.5, 1.7, 0.3); } },
+  { k: 'sack', f: function (x, y) { return sdEll(x, y, -7.6, -5.2, 3.8, 3.3, 0.2); } }
+];
+function slColor(k, x, y, b, d) {
+  var edge = d > -0.55;
+  switch (k) {
+    case 'runner': return hsl(44, 85, 34 + 40 * b);
+    case 'mitten': return hsl(140, 45, 14 + 22 * b);
+    case 'arm': return hsl(356, 80, 26 + 30 * b);
+    case 'cuff': return hsl(0, 0, 70 + 26 * b);
+    case 'body':
+      if ((y > -1.5 && y < -0.6 && x > -11) || (edge && y < 4.4)) return hsl(44, 88, 38 + 34 * b);
+      if (Math.abs(x - 9.6) < 1.2 && Math.abs(y - 0.3) < 1.2) return hsl(44, 85, 42 + 30 * b);
+      return hsl(354, 80, 24 + 32 * b);
+    case 'eye': return hsl(220, 20, 12);
+    case 'nose': return hsl(354, 70, 50 + 22 * b);
+    case 'mous': case 'beard': case 'trim': case 'pom': return hsl(210, 18, 72 + 26 * b);
+    case 'hat': return hsl(356, 82, 26 + 32 * b);
+    case 'face': return hsl(22, 68, 50 + 30 * b);
+    case 'coat':
+      if (y > -1.2) return hsl(0, 0, 72 + 24 * b);
+      if (y > -3.5 && y < -2.6) return Math.abs(x - 1) < 0.9 ? hsl(46, 90, 60) : hsl(240, 12, 12);
+      return hsl(356, 80, 26 + 32 * b);
+    case 'gift1': return (Math.abs(x + 9.4) < 0.35 || Math.abs(y + 9.6) < 0.3) ? hsl(354, 80, 50) : hsl(140, 60, 24 + 26 * b);
+    case 'gift2': return (Math.abs(x + 6.2) < 0.35 || Math.abs(y + 9.1) < 0.3) ? hsl(46, 90, 58) : hsl(212, 70, 30 + 26 * b);
+    case 'sack': return hsl(30, 45, 20 + 26 * b);
+  }
+  return '#ffffff';
+}
+/* bóng đổ kiểu "vòm": pháp tuyến giả từ đạo hàm khoảng cách */
+function domeLight(fn, x, y, d) {
+  var gx = fn(x + 0.35, y) - fn(x - 0.35, y), gy = fn(x, y + 0.35) - fn(x, y - 0.35);
+  var gl = Math.sqrt(gx * gx + gy * gy) || 1;
+  gx /= gl; gy /= gl;
+  var h = clamp01(-d / 1.8);
+  var nx = gx * (1 - h), ny = gy * (1 - h), nz = h + 0.15;
+  var nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
+  return clamp01(0.18 + 0.82 * ((nx * -0.5 + ny * -0.62 + nz * 0.6) / nl));
+}
+function drawSantaSleigh(cx, cy, sc, dir, z, t, dim) {
+  var x0 = Math.floor(cx - 16 * sc), x1 = Math.ceil(cx + 16 * sc);
+  var y0 = Math.floor(cy - 16.5 * sc * AR), y1 = Math.ceil(cy + 7.5 * sc * AR);
+  for (var gy = y0; gy <= y1; gy++) {
+    for (var gx = x0; gx <= x1; gx++) {
+      var lx = (gx - cx) / sc * dir, ly = (gy - cy) / AR / sc;
+      for (var p = 0; p < SL_PARTS.length; p++) {
+        var P = SL_PARTS[p];
+        var d = P.f(lx, ly);
+        if (d > 0.3) continue;
+        var b = domeLight(P.f, lx, ly, d);
+        var ch = SL_RAMP.charAt(Math.min(7, Math.floor(b * 8)));
+        if (P.k === 'eye') ch = '@';
+        put(gx, gy, ch, slColor(P.k, lx, ly, b * dim, d), z);
+        break;
+      }
+    }
+  }
+}
+function deerAntlerD(lx, ly, tt) {
+  var stride = tt;
+  ly -= Math.sin(stride * Math.PI * 2 * 2) * 0.5;
+  var hn = Math.sin(stride * Math.PI * 2) * 0.45;
+  var ax0 = 9.5, ay0 = -8.3 + hn, d = 1e9;
+  for (var s = -1; s <= 1; s += 2) {
+    var tipx = ax0 + s * 1.1 + 0.6, tipy = ay0 - 6.2;
+    d = Math.min(d, sdSeg(lx, ly, ax0 + s * 0.35, ay0, tipx, tipy, 0.62, 0.36));
+    d = Math.min(d, sdSeg(lx, ly, ax0 + s * 0.35 + 0.25, ay0 - 1.9, tipx - 2.3, tipy + 1.2, 0.44, 0.28));
+    d = Math.min(d, sdSeg(lx, ly, ax0 + s * 0.35 + 0.5, ay0 - 3.7, tipx + 1.9, tipy + 1.9, 0.44, 0.28));
+    d = Math.min(d, sdSeg(lx, ly, tipx - 0.15, tipy + 1.4, tipx + 1.4, tipy - 1.2, 0.4, 0.26));
+  }
+  return d;
+}
+function drawFlyDeer(cx, cy, sc, dir, z, t, lead, dim, ph) {
+  var tt = t * 1.7 + ph;
+  var bob = Math.sin(tt * Math.PI * 2 * 2) * 0.5;
+  var hn = Math.sin(tt * Math.PI * 2) * 0.45;
+  var x0 = Math.floor(cx - 17 * sc), x1 = Math.ceil(cx + 17 * sc);
+  var y0 = Math.floor(cy - 17 * sc * AR), y1 = Math.ceil(cy + 14 * sc * AR);
+  var fBody = function (a, b) { return deerSDF(a, b, tt); };
+  for (var gy = y0; gy <= y1; gy++) {
+    for (var gx = x0; gx <= x1; gx++) {
+      var lx = (gx - cx) / sc * dir, ly = (gy - cy) / AR / sc;
+      if (lx < -15 || lx > 17 || ly < -17 || ly > 14) continue;
+      var d = deerSDF(lx, ly, tt);
+      if (d > 0.3) continue;
+      var lyb = ly - bob;
+      var b = domeLight(fBody, lx, ly, d) * dim;
+      var ch = SL_RAMP.charAt(Math.min(7, Math.floor(b / Math.max(0.3, dim) * 8)));
+      var col;
+      var dn = sdCirc(lx, lyb, 15.1, -5.65 + hn, 0.95);
+      var de = sdCirc(lx, lyb, 11.7, -7.0 + hn, 0.5);
+      var da = deerAntlerD(lx, ly, tt);
+      if (dn < 0.2) { col = lead ? hsl(0, 95, 55 + 15 * Math.sin(t * 6)) : hsl(20, 30, 16); ch = '@'; }
+      else if (de < 0.15) { col = hsl(20, 30, 10); ch = '@'; }
+      else if (da < 0.25 && da <= d + 0.05) col = hsl(36, 40, 40 + 38 * b);
+      else if (Math.abs(lx - 5.4) < 0.75 && lyb > -3.6 && lyb < 3.4 && d < -0.2) {
+        col = hsl(354, 80, 38 + 22 * b); ch = '#';
+        if (Math.abs(lyb - 1.2) < 0.7) { col = hsl(46, 95, 66); ch = '*'; }
+      }
+      else if (lx < -9.5 && lyb < -1) col = hsl(30, 20, 72 + 22 * b);
+      else if (lyb > 1.6 && lx > -6 && lx < 6.5 && d < -0.4) col = hsl(32, 45, 36 + 34 * b);
+      else col = hsl(25, 50, 16 + 36 * b);
+      put(gx, gy, ch, col, z);
+    }
+  }
+  if (lead) halo(cx + 15.1 * sc * dir, cy + (-5.65 + hn + bob) * sc * AR, 4, t, 0.6, 0);
+}
+function teamPhase(t) { return (t - SLEIGH_T0) / SLEIGH_EVERY * Math.PI * 2 - Math.PI * 0.5; }
+function teamAt(ph) {
+  var RX = COLS * 0.68;
+  var sn = Math.sin(ph);
+  return {
+    x: CX0 - RX * Math.cos(ph),
+    y: ROWS * 0.15 + ROWS * 0.065 * sn,
+    sc: 0.7 + 0.3 * (sn + 1) / 2,
+    dir: sn >= 0 ? 1 : -1,
+    front: sn >= 0,
+    sn: sn
+  };
+}
+function sleighPass(t) {
+  if (t < SLEIGH_T0) return -1;
+  var sn = Math.sin(teamPhase(t));
+  return sn > 0.2 ? ((t - SLEIGH_T0) % SLEIGH_EVERY) : -1;
+}
+function drawSleigh(t) {
+  if (t < SLEIGH_T0) return;
+  var ph = teamPhase(t);
+  var RX = COLS * 0.68;
+  var S = teamAt(ph);
+  if (t > HB_T0 - 0.5 && !S.front) return;
+  var zBase = S.front ? 950 : -650;
+  var dim = S.front ? 1 : 0.62;
+  var sSc = SSC * S.sc;
+  /* vệt kim tuyến */
+  for (var k = 1; k <= 60; k++) {
+    var q = teamAt(ph - k * 0.006);
+    var fr = k / 60;
+    var jx = (hash3(k, Math.floor(t * 9), 3) - 0.5) * 3 * fr;
+    var jy = (hash3(k, Math.floor(t * 9), 4) - 0.5) * 2 * fr + fr * 2.5;
+    put(q.x - q.dir * 12 * SSC * q.sc + jx, q.y + 6 * SSC * q.sc * AR + jy, fr < 0.3 ? '*' : fr < 0.65 ? '+' : '.',
+      hsl(rampHue((fr + t * 0.3) % 1), 70, (88 - fr * 34) * dim), zBase - 8);
+  }
+  /* đội tuần lộc: 2 cặp + con đầu đàn mũi đỏ */
+  var gaps = [40, 30, 30];
+  var acc = 0, deerPos = [];
+  for (var i = 0; i < 3; i++) {
+    acc += gaps[i] * S.sc;
+    var dp = teamAt(ph + acc / RX);
+    deerPos.push(dp);
+    var dz = (dp.front ? 950 : -650) + 3 + i;
+    var ddim = dp.front ? 1 : 0.62;
+    drawFlyDeer(dp.x, dp.y, DSC * dp.sc, dp.dir, dz, t, i === 2, ddim, i * 0.21);
+  }
+  /* dây cương: từ tay ông già Noel tới dây đai từng con */
+  var hx = S.x + 7.1 * sSc * S.dir, hy = S.y - 4.0 * sSc * AR;
+  for (var j = 0; j < deerPos.length; j++) {
+    var D = deerPos[j];
+    var tx = D.x + 4.6 * DSC * D.sc * D.dir, ty = D.y + 0.4 * DSC * D.sc * AR;
+    if (j > 0) { var Dp = deerPos[j - 1]; hx = Dp.x + 5.4 * DSC * Dp.sc * Dp.dir; hy = Dp.y + 0.4 * DSC * Dp.sc * AR; }
+    var n = Math.max(2, Math.round(Math.abs(tx - hx)));
+    for (var m = 0; m <= n; m++) {
+      var u = m / n;
+      var sag = Math.sin(u * Math.PI) * 1.2;
+      put(hx + (tx - hx) * u, hy + (ty - hy) * u + sag, m % 6 === 3 ? '*' : '-', hsl(44, 85, (m % 6 === 3 ? 70 : 52) * dim), zBase - 1);
+    }
+  }
+  drawSantaSleigh(S.x, S.y, sSc, S.dir, zBase + 6, t, dim);
+}
+
+/* ================= PHÁO HOA ASCII ================= */
+var FW_T0 = 14.6, FW_GAP = 0.82, FW_RISE = 0.75, FW_LIFE = 1.7;
+var FW_HUES = [354, 44, 200, 322, 140, 280, 18, 180];
+function fwInfo(i) {
+  var launch = FW_T0 + i * FW_GAP + hash3(i, 7, 1) * 0.35;
+  var side = (i % 2 === 0) ? -1 : 1;
+  var x = CX0 + side * (14 + hash3(i, 7, 2) * COLS * 0.30);
+  var yb = ROWS * (0.06 + hash3(i, 7, 3) * 0.17);
+  var hue = FW_HUES[Math.floor(hash3(i, 7, 4) * FW_HUES.length)];
+  var hue2 = FW_HUES[Math.floor(hash3(i, 7, 5) * FW_HUES.length)];
+  var type = Math.floor(hash3(i, 7, 6) * 3);
+  var rad = 11 + hash3(i, 7, 8) * 9;
+  return { launch: launch, burst: launch + FW_RISE, x: x, yb: yb, hue: hue, hue2: hue2, type: type, rad: rad };
+}
+function drawFireworks(t) {
+  if (t < FW_T0) return;
+  var last = Math.floor((Math.min(t, HB_T0 + 0.6) - FW_T0) / FW_GAP);
+  for (var i = Math.max(0, last - 4); i <= last; i++) {
+    var f = fwInfo(i);
+    if (t < f.launch) continue;
+    var y0 = rowFloor() - 4;
+    if (t < f.burst) {
+      var u = (t - f.launch) / FW_RISE;
+      var e = 1 - (1 - u) * (1 - u);
+      var y = y0 + (f.yb - y0) * e;
+      var wob = Math.sin(u * 12 + i) * 0.4;
+      put(f.x + wob, y, '^', '#fff6e0', 930);
+      for (var k = 1; k < 9; k++) {
+        put(f.x + wob * (1 - k / 9), y + k * 0.9, k < 3 ? '|' : '.', hsl(40, 80, 86 - k * 7), 929);
+      }
+      continue;
+    }
+    var tb = t - f.burst;
+    if (tb > FW_LIFE) continue;
+    var e2 = 1 - Math.pow(1 - Math.min(1, tb / 0.9), 3);
+    var fade = 1 - tb / FW_LIFE;
+    var N = f.type === 1 ? 44 : 64;
+    for (var k = 0; k < N; k++) {
+      var ang = k / N * Math.PI * 2 + hash3(i, k, 9) * 0.15;
+      var sp = f.type === 1 ? 1 : (0.45 + 0.55 * hash3(i, k, 10));
+      var r = f.rad * sp * e2;
+      var gx = f.x + Math.cos(ang) * r;
+      var gy = f.yb + Math.sin(ang) * r * AR + tb * tb * 5;
+      var ch = tb < 0.35 ? '*' : tb < 0.95 ? '+' : (hash3(i, k, Math.floor(t * 10)) > 0.5 ? '.' : ' ');
+      if (ch === ' ') continue;
+      var hh = (f.type === 2 && k % 2) ? f.hue2 : f.hue;
+      put(gx, gy, ch, hsl(hh, 90, 40 + 50 * fade), 920);
+      if (tb < 0.6 && f.type !== 1) {
+        var r2 = r * 0.82;
+        put(f.x + Math.cos(ang) * r2, f.yb + Math.sin(ang) * r2 * AR + tb * tb * 5, '.', hsl(hh, 80, 55 + 30 * fade), 919);
+      }
+    }
+    if (tb < 0.25) {
+      put(f.x, f.yb, '@', '#ffffff', 925);
+      halo(f.x, f.yb, 6 + tb * 20, t, 0.7, f.hue);
+    }
+  }
+}
+
+/* ================= NHẠC NỀN (Jingle Bells — giai điệu dân gian, tự tổng hợp) ================= */
+var BEAT = 0.42, LOOP_BEATS = 64;
+var MEL = [[4,1],[4,1],[4,2],[4,1],[4,1],[4,2],[4,1],[7,1],[0,1.5],[2,0.5],[4,4],
+  [5,1],[5,1],[5,1.5],[5,0.5],[5,1],[4,1],[4,1],[4,0.5],[4,0.5],[4,1],[2,1],[2,1],[4,1],[2,2],[7,2],
+  [4,1],[4,1],[4,2],[4,1],[4,1],[4,2],[4,1],[7,1],[0,1.5],[2,0.5],[4,4],
+  [5,1],[5,1],[5,1.5],[5,0.5],[5,1],[4,1],[4,1],[4,0.5],[4,0.5],[7,1],[7,1],[5,1],[2,1],[0,4]];
+var CHORDS = [0, 0, 0, 0, 5, 0, 2, 7, 0, 0, 0, 0, 5, 0, 7, 0];
+var MUSIC_EV = (function () {
+  var ev = [], b = 0;
+  for (var i = 0; i < MEL.length; i++) { ev.push({ b: b, k: 'm', s: MEL[i][0], d: MEL[i][1] }); b += MEL[i][1]; }
+  for (var bar = 0; bar < 16; bar++) {
+    ev.push({ b: bar * 4, k: 'b', s: CHORDS[bar] });
+    ev.push({ b: bar * 4 + 2, k: 'b', s: CHORDS[bar] + 7 });
+    for (var q = 0; q < 4; q++) ev.push({ b: bar * 4 + q, k: 'j', s: q % 2 });
+  }
+  ev.sort(function (a, c) { return a.b - c.b; });
+  return ev;
+})();
+var musicT0 = -1, musicIdx = 0, musicLoop = 0, muted = false;
+function pluck(freq, dur, vol, delay) {
+  if (!ready()) return;
+  var t0a = AC.currentTime + (delay || 0);
+  var o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
+  var g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t0a);
+  g.gain.linearRampToValueAtTime(vol, t0a + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0a + dur);
+  o.connect(g); g.connect(bus);
+  o.start(t0a); o.stop(t0a + dur + 0.05);
+}
+function startMusic() { if (musicT0 >= 0) return; if (ready()) { musicT0 = AC.currentTime + 0.05; musicIdx = 0; musicLoop = 0; } }
+function scheduleMusic(t) {
+  if (musicT0 < 0 || !ready() || musicHold) return;
+  var horizon = AC.currentTime + 0.35;
+  var loud = t > 11.5 ? 1 : 0.7;
+  for (var guard = 0; guard < 64; guard++) {
+    var ev = MUSIC_EV[musicIdx];
+    var at2 = musicT0 + (musicLoop * LOOP_BEATS + ev.b) * BEAT;
+    if (at2 > horizon) break;
+    var delay = at2 - AC.currentTime;
+    if (delay > -0.05) {
+      delay = Math.max(0, delay);
+      if (ev.k === 'm') {
+        var f = 523.25 * Math.pow(2, ev.s / 12);
+        bell(f, Math.min(1.4, 0.35 + ev.d * BEAT), 0.06 * loud, 0.15, delay);
+      } else if (ev.k === 'b') {
+        pluck(130.81 * Math.pow(2, ev.s / 12), BEAT * 1.8, 0.07 * loud, delay);
+      } else {
+        noise(6200, 6200, 2.5, 0.06, (ev.s ? 0.012 : 0.02) * loud, ev.s ? 0.4 : -0.4, delay);
+      }
+    }
+    musicIdx++;
+    if (musicIdx >= MUSIC_EV.length) { musicIdx = 0; musicLoop++; }
+  }
+}
+
+
+/* ================= MẶT TRĂNG ASCII ================= */
+function drawMoon(t) {
+  var mx = LEFT + COLS * 0.16, my = ROWS * 0.115, R = 10.5;
+  var RAMPM = '.:-=+o0#@';
+  for (var y = Math.floor(my - R * AR - 1); y <= my + R * AR + 1; y++) {
+    for (var x = Math.floor(mx - R - 1); x <= mx + R + 1; x++) {
+      var dx = (x - mx) / R, dy = (y - my) / AR / R;
+      var d2 = dx * dx + dy * dy;
+      if (d2 > 1) continue;
+      var nz = Math.sqrt(1 - d2);
+      var lit = clamp01(0.25 + 0.75 * (-dx * 0.55 - dy * 0.35 + nz * 0.6));
+      var cr = hash3(Math.floor(x / 2), Math.floor(y / 1.5), 77);
+      if (cr > 0.8) lit *= 0.62;
+      if (hash3(Math.floor(x / 4) + 9, Math.floor(y / 2), 78) > 0.86) lit *= 0.75;
+      var ch = d2 > 0.86 ? 'o' : RAMPM.charAt(Math.min(8, Math.floor(lit * 9)));
+      put(x, y, ch, hsl(222, 10, 22 + 58 * lit), -600);
+    }
+  }
+}
+
+/* ================= MERRY CHRISTMAS 2026 ================= */
+var GREET = 'M E R R Y   C H R I S T M A S   2 0 2 6';
+function drawGreeting(t) {
+  if (t < 11.2) return;
+  var n = Math.floor((t - 11.2) * 14);
+  var row = Math.round(ROWS * 0.955);
+  var x0 = Math.round(CX0 - GREET.length / 2);
+  for (var i = 0; i < GREET.length && i < n; i++) {
+    var ch = GREET.charAt(i);
+    if (ch === ' ') continue;
+    var hue = i < 9 ? 128 : i < 30 ? 354 : 46;
+    var tw = 0.8 + 0.2 * Math.sin(t * 3 + i);
+    put(x0 + i, row, ch, hsl(hue, 80, 60 * tw), 990);
+  }
+}
+
+/* ================= MÀN KẾT: HỘP QUÀ 3D + ĐOÀN TÀU QUÀ 3D ================= */
+var finaleT0 = -1, fPrev = -1, fFired = {}, fGone = false, chugStep = -1;
+var F_TRAIN0 = 3.0, F_SPEED = 0.32, F_END = 9.9;
+var RX3 = 1.75, RZ3 = 1.25, LINK3 = 0.056, S_EXIT = 1.75, LOOP_LEN = 9.49, CAR_GAP = 0.07;
+var BOX_W = 1.4, BOX_H = 1.0, BOX_YAW = 0.42;
+var CAM = { y: 1.55, z: 6.4, cp: Math.cos(0.2), sp: Math.sin(0.2), foc: 210, cy: 0 };
+var LX3 = -0.48, LY3 = 0.74, LZ3 = 0.47;
+var RAMP3 = '+*##%%@@';
+var PX = 0, PY = 0, PZ = 0;
+var TRAIN_COLS = [[330, 80, 46, 0], [186, 72, 354, 1], [354, 82, 46, 2], [46, 88, 354, 0], [214, 74, 46, 1]];
+
+function proj(x, y, z) {
+  var py = y - CAM.y, pz = z - CAM.z;
+  var yc = py * CAM.cp - pz * CAM.sp;
+  var zc = -py * CAM.sp - pz * CAM.cp;
+  PZ = zc;
+  if (zc < 0.05) { PX = -999; PY = -999; return; }
+  PX = CX0 + x * CAM.foc / zc;
+  PY = CAM.cy - yc * CAM.foc * AR / zc;
+}
+
+/* ---------- đám mây điểm ---------- */
+function Cloud() { this.a = []; }
+Cloud.prototype.add = function (x, y, z, nx, ny, nz, h, s, l, sp, f, two) {
+  this.a.push(x, y, z, nx, ny, nz, h, s, l, sp || 0, f || 0, two ? 1 : 0);
+};
+Cloud.prototype.freeze = function () { this.d = new Float32Array(this.a); this.n = this.a.length / 12; this.a = null; return this; };
+var crand = mulberry32(4242);
+function face(C, ox, oy, oz, ux, uy, uz, vx, vy, vz, nx, ny, nz, hu, hv, step, mat, flag, two) {
+  for (var a = -hu + step * 0.5; a < hu; a += step) {
+    for (var b = -hv + step * 0.5; b < hv; b += step) {
+      var aa = a + (crand() - 0.5) * step * 0.6, bb = b + (crand() - 0.5) * step * 0.6;
+      var m = mat(aa, bb, hu, hv);
+      if (!m) continue;
+      C.add(ox + ux * aa + vx * bb, oy + uy * aa + vy * bb, oz + uz * aa + vz * bb, nx, ny, nz, m[0], m[1], m[2], m[3], flag, two);
+    }
+  }
+}
+function box3(C, x0, x1, y0, y1, z0, z1, step, mat, flag, noBottom) {
+  var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, cz = (z0 + z1) / 2;
+  var hx = (x1 - x0) / 2, hy = (y1 - y0) / 2, hz = (z1 - z0) / 2;
+  face(C, cx, cy, z1, 1, 0, 0, 0, 1, 0, 0, 0, 1, hx, hy, step, function (a, b) { return mat('s', a, b, hx, hy); }, flag);
+  face(C, cx, cy, z0, 1, 0, 0, 0, 1, 0, 0, 0, -1, hx, hy, step, function (a, b) { return mat('s', a, b, hx, hy); }, flag);
+  face(C, x1, cy, cz, 0, 0, 1, 0, 1, 0, 1, 0, 0, hz, hy, step, function (a, b) { return mat('e', a, b, hz, hy); }, flag);
+  face(C, x0, cy, cz, 0, 0, 1, 0, 1, 0, -1, 0, 0, hz, hy, step, function (a, b) { return mat('e', a, b, hz, hy); }, flag);
+  face(C, cx, y1, cz, 1, 0, 0, 0, 0, 1, 0, 1, 0, hx, hz, step, function (a, b) { return mat('t', a, b, hx, hz); }, flag);
+  if (!noBottom) face(C, cx, y0, cz, 1, 0, 0, 0, 0, 1, 0, -1, 0, hx, hz, step, function (a, b) { return mat('b', a, b, hx, hz); }, flag);
+}
+function cyl(C, x0, x1, cy, cz, r, step, mat, flag) {
+  var na = Math.max(8, Math.round(2 * Math.PI * r / step));
+  for (var x = x0; x <= x1; x += step) {
+    for (var i = 0; i < na; i++) {
+      var th = i / na * Math.PI * 2 + crand() * 0.05;
+      var m = mat(x, th);
+      C.add(x, cy + r * Math.cos(th), cz + r * Math.sin(th), 0, Math.cos(th), Math.sin(th), m[0], m[1], m[2], m[3], flag);
+    }
+  }
+}
+function vcyl(C, cx, cz, y0, y1, r, step, col, flag) {
+  var na = Math.max(8, Math.round(2 * Math.PI * r / step));
+  for (var y = y0; y <= y1; y += step) for (var i = 0; i < na; i++) {
+    var th = i / na * Math.PI * 2;
+    C.add(cx + r * Math.cos(th), y, cz + r * Math.sin(th), Math.cos(th), 0, Math.sin(th), col[0], col[1], col[2], col[3] || 0, flag);
+  }
+}
+function sphere3(C, cx, cy, cz, r, step, col, flag) {
+  var n = Math.max(20, Math.round(4 * Math.PI * r * r / (step * step)));
+  for (var i = 0; i < n; i++) {
+    var u = crand() * 2 - 1, v = crand() * Math.PI * 2, q = Math.sqrt(1 - u * u);
+    var nx = q * Math.cos(v), ny = u, nz = q * Math.sin(v);
+    C.add(cx + nx * r, cy + ny * r, cz + nz * r, nx, ny, nz, col[0], col[1], col[2], col[3] || 0, flag);
+  }
+}
+function bow3(C, kx, ky, kz, size, col, flag, step) {
+  for (var s = -1; s <= 1; s += 2) {
+    var ang = s * 0.5, ca = Math.cos(ang), sa = Math.sin(ang);
+    for (var u = 0; u < Math.PI * 2; u += step / size) {
+      for (var w = -1; w <= 1.001; w += 0.25) {
+        var lx = s * size * 0.95 * (1 - Math.cos(u)), ly = size * 0.55 * Math.sin(u);
+        var tx = s * size * 0.95 * Math.sin(u), ty = size * 0.55 * Math.cos(u);
+        var rx = lx * ca - ly * sa, ry = lx * sa + ly * ca;
+        var rtx = tx * ca - ty * sa, rty = tx * sa + ty * ca;
+        var tl = Math.sqrt(rtx * rtx + rty * rty) || 1;
+        var wz = w * size * 0.36 * (0.75 + 0.25 * Math.cos(u));
+        var shine = 0.5 + 0.5 * Math.cos(u * 2 + w);
+        C.add(kx + rx, ky + size * 0.32 + ry, kz + wz, rty / tl, -rtx / tl, 0, col[0], col[1], col[2] * (0.85 + 0.25 * shine), 0.9, flag, true);
+      }
+    }
+    for (var v = 0; v <= 1; v += step / (size * 1.6)) {
+      for (var w2 = -1; w2 <= 1.001; w2 += 0.25) {
+        if (v > 0.9 && Math.abs(w2) < (v - 0.9) * 10) continue;
+        var bx = kx + s * size * 0.55 * v + w2 * size * 0.14, bz = kz + size * (0.25 + 1.1 * v);
+        C.add(bx, ky + 0.006, bz, 0, 1, 0, col[0], col[1], col[2] * 0.92, 0.6, flag, true);
+      }
+    }
+  }
+  sphere3(C, kx, ky + size * 0.28, kz, size * 0.24, step * 0.7, [col[0], col[1], col[2] * 1.05, 0.9], flag);
+}
+function paperMat(hue, sat, lig, ribHue, pattern, ribW) {
+  return function (a, b, hu, hv, top) {
+    var rib = Math.abs(a) < ribW || (top && Math.abs(b) < ribW);
+    if (rib) return [ribHue, 88, ribHue === 354 ? 48 : 56, 0.8];
+    var e = Math.min(hu - Math.abs(a), hv - Math.abs(b));
+    var edge = e < 0.012 ? 0.82 : 1;
+    if (pattern === 0) {
+      var gx = a / 0.17, gy = b / 0.17;
+      var row = Math.floor(gy);
+      var fx = gx + (row % 2 ? 0.5 : 0) - Math.floor(gx + (row % 2 ? 0.5 : 0)) - 0.5, fy = gy - row - 0.5;
+      if (fx * fx + fy * fy < 0.06) return [hue, sat * 0.35, Math.min(92, lig + 30), 0.15];
+    } else if (pattern === 1) {
+      if (((a + b) * 9) - Math.floor((a + b) * 9) < 0.42) return [hue, sat * 0.4, Math.min(92, lig + 28) * edge, 0.1];
+    } else if (pattern === 2) {
+      var sx = a / 0.24 - Math.floor(a / 0.24) - 0.5, sy = b / 0.24 - Math.floor(b / 0.24) - 0.5;
+      var r = Math.sqrt(sx * sx + sy * sy), th = Math.atan2(sy, sx);
+      if (r < 0.28 && Math.abs(Math.sin(th * 3)) < 0.22) return [0, 0, 92, 0.1];
+    }
+    return [hue, sat, lig * edge, 0.12];
+  };
+}
+
+/* ---------- dựng hộp quà lớn ---------- */
+var BIGBOX = null, BIGLID = null;
+function buildBigBox() {
+  var W = BOX_W / 2, H = BOX_H, st = 0.028;
+  var pm = paperMat(332, 78, 50, 46, 0, 0.075);
+  var C = new Cloud();
+  face(C, 0, H / 2, W, 1, 0, 0, 0, 1, 0, 0, 0, 1, W, H / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 0);
+  face(C, 0, H / 2, -W, 1, 0, 0, 0, 1, 0, 0, 0, -1, W, H / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 0);
+  face(C, W, H / 2, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, W, H / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 0);
+  face(C, -W, H / 2, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0, W, H / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 0);
+  var inner = function () { return [330, 40, 20, 0]; };
+  var Wi = W - 0.02, sti = 0.05;
+  face(C, 0, H / 2, Wi, 1, 0, 0, 0, 1, 0, 0, 0, -1, Wi, H / 2, sti, inner, 2);
+  face(C, 0, H / 2, -Wi, 1, 0, 0, 0, 1, 0, 0, 0, 1, Wi, H / 2, sti, inner, 2);
+  face(C, Wi, H / 2, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0, Wi, H / 2, sti, inner, 2);
+  face(C, -Wi, H / 2, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, Wi, H / 2, sti, inner, 2);
+  face(C, 0, 0.04, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, Wi, Wi, sti, inner, 2);
+  BIGBOX = C.freeze();
+
+  var L = new Cloud(), Wl = W + 0.035, LH = 0.21, top = H + 0.19;
+  face(L, 0, top, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, Wl, Wl, st, function (a, b, hu, hv) { return pm(a, b, hu, hv, true); }, 1);
+  var bandY = top - LH / 2;
+  face(L, 0, bandY, Wl, 1, 0, 0, 0, 1, 0, 0, 0, 1, Wl, LH / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 1);
+  face(L, 0, bandY, -Wl, 1, 0, 0, 0, 1, 0, 0, 0, -1, Wl, LH / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 1);
+  face(L, Wl, bandY, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, Wl, LH / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 1);
+  face(L, -Wl, bandY, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0, Wl, LH / 2, st, function (a, b, hu, hv) { return pm(a, b, hu, hv); }, 1);
+  bow3(L, 0, top, 0, 0.3, [46, 90, 56], 1, 0.03);
+  BIGLID = L.freeze();
+}
+
+/* ---------- dựng toa tàu + đầu tàu ---------- */
+var CARS = [], LOCO = null;
+function buildTrain() {
+  for (var k = 0; k < TRAIN_COLS.length; k++) {
+    var tc = TRAIN_COLS[k];
+    var C = new Cloud(), st = 0.024;
+    box3(C, -0.31, 0.31, 0.09, 0.14, -0.2, 0.2, st, function (f, a, b, hu, hv) {
+      var rim = Math.abs(b) > hv - 0.012;
+      return rim ? [44, 85, 54, 0.6] : [28, 45, 30, 0.1];
+    }, 0, true);
+    var pm = paperMat(tc[0], tc[1], tc[0] === 46 ? 52 : 50, tc[2], tc[3], 0.035);
+    box3(C, -0.26, 0.26, 0.14, 0.5, -0.19, 0.19, st, function (f, a, b, hu, hv) { return pm(a, b, hu, hv, f === 't'); }, 0, true);
+    bow3(C, 0, 0.5, 0, 0.11, [tc[2], 90, tc[2] === 354 ? 50 : 58], 0, 0.02);
+    CARS.push(C.freeze());
+  }
+  var L = new Cloud(), st2 = 0.022;
+  box3(L, -0.44, 0.44, 0.08, 0.15, -0.2, 0.2, st2, function () { return [240, 10, 16, 0.2]; }, 0, true);
+  cyl(L, -0.06, 0.37, 0.31, 0, 0.16, st2, function (x, th) {
+    var band = Math.abs(x - 0.06) < 0.02 || Math.abs(x - 0.22) < 0.02 || x > 0.35;
+    return band ? [44, 88, 56, 0.9] : [354, 76, 42, 0.5];
+  }, 0);
+  face(L, 0.375, 0.31, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0.16, 0.16, st2, function (a, b) {
+    var r = Math.sqrt(a * a + b * b);
+    if (r > 0.16) return null;
+    return r > 0.13 ? [44, 88, 58, 0.9] : [230, 8, 22, 0.3];
+  }, 0);
+  vcyl(L, 0.27, 0, 0.44, 0.62, 0.052, st2, [230, 8, 18, 0.3], 0);
+  vcyl(L, 0.27, 0, 0.6, 0.66, 0.075, st2, [230, 8, 24, 0.4], 0);
+  sphere3(L, 0.13, 0.46, 0, 0.065, st2, [44, 90, 58, 1], 0);
+  sphere3(L, 0.4, 0.42, 0, 0.042, 0.012, [52, 100, 88, 0], 3);
+  box3(L, -0.44, -0.06, 0.15, 0.62, -0.2, 0.2, st2, function (f, a, b, hu, hv) {
+    if (f === 's' && b > 0.03 && b < 0.17 && Math.abs(a) < 0.13) return [190, 80, 68, 0.9];
+    if (f === 'e' && b > 0.03 && b < 0.17 && Math.abs(a) < 0.12) return [190, 80, 68, 0.9];
+    if (Math.abs(b) > hv - 0.02) return [44, 85, 56, 0.7];
+    return [330, 74, 48, 0.3];
+  }, 0, true);
+  box3(L, -0.48, -0.02, 0.62, 0.665, -0.24, 0.24, st2, function () { return [354, 70, 30, 0.3]; }, 0, true);
+  for (var x = 0.37; x <= 0.5; x += 0.016) {
+    var hh = 0.16 - (x - 0.37) * 0.9;
+    for (var y = 0.04; y < 0.04 + hh; y += 0.016) for (var z = -0.18; z <= 0.18; z += 0.016) {
+      L.add(x, y, z, 0.7, 0.7, 0, 44, 85, 50, 0.7, 0);
+    }
+  }
+  LOCO = L.freeze();
+}
+
+/* ---------- vẽ một đám mây điểm ---------- */
+function renderCloud(C, ox, oy, oz, yaw, k, zBias, o) {
+  o = o || {};
+  var ca = Math.cos(yaw), sa = Math.sin(yaw);
+  var pc = o.pitch ? Math.cos(o.pitch) : 1, ps = o.pitch ? Math.sin(o.pitch) : 0;
+  var piy = o.piy || 0, piz = o.piz || 0, lift = o.lift || 0, slide = o.slide || 0;
+  var glow = o.glow || 0, dim = o.dim === undefined ? 1 : o.dim, hideInner = o.hideInner;
+  var D = C.d, n = C.n;
+  for (var i = 0; i < n; i++) {
+    var j = i * 12;
+    var flag = D[j + 10];
+    if (flag === 2 && hideInner) continue;
+    var lx = D[j], ly = D[j + 1], lz = D[j + 2];
+    var nx = D[j + 3], ny = D[j + 4], nz = D[j + 5];
+    if (o.pitch) {
+      var yy = ly - piy, zz = lz - piz;
+      ly = yy * pc - zz * ps + piy; lz = yy * ps + zz * pc + piz;
+      var nyy = ny * pc - nz * ps; nz = ny * ps + nz * pc; ny = nyy;
+    }
+    ly += lift; lz += slide;
+    lx *= k; ly *= k; lz *= k;
+    var wx = ox + lx * ca - lz * sa, wy = oy + ly, wz = oz + lx * sa + lz * ca;
+    var wnx = nx * ca - nz * sa, wnz = nx * sa + nz * ca;
+    var vx = -wx, vy = CAM.y - wy, vz = CAM.z - wz;
+    var nd = wnx * vx + ny * vy + wnz * vz;
+    if (nd < 0) {
+      if (!D[j + 11]) continue;
+      wnx = -wnx; ny = -ny; wnz = -wnz;
+    }
+    proj(wx, wy, wz);
+    if (PZ < 0.6 || PX < -2 || PX > COLS_T + 2 || PY < -2 || PY > ROWS + 2) continue;
+    var dif = wnx * LX3 + ny * LY3 + wnz * LZ3;
+    if (dif < 0) dif = 0;
+    var vl = Math.sqrt(vx * vx + vy * vy + vz * vz);
+    var hx = LX3 + vx / vl, hy = LY3 + vy / vl, hz = LZ3 + vz / vl;
+    var hl = Math.sqrt(hx * hx + hy * hy + hz * hz);
+    var sp = Math.pow(Math.max(0, (wnx * hx + ny * hy + wnz * hz) / hl), 22) * D[j + 9];
+    var dif2 = wnx * 0.62 + ny * 0.3 + wnz * 0.52;
+    if (dif2 < 0) dif2 = 0;
+    var b = Math.min(1, 0.24 + 0.66 * dif + 0.32 * dif2);
+    var hue = D[j + 6], sat = D[j + 7], li = D[j + 8] * (0.42 + 0.78 * b) + sp * 42;
+    if (flag === 2) { li = D[j + 8] + glow * 42; hue = hue + (44 - hue) * glow; sat = sat + 40 * glow; b = 0.4 + 0.5 * glow; }
+    if (flag === 3) { li = 88; b = 1; }
+    var ci = Math.min(7, Math.floor((b * 0.9 + sp * 0.5) * 8));
+    put(PX, PY, RAMP3.charAt(ci), hsl(hue, sat * (1 - Math.min(0.6, sp * 0.5)), Math.min(97, li * dim)), 1000 - PZ * 40 + zBias);
+  }
+}
+
+/* ---------- bánh xe quay ---------- */
+function drawWheel(cx, cz, ox, oz, ca, sa, R, side, rot, zb) {
+  var lzs = side * 0.215;
+  for (var i = 0; i < 26; i++) {
+    var th = i / 26 * Math.PI * 2;
+    for (var rr = 0; rr < 2; rr++) {
+      var r = R * (rr ? 0.78 : 1);
+      var lx = cx + Math.cos(th) * r, ly = R + Math.sin(th) * r;
+      proj(ox + lx * ca - lzs * sa, ly, oz + lx * sa + lzs * ca);
+      if (PZ > 0.6) put(PX, PY, rr ? 'o' : 'O', rr ? hsl(44, 70, 50) : hsl(222, 12, 30), 1000 - PZ * 40 + zb + 2);
+    }
+  }
+  for (var s = 0; s < 6; s++) {
+    var a = rot + s * Math.PI / 3;
+    for (var q = 0.15; q < 0.8; q += 0.2) {
+      var lx2 = cx + Math.cos(a) * R * q, ly2 = R + Math.sin(a) * R * q;
+      proj(ox + lx2 * ca - lzs * sa, ly2, oz + lx2 * sa + lzs * ca);
+      if (PZ > 0.6) put(PX, PY, '+', hsl(44, 80, 62), 1000 - PZ * 40 + zb + 2.5);
+    }
+  }
+}
+
+/* ---------- đường ray ---------- */
+function trackW(s) {
+  if (s < 0) { var u = (s + LINK3) / LINK3; return { x: 0, z: 0.72 + (RZ3 - 0.72) * u, tx: 0, tz: 1 }; }
+  if (s <= S_EXIT) {
+    var ph = Math.PI / 2 + 2 * Math.PI * s;
+    return { x: RX3 * Math.cos(ph), z: RZ3 * Math.sin(ph), tx: -RX3 * Math.sin(ph), tz: RZ3 * Math.cos(ph) };
+  }
+  var d = (s - S_EXIT) * LOOP_LEN, dx = 0.33, dz = 1, L = Math.sqrt(dx * dx + dz * dz);
+  return { x: RX3 + d * dx / L, z: d * dz / L, tx: dx, tz: dz };
+}
+function railGlyph(dx, dy) {
+  var a = Math.atan2(-dy / AR, dx) * 180 / Math.PI;
+  a = (a + 360) % 180;
+  return a < 22 || a > 158 ? '=' : a < 68 ? '/' : a < 112 ? '|' : '\\';
+}
+function railSample(s, i) {
+  var p = trackW(s), L = Math.sqrt(p.tx * p.tx + p.tz * p.tz) || 1;
+  var tx = p.tx / L, tz = p.tz / L, nx = -tz, nz = tx;
+  for (var side = -1; side <= 1; side += 2) {
+    var wx = p.x + nx * 0.115 * side, wz = p.z + nz * 0.115 * side;
+    proj(wx + tx * 0.03, 0.03, wz + tz * 0.03);
+    if (PZ < 0.6) continue;
+    var bx = PX, by = PY;
+    proj(wx, 0.03, wz);
+    var az = PZ, ax = PX, ay = PY;
+    var shine = 0.5 + 0.5 * Math.sin(s * 60 - finT * 3);
+    var li = 30 + 26 * clamp01((8.5 - az) / 4) + shine * 14;
+    put(ax, ay, railGlyph(bx - ax, by - ay), hsl(44, 86, li), 1000 - az * 40 - 3);
+  }
+  if (i % 9 === 0) {
+    for (var w = -1.3; w <= 1.3; w += 0.22) {
+      proj(p.x + nx * 0.115 * w, 0.012, p.z + nz * 0.115 * w);
+      if (PZ > 0.6) put(PX, PY, '#', hsl(26, 40, 22), 1000 - PZ * 40 - 6);
+    }
+  }
+}
+var finT = 0;
+function drawRails3(ft) {
+  if (ft < 2.2) return;
+  var rev = smooth(clamp01((ft - 2.2) / 2.0));
+  var sMax = -LINK3 + (1 + LINK3) * rev, i = 0;
+  for (var s = -LINK3; s <= sMax; s += 0.0015) railSample(s, i++);
+  var spur = clamp01((ft - 4.2) / 0.9);
+  if (spur > 0) for (var s2 = S_EXIT; s2 <= S_EXIT + 0.5 * spur; s2 += 0.0015) railSample(s2, i++);
+}
+
+/* ---------- đoàn tàu ---------- */
+function drawTrain3(ft) {
+  if (ft < F_TRAIN0) return;
+  var sL = -LINK3 + (ft - F_TRAIN0) * F_SPEED;
+  for (var k = 0; k <= TRAIN_COLS.length; k++) {
+    var s = sL - k * CAR_GAP;
+    if (s < -LINK3 + 0.004) continue;
+    var p = trackW(s);
+    var yaw = Math.atan2(p.tz, p.tx);
+    var ca = Math.cos(yaw), sa = Math.sin(yaw);
+    var dist = s * LOOP_LEN;
+    if (k === 0) {
+      renderCloud(LOCO, p.x, 0, p.z, yaw, 1, 0);
+      var wx3 = [-0.28, 0, 0.24], wr = [0.11, 0.09, 0.08];
+      for (var w = 0; w < 3; w++) for (var sd = -1; sd <= 1; sd += 2) drawWheel(wx3[w], 0, p.x, p.z, ca, sa, wr[w], sd, -dist / wr[w], 0);
+      /* đèn pha */
+      proj(p.x + 0.43 * ca, 0.42, p.z + 0.43 * sa);
+      if (PZ > 0.6) halo(PX, PY, 6, ft, 0.6, 50);
+      /* khói */
+      for (var i = 0; i < 14; i++) {
+        var age = ((ft * 1.3 + i / 14) % 1) * 1.3;
+        var sp = Math.max(-LINK3, sL - age * F_SPEED);
+        var q = trackW(sp), qy = Math.atan2(q.tz, q.tx);
+        var cxs = q.x + 0.27 * Math.cos(qy), czs = q.z + 0.27 * Math.sin(qy);
+        var jx = (hash3(i, Math.floor(ft * 1.3 + i / 14), 5) - 0.5) * age * 0.5;
+        proj(cxs + jx, 0.68 + age * 0.75, czs);
+        if (PZ > 0.6) put(PX, PY, age < 0.35 ? '@' : age < 0.8 ? 'O' : 'o', rgba(232, 236, 245, Math.max(0.15, 0.95 - age * 0.62)), 1000 - PZ * 40 + 4);
+      }
+    } else {
+      renderCloud(CARS[k - 1], p.x, 0, p.z, yaw, 1, 0);
+      for (var sd2 = -1; sd2 <= 1; sd2 += 2) {
+        drawWheel(-0.2, 0, p.x, p.z, ca, sa, 0.07, sd2, -dist / 0.07, 0);
+        drawWheel(0.2, 0, p.x, p.z, ca, sa, 0.07, sd2, -dist / 0.07, 0);
+      }
+    }
+  }
+}
+
+/* ---------- hộp quà lớn ---------- */
+function drawBigBox3(ft) {
+  var pop = backOut(clamp01((ft - 0.6) / 0.8));
+  if (pop <= 0.02) return;
+  var lidT = smooth(clamp01((ft - 1.7) / 0.8));
+  var after = Math.max(0, ft - 2.5);
+  renderCloud(BIGBOX, 0, 0, 0, BOX_YAW, pop, 0, { glow: lidT, hideInner: lidT <= 0 });
+  var lift = lidT * 0.85 + after * after * 5;
+  if (lift < 8) {
+    renderCloud(BIGLID, 0, 0, 0, BOX_YAW + lidT * 0.35 + after * 0.8, pop, 1, {
+      pitch: -(lidT * 0.55 + after * 2.4), piy: BOX_H + 0.1, piz: 0, lift: lift, slide: -lidT * 0.25
+    });
+  }
+  if (lidT > 0) {
+    proj(0, BOX_H, 0);
+    var cx = PX, cy = PY;
+    var hw = BOX_W * 0.62 * CAM.foc / PZ;
+    for (var k = 0; k < 34; k++) {
+      var rx = cx + (hash3(k, 1, 4) - 0.5) * 2 * hw;
+      var ph = (ft * 1.6 + hash3(k, 2, 4)) % 1;
+      var len = (4 + hash3(k, 3, 4) * 14) * lidT;
+      for (var q = 0; q < len; q++) {
+        put(rx, cy - 1 - q - ph * 6, q < 2 ? '|' : (q < 6 ? ':' : '.'), hsl(46, 90, 84 - q * 4), 1000 - PZ * 40 + 3);
+      }
+    }
+    halo(cx, cy - 2, 10 * lidT, ft, 0.5, 46);
+  }
+  var sp = ft - 1.8;
+  if (sp > 0 && sp < 1.8) {
+    for (var k2 = 0; k2 < 90; k2++) {
+      var ang = hash3(k2, 5, 6) * Math.PI * 2;
+      var vh = 0.6 + hash3(k2, 6, 6) * 1.4, vu = 1.6 + hash3(k2, 8, 6) * 2.2;
+      var x = Math.cos(ang) * vh * sp, z = Math.sin(ang) * vh * sp;
+      var y = BOX_H + vu * sp - 2.4 * sp * sp;
+      if (y < 0) continue;
+      proj(x, y, z);
+      if (PZ > 0.6) put(PX, PY, sp < 0.5 ? '*' : sp < 1.2 ? '+' : '.', hsl(rampHue(hash3(k2, 7, 6)), 80, 86 - sp * 22), 1000 - PZ * 40 + 6);
+    }
+  }
+}
+
+function fcue(name, time, tp, t, fn) {
+  if (fFired[name]) return;
+  if (tp < time && t >= time) { fFired[name] = true; if (ready()) fn(); }
+}
+function finaleSound(tp, ft) {
+  fcue('open', 0.02, tp, ft, function () { noise(600, 4000, 1, 0.5, 0.08, 0); for (var i = 0; i < 6; i++) bell(note(10 + i), 0.6, 0.06, (i % 2 ? 0.5 : -0.5), i * 0.05); });
+  fcue('box', 0.62, tp, ft, function () { glide(180, 620, 0.14, 0.18, 'sine'); noise(1400, 900, 3, 0.06, 0.06, 0); bell(note(5), 1.4, 0.13, 0, 0.12); });
+  fcue('lid', 1.72, tp, ft, function () { noise(800, 3000, 1.2, 0.35, 0.1, 0); for (var i = 0; i < 5; i++) bell(note(7 + i * 2), 0.8, 0.1, -0.6 + i * 0.3, 0.1 + i * 0.07); });
+  fcue('rail', 2.2, tp, ft, function () { noise(2000, 7000, 1.5, 2.0, 0.035, 0); });
+  fcue('whistle', F_TRAIN0, tp, ft, function () {
+    glide(880, 940, 0.35, 0.07, 'sine'); glide(1108, 1180, 0.35, 0.05, 'sine');
+    glide(880, 940, 0.5, 0.07, 'sine', 0.45); glide(1108, 1180, 0.5, 0.05, 'sine', 0.45);
+  });
+  if (ft > F_TRAIN0 && ft < F_END - 0.6) {
+    var st = Math.floor((ft - F_TRAIN0) / 0.22);
+    if (st > chugStep) {
+      chugStep = st;
+      if (ready()) {
+        var p = trackW(-LINK3 + (ft - F_TRAIN0) * F_SPEED);
+        var pan = Math.max(-0.9, Math.min(0.9, p.x / RX3));
+        noise(st % 2 ? 900 : 1300, 500, 2, 0.12, 0.05, pan);
+        if (st % 4 === 0) sleigh(0, 0.035);
+      }
+    }
+  }
+  fcue('end', F_END - 1.2, tp, ft, function () {
+    var ch = [0, 4, 7, 12];
+    for (var i = 0; i < 4; i++) bell(note(ch[i]), 2.4, 0.11, i % 2 ? 0.5 : -0.5, i * 0.06);
+  });
+}
+function drawFinaleBG(G) {
+  var base = Math.round(G.horizon);
+  var peaks = [[0.04, 26], [0.25, 15], [0.5, 9], [0.7, 14], [0.93, 27], [1.05, 20]];
+  for (var x = 0; x < COLS_T; x++) {
+    var u = (x - LEFT) / COLS;
+    var h = 0;
+    for (var k = 0; k < peaks.length; k++) h = Math.max(h, peaks[k][1] - Math.abs(u - peaks[k][0]) * 95);
+    for (var y = Math.round(base - h); y <= base; y++) {
+      if ((x + y) % 2) continue;
+      var e = h > 0 ? (base - y) / h : 0;
+      put(x, y, (x + y) % 4 ? ':' : '.', hsl(178, 45, 22 + 14 * (1 - e)), -300);
+    }
+  }
+  for (var y2 = base + 1; y2 < ROWS; y2++) {
+    var depthF = (y2 - base) / Math.max(1, ROWS - base);
+    for (var x2 = 0; x2 < COLS_T; x2++) {
+      var hh = hash3(x2, y2, 5);
+      if (hh > 0.42) continue;
+      put(x2, y2, hh < 0.12 ? ':' : '.', hsl(262, 20, 24 + 16 * depthF + hh * 12), -320);
+    }
+  }
+  /* bóng hộp + đốm sáng dưới đất */
+  for (var s = 0; s < 260; s++) {
+    var a = hash3(s, 3, 3) * Math.PI * 2, r = 0.95 + hash3(s, 4, 3) * 0.5;
+    proj(Math.cos(a) * r, 0, Math.sin(a) * r);
+    put(PX, PY, '.', hsl(46, 50, 30 + 20 * hash3(s, 5, 3)), -310);
+  }
+}
+function drawFinale(ft) {
+  finT = ft;
+  if (!BIGBOX) { buildBigBox(); buildTrain(); }
+  CAM.cy = ROWS * 0.57;
+  proj(0, 0, -6);
+  drawFinaleBG({ horizon: PY - 1 });
+  drawBigBox3(ft);
+  drawRails3(ft);
+  drawTrain3(ft);
+}
+
+function startFinale() {
+  if (finaleT0 >= 0) return;
+  finaleT0 = performance.now() / 1000;
+  fPrev = -1; fFired = {}; fGone = false; chugStep = -1;
+  nextBtn.classList.remove('show');
+}
+
+
+/* ================= SAO LẤP LÁNH NỀN ================= */
+var NST = 150, st_x = new Float32Array(NST), st_y = new Float32Array(NST), st_p = new Float32Array(NST), st_v = new Float32Array(NST);
+(function () { var r = mulberry32(31337); for (var i = 0; i < NST; i++) { st_x[i] = r(); st_y[i] = Math.pow(r(), 1.3) * 0.62; st_p[i] = r() * 6.28; st_v[i] = 0.8 + r() * 2.2; } })();
+function drawStars(t) {
+  for (var i = 0; i < NST; i++) {
+    var tw = 0.5 + 0.5 * Math.sin(t * st_v[i] + st_p[i]);
+    if (tw < 0.3) continue;
+    put(st_x[i] * COLS_T, st_y[i] * ROWS, tw > 0.9 ? '*' : '.', hsl(215, 40, 30 + 55 * tw), -998);
+  }
+}
+
+/* ================= DÂY KIM TUYẾN QUẤN CÂY ================= */
+function treeRadiusAtF(f) {
+  for (var ti = TIERS - 1; ti >= 0; ti--) if (f >= TB[ti]) return tierRadiusAt(ti, clamp01((f - TB[ti]) / (TT[ti] - TB[ti])));
+  return tierRadiusAt(0, 0);
+}
+function drawGarland(t, rot, deerOn, deer) {
+  if (t < 9.0) return;
+  var rev = clamp01((t - 9.0) / 1.3);
+  var cx = CX0, bR = rowBase(), tH = treeH(), tl = tilt();
+  for (var gI = 0; gI < 2; gI++) {
+    var N = 1000, turns = 4.2, off = gI * Math.PI;
+    for (var i = 0; i < N; i++) {
+      var s = i / N;
+      if (s > rev) break;
+      var f = 0.95 - s * 0.9;
+      var a = off + s * turns * Math.PI * 2;
+      var r = treeRadiusAtF(f) * 0.74 + 0.6;
+      var phi = a + rot;
+      var x = cx + r * Math.sin(phi), z = r * Math.cos(phi);
+      if (z < 0) continue;
+      var y = bR - f * tH + z * tl + 1.2 + Math.sin(s * 160) * 0.35;
+      if (deerOn) { var ddx = (x - deer.x) / 24, ddy = (y - deer.y) / AR / 19; if (ddx * ddx + ddy * ddy < 1) continue; }
+      var sp = Math.sin(s * 90 - t * 6 + gI * 2);
+      var ch = sp > 0.92 ? '*' : (i % 2 ? '~' : '-');
+      var col = gI === 0 ? hsl(44, 92, 52 + 26 * Math.max(0, sp)) : hsl(205, 20, 70 + 24 * Math.max(0, sp));
+      put(x, y, ch, col, z + 2.5);
+    }
+  }
+}
+
+/* ================= HAPPY BIRTHDAY BẰNG PHÁO HOA ================= */
+var HB_T0 = 20.5, HB_RISE = 0.7, HB_FLY = 0.85, HB_FALL = 30.1, HB_END = 31.6;
+var HB_FONT = {
+  H: ['10001', '10001', '10001', '11111', '10001', '10001', '10001'],
+  A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
+  P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
+  Y: ['10001', '10001', '01010', '00100', '00100', '00100', '00100'],
+  B: ['11110', '10001', '10001', '11110', '10001', '10001', '11110'],
+  I: ['11111', '00100', '00100', '00100', '00100', '00100', '11111'],
+  R: ['11110', '10001', '10001', '11110', '10100', '10010', '10001'],
+  T: ['11111', '00100', '00100', '00100', '00100', '00100', '00100'],
+  D: ['11110', '10001', '10001', '10001', '10001', '10001', '11110']
+};
+var HB_PTS = null, HB_LET = null, HB_KEY = '';
+function buildHB() {
+  var key = COLS_T + 'x' + ROWS;
+  if (HB_KEY === key) return;
+  HB_KEY = key; HB_PTS = []; HB_LET = [];
+  var lines = ['HAPPY', 'BIRTHDAY'], ys = [ROWS * 0.055, ROWS * 0.15];
+  var sx = 2, sy = 1.3, g = 0, rr = mulberry32(99);
+  for (var l = 0; l < 2; l++) {
+    var L = lines[l], wdt = (L.length * 6 - 1) * sx, x0 = Math.round(CX0 - wdt / 2);
+    for (var li = 0; li < L.length; li++) {
+      var gl = HB_FONT[L.charAt(li)];
+      HB_LET.push({ x: x0 + (li * 6 + 2) * sx + sx / 2, y: ys[l] + 3 * sy, launch: HB_T0 + g * 0.17, hue: [354, 46, 140, 200, 322, 280, 18][g % 7] });
+      for (var r = 0; r < 7; r++) for (var c = 0; c < 5; c++) {
+        if (gl[r].charAt(c) !== '1') continue;
+        for (var s2 = 0; s2 < sx; s2++) HB_PTS.push({ tx: x0 + (li * 6 + c) * sx + s2, ty: ys[l] + r * sy, g: g, ph: rr() * 6.28 });
+      }
+      g++;
+    }
+  }
+}
+function drawHB(t) {
+  if (t < HB_T0) return;
+  buildHB();
+  var y0 = rowFloor() - 2;
+  for (var g = 0; g < HB_LET.length; g++) {
+    var Lt = HB_LET[g], tl = t - Lt.launch;
+    if (tl < 0) continue;
+    if (tl < HB_RISE) {
+      var u = tl / HB_RISE, e = 1 - (1 - u) * (1 - u);
+      var ry = y0 + (Lt.y - y0) * e;
+      put(Lt.x, ry, '^', '#fff6e0', 996);
+      for (var k = 1; k < 10; k++) put(Lt.x, ry + k * 0.9, k < 3 ? '|' : '.', hsl(Lt.hue, 70, 86 - k * 6), 995);
+    } else if (tl < HB_RISE + 0.35) {
+      put(Lt.x, Lt.y, '@', '#ffffff', 997);
+      halo(Lt.x, Lt.y, 6 + (tl - HB_RISE) * 18, t, 0.8, Lt.hue);
+    }
+  }
+  var fall = t - HB_FALL;
+  for (var i = 0; i < HB_PTS.length; i++) {
+    var P = HB_PTS[i], L2 = HB_LET[P.g];
+    var tb = t - L2.launch - HB_RISE;
+    if (tb < 0) continue;
+    var u2 = clamp01(tb / HB_FLY), e2 = backOut(u2);
+    var x = L2.x + (P.tx - L2.x) * e2, y = L2.y + (P.ty - L2.y) * e2;
+    var ch, li;
+    if (u2 < 1) {
+      ch = '*'; li = 88;
+      var e3 = backOut(clamp01((tb - 0.07) / HB_FLY));
+      put(L2.x + (P.tx - L2.x) * e3, L2.y + (P.ty - L2.y) * e3, '.', hsl(L2.hue, 80, 72), 993);
+    } else {
+      var tw = Math.sin(t * 6 + P.ph);
+      ch = tw > 0.55 ? '@' : tw > -0.35 ? '#' : '*';
+      li = 56 + 20 * tw;
+    }
+    if (fall > 0) {
+      y += fall * fall * 6 * (0.6 + 0.4 * Math.sin(P.ph));
+      x += Math.sin(P.ph * 3) * fall * 2;
+      li *= Math.max(0, 1 - fall / 1.6);
+      if (li < 8) continue;
+      ch = fall > 0.8 ? '.' : '+';
+    }
+    put(x, y, ch, hsl(L2.hue, 92, li), 994);
+  }
+  if (t > HB_T0 + 2.8 && fall < 0) {
+    var q = Math.floor(t * 5);
+    for (var k2 = 0; k2 < 34; k2++) {
+      var P2 = HB_PTS[Math.floor(hash3(k2, q, 3) * HB_PTS.length)];
+      put(P2.tx + (hash3(k2, 2, q) - 0.5) * 7, P2.ty + (hash3(k2, 3, q) - 0.5) * 3.5, hash3(k2, 4, q) > 0.5 ? '+' : '.', '#ffffff', 992);
+    }
+  }
+}
+var HB_MEL = [[-5, .75], [-5, .25], [-3, 1], [-5, 1], [0, 1], [-1, 2],
+  [-5, .75], [-5, .25], [-3, 1], [-5, 1], [2, 1], [0, 2],
+  [-5, .75], [-5, .25], [7, 1], [4, 1], [0, 1], [-1, 1], [-3, 2],
+  [5, .75], [5, .25], [4, 1], [0, 1], [2, 1], [0, 3]];
+var HB_CH = [[0, 0], [6, 7], [12, 0], [19, 5], [22, 0]];
+function hbSound(tp, t) {
+  if (t < HB_T0 - 0.1) return;
+  buildHB();
+  for (var g = 0; g < HB_LET.length; g++) {
+    (function (g) {
+      var Lt = HB_LET[g];
+      cue('hbL' + g, Lt.launch, tp, t, function () { glide(520, 1500, HB_RISE * 0.9, 0.02, 'sine'); });
+      cue('hbB' + g, Lt.launch + HB_RISE, tp, t, function () {
+        var pan = Math.max(-0.9, Math.min(0.9, (Lt.x - CX0) / (COLS * 0.45)));
+        glide(120, 40, 0.45, 0.12, 'sine');
+        noise(1200, 200, 0.8, 0.6, 0.07, pan);
+        noise(5600, 3200, 1.5, 0.9, 0.025, -pan * 0.5, 0.15);
+      });
+    })(g);
+  }
+  cue('hbMel', HB_T0 + 2.5, tp, t, function () {
+    var BT = 0.33, b = 0;
+    for (var i = 0; i < HB_MEL.length; i++) {
+      var f = 523.25 * Math.pow(2, HB_MEL[i][0] / 12);
+      bell(f, 0.45 + HB_MEL[i][1] * BT, 0.13, 0, b * BT);
+      bell(f * 2, 0.4, 0.025, 0.3, b * BT + 0.01);
+      b += HB_MEL[i][1];
+    }
+    for (var c = 0; c < HB_CH.length; c++) {
+      var root = HB_CH[c][1];
+      pad(261.63 * Math.pow(2, root / 12), 2.4, 0.05, -0.3, HB_CH[c][0] * BT);
+      pad(261.63 * Math.pow(2, (root + 4) / 12), 2.4, 0.04, 0.3, HB_CH[c][0] * BT);
+      pad(261.63 * Math.pow(2, (root + 7) / 12), 2.4, 0.035, 0, HB_CH[c][0] * BT);
+    }
+  });
+}
+
+/* ---------- snow ---------- */
+var NS = 230;
+var s_x = new Float32Array(NS), s_y = new Float32Array(NS), s_v = new Float32Array(NS),
+  s_a = new Float32Array(NS), s_p = new Float32Array(NS);
+for (var i = 0; i < NS; i++) {
+  s_x[i] = rnd(); s_y[i] = rnd(); s_v[i] = 0.015 + rnd() * 0.035;
+  s_a[i] = 0.22 + Math.pow(rnd(), 1.4) * 0.78; s_p[i] = rnd() * 6.28;
+}
+
+/* ---------- dust ---------- */
+var ND = 170;
+var d_a = new Float32Array(ND), d_r = new Float32Array(ND), d_y = new Float32Array(ND),
+  d_v = new Float32Array(ND), d_h = new Float32Array(ND);
+for (var i = 0; i < ND; i++) {
+  d_a[i] = rnd() * 6.28; d_r[i] = (0.4 + rnd() * 0.9) * MAXR; d_y[i] = rnd();
+  d_v[i] = 0.03 + rnd() * 0.06; d_h[i] = rampHue(rnd());
+}
+
+/* ================= AUDIO ================= */
+var AC = null, bus = null, master = null, started = false;
+function initAudio() {
+  if (AC) return;
+  var ACtor = window.AudioContext || window.webkitAudioContext;
+  if (!ACtor) return;
+  AC = new ACtor();
+  bus = AC.createGain(); bus.gain.value = 1;
+  var dry = AC.createGain(); dry.gain.value = 0.85;
+  var wet = AC.createGain(); wet.gain.value = 0.32;
+  var conv = AC.createConvolver();
+  var len = Math.floor(AC.sampleRate * 2.4);
+  var ir = AC.createBuffer(2, len, AC.sampleRate);
+  for (var c = 0; c < 2; c++) {
+    var dat = ir.getChannelData(c);
+    for (var i = 0; i < len; i++) {
+      var k = 1 - i / len;
+      dat[i] = (Math.random() * 2 - 1) * k * k * k;
+    }
+  }
+  conv.buffer = ir;
+  var comp = AC.createDynamicsCompressor();
+  comp.threshold.value = -16; comp.ratio.value = 4;
+  master = AC.createGain(); master.gain.value = 1.3;
+  bus.connect(dry); dry.connect(comp);
+  bus.connect(conv); conv.connect(wet); wet.connect(comp);
+  comp.connect(master); master.connect(AC.destination);
+  noiseBuf = AC.createBuffer(1, Math.floor(AC.sampleRate * 2), AC.sampleRate);
+  var nd = noiseBuf.getChannelData(0);
+  for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+}
+var noiseBuf = null;
+function ready() { return AC && AC.state === 'running'; }
+
+var PENTA = [0, 2, 4, 7, 9];
+function note(i) {
+  var oct = Math.floor(i / 5), deg = i - oct * 5;
+  return 523.25 * Math.pow(2, (PENTA[deg] + 12 * oct) / 12);
+}
+function panner(p) {
+  if (AC.createStereoPanner) { var n = AC.createStereoPanner(); n.pan.value = p; return n; }
+  var n = AC.createPanner(); n.panningModel = 'equalpower'; n.setPosition(p, 0, 1 - Math.abs(p)); return n;
+}
+function bell(freq, dur, vol, pan, delay) {
+  if (!ready()) return;
+  var t0 = AC.currentTime + (delay || 0);
+  var out = AC.createGain(); out.gain.value = 1;
+  var p = panner(pan || 0);
+  out.connect(p); p.connect(bus);
+  var parts = [[1, 1], [2.76, 0.2], [5.4, 0.07]];
+  for (var i = 0; i < parts.length; i++) {
+    var o = AC.createOscillator(); o.type = 'sine';
+    o.frequency.value = freq * parts[i][0];
+    var g = AC.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol * parts[i][1], t0 + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(out);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+}
+function noise(f0, f1, q, dur, vol, pan, delay, type) {
+  if (!ready() || !noiseBuf) return;
+  var t0 = AC.currentTime + (delay || 0);
+  var s = AC.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+  var bq = AC.createBiquadFilter(); bq.type = type || 'bandpass';
+  bq.Q.value = q;
+  bq.frequency.setValueAtTime(f0, t0);
+  bq.frequency.exponentialRampToValueAtTime(Math.max(40, f1), t0 + dur);
+  var g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + Math.min(0.12, dur * 0.3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  var p = panner(pan || 0);
+  s.connect(bq); bq.connect(g); g.connect(p); p.connect(bus);
+  s.start(t0); s.stop(t0 + dur + 0.05);
+}
+function glide(f0, f1, dur, vol, type, delay) {
+  if (!ready()) return;
+  var t0 = AC.currentTime + (delay || 0);
+  var o = AC.createOscillator(); o.type = type || 'sine';
+  o.frequency.setValueAtTime(f0, t0);
+  o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur);
+  var g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g); g.connect(bus);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function pad(freq, dur, vol, pan, delay) {
+  if (!ready()) return;
+  var t0 = AC.currentTime + (delay || 0);
+  var o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
+  var g = AC.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.linearRampToValueAtTime(vol, t0 + 0.5);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  var p = panner(pan || 0);
+  o.connect(g); g.connect(p); p.connect(bus);
+  o.start(t0); o.stop(t0 + dur + 0.05);
+}
+function sleigh(delay, vol) {
+  noise(5200, 7000, 2, 0.14, vol * 0.5, (Math.random() - 0.5) * 1.2, delay);
+  for (var i = 0; i < 4; i++) {
+    bell(note(9 + i) * (1 + (Math.random() - 0.5) * 0.02), 0.22, vol * 0.12,
+      (Math.random() - 0.5) * 1.4, delay + i * 0.008);
+  }
+}
+
+var fired = {};
+function cue(name, time, tp, t, fn) {
+  if (fired[name]) return;
+  if (tp < time && t >= time) { fired[name] = true; if (ready()) fn(); }
+}
+
+var growStep = -1, leafStep = -1, leafBedOn = false;
+var smStep = -1;
+function startLeafBed() {
+  if (leafBedOn || !ready()) return;
+  leafBedOn = true;
+  for (var k = 0; k < 2; k++) {
+    var s = AC.createBufferSource(); s.buffer = noiseBuf; s.loop = true;
+    var bq = AC.createBiquadFilter(); bq.type = 'bandpass';
+    bq.frequency.value = k === 0 ? 3200 : 6200; bq.Q.value = k === 0 ? 1.1 : 2.2;
+    var g = AC.createGain(); g.gain.value = 0.0001;
+    var lfo = AC.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = k === 0 ? 7.3 : 11.7;
+    var lg = AC.createGain(); lg.gain.value = k === 0 ? 0.022 : 0.012;
+    var base = AC.createGain(); base.gain.value = 1;
+    var t0 = AC.currentTime;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(k === 0 ? 0.030 : 0.016, t0 + 1.1);
+    g.gain.setValueAtTime(k === 0 ? 0.030 : 0.016, t0 + 2.4);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 3.7);
+    lfo.connect(lg); lg.connect(g.gain);
+    s.connect(bq); bq.connect(g); g.connect(bus);
+    s.start(t0); s.stop(t0 + 3.9); lfo.start(t0); lfo.stop(t0 + 3.9);
+  }
+}
+
+/* ================= DRAW PARTS ================= */
+
+function drawSnow(t) {
+  for (var i = 0; i < NS; i++) {
+    var y = (s_y[i] + t * s_v[i]) % 1;
+    var x = s_x[i] + Math.sin(t * 0.5 + s_p[i]) * 0.012;
+    var px = x * COLS_T;
+    var py = y * ROWS;
+    put(px, py, '+', rgba(248, 250, 255, s_a[i]), -999);
+  }
+}
+
+function drawFallingLight(t) {
+  var p = at(t, 0.05, 0.34);
+  if (p <= 0 || t > 0.46) return;
+  var e = p * p;
+  var y0 = -4, y1 = rowFloor();
+  var y = y0 + (y1 - y0) * e;
+  var cx = CX0;
+  for (var k = 22; k >= 1; k--) {
+    var yy = y - k * (0.5 + e * 1.4);
+    if (yy < -2) continue;
+    var a = 1 - k / 22;
+    put(cx, yy, k > 8 ? '|' : '#', rgba(255, 246, 226, a * 0.85), 400);
+  }
+  put(cx, y, '@', '#fffaf0', 420);
+}
+
+function discPattern(rr, aa) {
+  if (rr > 0.955 && rr < 1.0) return 1;
+  if (rr > 0.898 && rr < 0.928) return 1;
+  if (rr > 0.62 && rr < 0.885) {
+    var band = (rr - 0.62) / 0.265;
+    var pet = Math.sin(16 * aa);
+    if (pet > 0.30 + 1.45 * Math.abs(band - 0.5)) return 1;
+    if (Math.abs(pet) > 0.9985) return 1;
+  }
+  if (rr > 0.555 && rr < 0.60) return 1;
+  if (rr > 0.22 && rr < 0.545 && Math.abs(Math.sin(4 * aa)) > 0.955) return 1;
+  if (rr > 0.155 && rr < 0.19) return 1;
+  return 0;
+}
+
+function drawDisc(t, rot) {
+  var g = at(t, 0.39, 1.0);
+  if (g <= 0) return;
+  var sp = smooth(g);
+  var cx = CX0, cy = rowFloor();
+  var rx = DISC_RX, ry = DISC_RX * AR * 0.28;
+  var impact = at(t, 0.39, 1.0);
+  var x0 = Math.max(0, Math.floor(cx - rx)), x1 = Math.min(COLS_T - 1, Math.ceil(cx + rx));
+  var y0 = Math.max(0, Math.floor(cy - ry - 1)), y1 = Math.min(ROWS - 1, Math.ceil(cy + ry + 1));
+  var sweepA = t * 0.9;
+  var pulse = ((t - 1.4) * 0.55) % 1.6;
+  for (var y = y0; y <= y1; y++) {
+    for (var x = x0; x <= x1; x++) {
+      var dx = (x - cx) / rx, dy = (y - cy) / ry;
+      var d2 = dx * dx + dy * dy;
+      if (d2 > 1) continue;
+      var rr = Math.sqrt(d2);
+      if (rr > sp * 1.001) continue;
+      var aa = Math.atan2(dy, dx) + rot;
+      var pat = discPattern(rr, aa);
+      var lead = 1 - Math.min(1, (sp - rr) / 0.09);
+      var sw = Math.max(0, Math.cos(aa - sweepA)) ;
+      sw = Math.pow(sw, 14) * 0.5;
+      var pl = Math.exp(-Math.pow((rr - pulse) / 0.06, 2)) * 0.35;
+      var li, ch;
+      if (pat) {
+        li = 50 + 10 * (0.5 + 0.5 * Math.sin(aa * 3 + t)) + lead * 18 + sw * 14 + pl * 20;
+        ch = rr > 0.9 ? '#' : (Math.abs(Math.sin(4 * aa)) > 0.955 && rr < 0.55 ? '=' : '+');
+      } else {
+        if (hash3(x, y, 3) > 0.55) continue;
+        li = 13 + 7 * hash3(x, y, 5) + lead * 18 + sw * 10 + pl * 13;
+        ch = '-';
+      }
+      var sat = 30 + 16 * (pat ? 1 : 0.35) + lead * 8;
+      put(x, y, ch, hsl(46, sat, Math.min(88, li)), -200 + rr * 2);
+    }
+  }
+  /* impact rings + sparks */
+  if (t < 1.45) {
+    for (var k = 0; k < 3; k++) {
+      var rt = at(t, 0.41 + k * 0.07, 0.75);
+      if (rt <= 0 || rt >= 1) continue;
+      var rr2 = rt * 0.95;
+      var al = 1 - rt;
+      for (var s = 0; s < 150; s++) {
+        var ang = s / 150 * Math.PI * 2;
+        var xx = cx + Math.cos(ang) * rr2 * rx;
+        var yy = cy + Math.sin(ang) * rr2 * ry;
+        put(xx, yy, '#', hsl(46, 30, 50 + 40 * al), 120);
+      }
+    }
+    var sp2 = at(t, 0.40, 1.0);
+    if (sp2 < 1) {
+      for (var s = 0; s < 80; s++) {
+        var ang = hash3(s, 1, 2) * Math.PI * 2;
+        var spd = 0.3 + hash3(s, 2, 3) * 0.75;
+        var pr = sp2 * spd;
+        var xx = cx + Math.cos(ang) * pr * rx * 0.9;
+        var yy = cy + Math.sin(ang) * pr * ry * 0.9 - (Math.sin(sp2 * Math.PI) * 14 * (0.4 + hash3(s, 3, 4)));
+        var ch2 = sp2 < 0.3 ? '*' : sp2 < 0.65 ? '+' : '.';
+        put(xx, yy, ch2, hsl(44, 40, 92 - sp2 * 40), 300);
+      }
+    }
+  }
+  /* motes */
+  if (t > 1.3) {
+    for (var s = 0; s < 26; s++) {
+      var ph = (t * (0.18 + hash3(s, 9, 1) * 0.14) + hash3(s, 8, 2)) % 1;
+      var ang = hash3(s, 7, 3) * Math.PI * 2 + rot * 0.3;
+      var xx = cx + Math.cos(ang) * rx * (0.82 + 0.14 * hash3(s, 6, 4));
+      var yy = cy + Math.sin(ang) * ry * 0.9 - ph * 26;
+      put(xx, yy, ph > 0.6 ? '.' : '+', hsl(46, 35, 80 - ph * 35), 320);
+    }
+  }
+}
+
+function drawTrunk(t) {
+  var g = at(t, 1.05, 0.45);
+  if (g <= 0) return;
+  var cx = CX0;
+  var yBot = rowBase() + 5;
+  var yTop = rowBase() - treeH() * 0.10;
+  var cur = yBot + (yTop - yBot) * g;
+  for (var y = Math.floor(cur); y <= yBot; y++) {
+    var fr = (yBot - y) / (yBot - yTop);
+    var half = (5.0 - fr * 1.4) * (1 + Math.max(0, 0.25 - fr) * 2.2);
+    for (var x = Math.ceil(cx - half); x <= cx + half; x++) {
+      var u = (x - cx) / half;
+      var lightv = Math.max(0, 1 - Math.abs(u + 0.34) * 1.35);
+      var li = 2 + 13 * Math.pow(lightv, 1.3);
+      if (y < cur + 2) li += 6;
+      var ch = li > 11 ? '@' : li > 8 ? '%' : li > 5 ? '8' : '#';
+      put(x, y, ch, hsl(20, 46, li), 80 + u * 0.1);
+    }
+  }
+}
+
+function halo(cx, cy, rad, t, strength, hue) {
+  var seed = Math.floor(t * 9);
+  var r2 = Math.ceil(rad);
+  for (var y = Math.floor(cy - r2 * AR * 2); y <= cy + r2 * AR * 2; y++) {
+    for (var x = Math.floor(cx - r2); x <= cx + r2; x++) {
+      if (occupied(x, y)) continue;
+      var dx = x - cx, dy = (y - cy) / AR;
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d > rad || d < 0.5) continue;
+      var p = (1 - d / rad);
+      p = p * p * strength;
+      if (hash3(x * 7 + seed, y * 13, 11) > p) continue;
+      var ch = d < rad * 0.33 ? '+' : d < rad * 0.66 ? ':' : '.';
+      put(x, y, ch, hsl(hue, 30, 62 + 24 * p), 350);
+    }
+  }
+}
+
+function drawTree(t, rot, F, deerX, deerY, deerOn) {
+  var cx = CX0, bR = rowBase(), tH = treeH(), tl = tilt();
+  var frostIn = clamp01((F - 0.0) * 1.0);
+  for (var n = 0; n < NB; n++) {
+    var f = t_f[n];
+    if (f > F) continue;
+    var grow = clamp01((F - f) * 14);
+    var r = t_r[n] * (0.35 + 0.65 * smooth(grow));
+    var phi = t_a[n] + rot;
+    var sp = Math.sin(phi), cp = Math.cos(phi);
+    var x = cx + r * sp;
+    var z = r * cp;
+    var y = bR - f * tH + t_dr[n] + z * tl;
+    var sh = t_sh[n];
+    var nd = sp * LX + cp * LZ;
+    var lightv = clamp01(0.5 + 0.5 * nd);
+    lightv = Math.pow(lightv, 1.25);
+    var b = sh * (0.22 + 1.25 * lightv);
+    var age = clamp01((F - f) * 3.2);
+    b *= 0.55 + 0.45 * age;
+    var nearDeer = false;
+    if (deerOn) {
+      var ddx = (x - deerX) / 28, ddy = (y - deerY) / AR / 23;
+      var dd = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (dd < 1.4) b *= 0.14 + 0.86 * clamp01((dd - 0.8) / 0.6);
+      nearDeer = dd < 1.0;
+    }
+    b = clamp01(b);
+    var ch, col;
+    if (age < 0.25) {
+      ch = '#';
+      col = hsl(132 + t_tier[n] * 5 + t_hj[n] * 0.6, 80, 10 + 30 * b);
+    } else if (t_fr[n] && b > 0.52 && age > 0.55) {
+      var fm = clamp01((age - 0.55) / 0.5);
+      ch = b > 0.8 ? '@' : '#';
+      col = hsl(46 + t_hj[n] * 0.2, 4 + (1 - fm) * 40, 70 + 27 * fm * b);
+    } else {
+      var hp = hash3(n, 1, 1);
+      var soup = b < 0.3 ? SOUP_DARK : b < 0.62 ? SOUP_MID : SOUP_BRIGHT;
+      ch = soup.charAt(Math.floor(hp * soup.length));
+      var bb2 = Math.min(1, b * 1.18);
+      var sat = 86 - 16 * bb2;
+      var li = 8 + 62 * Math.pow(bb2, 0.92);
+      col = hsl(126 + t_tier[n] * 6 + t_hj[n] * 1.1 + (1 - bb2) * 14, sat, li);
+    }
+    if (t_col[n] && age >= 0.25 && !nearDeer) {
+      var hitT = COMET_T0 + t_hit[n] * COMET_DUR;
+      if (t >= hitT) {
+        var tlc = TREE_LIGHTS[t_col[n] - 1];
+        var tw = 0.62 + 0.38 * Math.sin(t * 4.2 + t_hj[n] * 2.7);
+        var flash = Math.exp(-(t - hitT) * 4);
+        var lit = (48 + 20 * tw) * (0.62 + 0.38 * lightv) + flash * 28;
+        ch = SOUP_BRIGHT.charAt((n + Math.floor(t * 1.3 + t_hj[n])) % SOUP_BRIGHT.length);
+        col = hsl(tlc[0], tlc[1], Math.min(93, tlc[1] === 0 ? lit + 18 : lit));
+        z += 0.3;
+      }
+    }
+    put(x, y, ch, col, z);
+    if (b > 0.75 && hash3(n, Math.floor(t * 7), 9) > 0.9994) {
+      put(x, y, '*', '#ffffff', z + 1);
+    }
+  }
+  /* baubles */
+  for (var i = 0; i < baubles.length; i++) {
+    var bb = baubles[i];
+    if (F < bb.f + 0.02) continue;
+    var dropT = clamp01((F - bb.f - 0.02) * 9);
+    var ov = backOut(dropT);
+    var phi2 = bb.a + rot;
+    var sp2 = Math.sin(phi2), cp2 = Math.cos(phi2);
+    var x2 = cx + bb.r * sp2, z2 = bb.r * cp2;
+    var y2 = bR - bb.f * tH + bb.dr * ov + z2 * tl;
+    var nd2 = sp2 * LX + cp2 * LZ;
+    var lv = clamp01(0.45 + 0.55 * nd2);
+    var li2 = bb.l * (0.45 + 0.75 * lv);
+    for (var ax = -1; ax <= 1; ax++) {
+      put(x2 + ax, y2, '@', hsl(bb.h, bb.s, li2), z2 + 1.5);
+      put(x2 + ax, y2 + 1, ax === 0 ? 'O' : '@', hsl(bb.h, bb.s, li2 * 0.8), z2 + 1.5);
+      if (bb.big && ax === 0) put(x2, y2 + 2, 'V', hsl(bb.h, bb.s, li2 * 0.7), z2 + 1.5);
+    }
+    put(x2 - 1, y2, '*', hsl(bb.h, Math.min(30, bb.s), Math.min(97, li2 + 48)), z2 + 2);
+    put(x2, y2 - 1, '|', hsl(44, 40, 70), z2 + 1);
+  }
+}
+
+function drawRing(t, rot, F) {
+  if (t < 1.2 || t > 6.2) return;
+  var cx = CX0, bR = rowBase(), tH = treeH(), tl = tilt();
+  var sweep = at(t, 1.2, 0.6);
+  var shrink = 0;
+  if (F >= 0.96) shrink = clamp01((F - 0.96) / 0.16 + at(t, 5.95, 0.22));
+  var fh = Math.min(1.02, Math.max(0.02, F));
+  var hgt = fh;
+  var tierR = 0;
+  for (var ti = TIERS - 1; ti >= 0; ti--) {
+    if (hgt >= TB[ti]) {
+      var u = clamp01((hgt - TB[ti]) / (TT[ti] - TB[ti]));
+      tierR = tierRadiusAt(ti, u);
+      break;
+    }
+  }
+  var R0 = tierR * 1.14 + 2;
+  R0 = 9 + (R0 - 9) * smooth(clamp01(F / 0.09));
+  R0 *= (1 + 0.04 * Math.sin(t * 7));
+  R0 *= (1 - shrink);
+  var yC = bR - hgt * tH;
+  var crot = -rot * 1.6 + t * 0.4;
+  var maxA = sweep * Math.PI * 2;
+  var N = 110;
+  for (var ri = 0; ri < 4; ri++) {
+    var rr = R0 * (1 + ri * 0.16);
+    var alpha = ri === 0 ? 1 : 0.62 - ri * 0.13;
+    for (var k = 0; k < N; k++) {
+      var aa = k / N * Math.PI * 2;
+      if (sweep < 1 && aa > maxA) continue;
+      var phi = aa + crot;
+      var sp = Math.sin(phi), cp = Math.cos(phi);
+      var x = cx + rr * sp, z = rr * cp;
+      var y = yC + z * tl;
+      if (ri === 0) {
+        for (var s = 0; s < 3; s++) {
+          put(x, y - s, '#', rgba(255, 253, 248, (1 - s * 0.32) * alpha), z + 40);
+        }
+      } else {
+        var hue = rampHue((aa / (Math.PI * 2) + t * 0.2) % 1);
+        put(x, y, '#', hsl(hue, 78, 62 + 10 * alpha), z + 40 - ri);
+      }
+    }
+  }
+  if (sweep < 1) {
+    var phi = maxA + crot;
+    var x = cx + R0 * Math.sin(phi), z = R0 * Math.cos(phi);
+    put(x, yC + z * tl, '@', '#ffffff', z + 60);
+    halo(x, yC + z * tl, 5, t, 0.8, 46);
+  }
+  if (t > 1.8 && shrink < 1) {
+    var rip = ((t * 1.5) % 1);
+    for (var k = 0; k < 70; k++) {
+      var aa = k / 70 * Math.PI * 2 + crot;
+      var rr = R0 * (1 + rip * 0.55);
+      var x = cx + rr * Math.sin(aa), z = rr * Math.cos(aa);
+      put(x, yC + z * tl, rip > 0.5 ? '.' : ':', rgba(230, 240, 255, (1 - rip) * 0.7), z + 30);
+    }
+    for (var k = 0; k < 54; k++) {
+      var ph = (t * 0.9 + hash3(k, 5, 5)) % 1;
+      var aa = hash3(k, 6, 6) * Math.PI * 2 + crot;
+      var rr = R0 * (1 + ph * 0.9);
+      var x = cx + rr * Math.sin(aa), z = rr * Math.cos(aa);
+      var y = yC + z * tl + ph * ph * 16 - ph * 7;
+      var ch = ph < 0.3 ? '*' : ph < 0.65 ? '+' : '.';
+      put(x, y, ch, hsl(rampHue(hash3(k, 7, 7)), 60, 86 - ph * 30), z + 45);
+    }
+    for (var k = 0; k < 22; k++) {
+      var ph = (t * 1.3 + hash3(k, 11, 2)) % 1;
+      var x = cx + (hash3(k, 12, 3) - 0.5) * R0 * 1.2;
+      var y = yC + 10 - ph * 22;
+      put(x, y, '.', rgba(255, 255, 255, (1 - ph) * 0.6), 60);
+    }
+  }
+}
+
+function drawStar(t) {
+  if (t < 5.27) return;
+  var cx = CX0;
+  var yTip = rowBase() - treeH() - 2;
+  var grow = at(t, 5.6, 0.57);
+  var dot = at(t, 5.27, 0.33);
+  var breathe = 1 + 0.06 * Math.sin(t * 1.5);
+  var glint = Math.pow(Math.max(0, Math.sin((t - 5.9) * Math.PI * 2 / 3.6)), 26);
+  var L = 72 + 8 * Math.sin(t * 1.2) + glint * 12;
+  if (grow <= 0) {
+    put(cx - 1, yTip, '#', hsl(44, 66, L), 500);
+    put(cx, yTip, '@', hsl(44, 66, Math.min(88, L + 8)), 500);
+    put(cx + 1, yTip, '#', hsl(44, 66, L), 500);
+    halo(cx, yTip, 4 + dot * 4, t, 0.7, 44);
+    return;
+  }
+  var g = smooth(grow);
+  var core = [[-1, -1, '#'], [0, -1, '#'], [1, -1, '#'],
+  [-3, 0, '#'], [-2, 0, '#'], [-1, 0, '@'], [0, 0, '@'], [1, 0, '@'], [2, 0, '#'], [3, 0, '#'],
+  [-1, 1, '#'], [0, 1, '#'], [1, 1, '#']];
+  for (var i = 0; i < core.length; i++) {
+    put(cx + core[i][0], yTip + core[i][1], core[i][2], hsl(44, 66, Math.min(92, L + 6)), 520);
+  }
+  var len = 13 * g * breathe;
+  var dirs = [[1, 0, '-'], [-1, 0, '-'], [0, 1, '|'], [0, -1, '|']];
+  for (var d = 0; d < 4; d++) {
+    for (var k = 2; k <= len; k++) {
+      var fade = 1 - k / len;
+      var xx = cx + dirs[d][0] * k;
+      var yy = yTip + dirs[d][1] * k * AR * 1.0;
+      var ch = k > len - 2 ? '.' : dirs[d][2];
+      put(xx, yy, ch, hsl(44, 66, 60 + 28 * fade), 510);
+    }
+  }
+  var dg = [[1, 1, '\\'], [-1, -1, '\\'], [1, -1, '/'], [-1, 1, '/']];
+  for (var d = 0; d < 4; d++) {
+    for (var k = 2; k <= len * 0.5; k++) {
+      var fade = 1 - k / (len * 0.5);
+      var xx = cx + dg[d][0] * k;
+      var yy = yTip + dg[d][1] * k * AR;
+      var ch = k > len * 0.5 - 1 ? ':' : dg[d][2];
+      put(xx, yy, ch, hsl(44, 60, 56 + 28 * fade), 508);
+    }
+  }
+  for (var d = 0; d < 8; d++) {
+    var aa = d / 8 * Math.PI * 2 + Math.PI / 8 + t * 0.25;
+    for (var k = 3; k <= 7; k++) {
+      if (k % 2 === 0) continue;
+      var xx = cx + Math.cos(aa) * k;
+      var yy = yTip + Math.sin(aa) * k * AR;
+      put(xx, yy, '.', hsl(44, 50, 70), 505);
+    }
+  }
+  for (var o = 0; o < 16; o++) {
+    var aa = o / 16 * Math.PI * 2 + t * 0.5;
+    var xx = cx + Math.cos(aa) * 11;
+    var yy = yTip + Math.sin(aa) * 11 * AR;
+    put(xx, yy, o % 2 ? '+' : '*', hsl(rampHue(o / 16), 55, 84), 504);
+  }
+  halo(cx, yTip, 9 + 3 * Math.sin(t * 1.5) + glint * 6, t, 0.55, 44);
+}
+
+/* ---------- comets + lights ---------- */
+var COMET_T0 = 5.95, COMET_DUR = 3.0, TURNS = 4;
+function cometPos(tc, side, rot) {
+  var f = 1 - tc;
+  var ang = side * Math.PI + tc * TURNS * Math.PI * 2;
+  var hgt = Math.max(0, f);
+  var tierR = MAXR;
+  for (var ti = TIERS - 1; ti >= 0; ti--) {
+    if (hgt >= TB[ti]) {
+      var u = clamp01((hgt - TB[ti]) / (TT[ti] - TB[ti]));
+      tierR = tierRadiusAt(ti, u); break;
+    }
+  }
+  if (hgt < TB[0]) tierR = tierRadiusAt(0, 0);
+  var r = tierR * 1.1 + 1.5;
+  var phi = ang + rot;
+  var sp = Math.sin(phi), cp = Math.cos(phi);
+  return { x: CX0 + r * sp, z: r * cp, y: rowBase() - hgt * treeH() + r * cp * tilt(), a: ang, f: hgt };
+}
+function lightHitTime(f, a) {
+  var base = 1 - f;
+  var best = 9;
+  for (var s = 0; s < 2; s++) {
+    var ang = s * Math.PI + base * TURNS * Math.PI * 2;
+    var da = (a - ang) % (Math.PI * 2);
+    if (da < 0) da += Math.PI * 2;
+    var tt = base + da / (TURNS * Math.PI * 2);
+    if (tt < best) best = tt;
+  }
+  return best;
+}
+var l_hit = new Float32Array(NL);
+for (var i = 0; i < NLreal; i++) l_hit[i] = lightHitTime(l_f[i], l_a[i]);
+(function colourTree() {
+  var cr = mulberry32(777);
+  for (var n = 0; n < NB; n++) {
+    if (t_rf[n] > 0.38 && cr() < 0.30) {
+      t_col[n] = 1 + Math.floor(cr() * TREE_LIGHTS.length);
+      t_hit[n] = lightHitTime(t_f[n], t_a[n]);
+    }
+  }
+})();
+
+function drawLights(t, rot, deer) {
+  if (t < COMET_T0) return;
+  var tc = (t - COMET_T0) / COMET_DUR;
+  var cx = CX0, bR = rowBase(), tH = treeH(), tl = tilt();
+  var dOn = t >= 10.55;
+  for (var i = 0; i < NLreal; i++) {
+    var hitAt = l_hit[i];
+    if (tc < hitAt) continue;
+    var since = (tc - hitAt) * COMET_DUR;
+    var flash = Math.exp(-since * 4.5);
+    var tw = 0.72 + 0.28 * Math.sin(t * 5 + l_ph[i]);
+    var phi = l_a[i] + rot;
+    var sp = Math.sin(phi), cp = Math.cos(phi);
+    var x = cx + l_r[i] * sp, z = l_r[i] * cp;
+    var y = bR - l_f[i] * tH + z * tl + 1.6;
+    if (dOn) {
+      var ddx = (x - deer.x) / 26, ddy = (y - deer.y) / AR / 21;
+      if (ddx * ddx + ddy * ddy < 1) continue;
+    }
+    var li = (l_g[i] ? 56 : 58) * tw + flash * 38;
+    var sat = l_g[i] ? 66 : 100;
+    var ch = flash > 0.5 ? '@' : (tw > 0.9 ? '0' : (tw > 0.78 ? 'o' : '*'));
+    put(x, y, ch, hsl(l_h[i], sat, Math.min(92, li)), z + 8);
+  }
+  if (tc <= 1.05) {
+    for (var s = 0; s < 2; s++) {
+      var head = cometPos(Math.min(1, tc), s, rot);
+      for (var k = 1; k <= 110; k++) {
+        var tt = Math.min(1, tc) - k / 110 * 0.17;
+        if (tt < 0) break;
+        var p = cometPos(tt, s, rot);
+        var fr = k / 110;
+        var loose = fr < 0.4 ? 0 : (fr - 0.4) * 10;
+        var jx = (hash3(k, s, Math.floor(t * 6)) - 0.5) * loose;
+        var jy = (hash3(k, s + 5, Math.floor(t * 6)) - 0.5) * loose * 0.6 + loose * 0.8;
+        var ch = fr < 0.18 ? '#' : fr < 0.45 ? '*' : fr < 0.72 ? '+' : '.';
+        var al = 1 - fr;
+        var hue = rampHue((fr * 0.8 + t * 0.3) % 1);
+        put(p.x + jx, p.y + jy, ch, hsl(hue, 85, 50 + 40 * al), p.z + 20);
+        if (fr < 0.4) put(p.x + jx + 1, p.y + jy, ch, hsl(hue, 85, 46 + 36 * al), p.z + 19);
+      }
+      for (var ax = -1; ax <= 1; ax++) for (var ay = -1; ay <= 1; ay++) {
+        var dd = Math.abs(ax) + Math.abs(ay);
+        if (dd === 0) put(head.x, head.y, '@', '#ffffff', head.z + 50);
+        else if (dd === 1) put(head.x + ax, head.y + ay, '@', hsl(rampHue(t * 0.4 + s * 0.5), 90, 72), head.z + 49);
+      }
+      var fl = Math.sin(t * 16 + s) > 0 ? 3 : 2;
+      for (var k = 2; k <= fl; k++) {
+        put(head.x + k, head.y, '-', hsl(44, 70, 80), head.z + 48);
+        put(head.x - k, head.y, '-', hsl(44, 70, 80), head.z + 48);
+        put(head.x, head.y + k * AR, '|', hsl(44, 70, 80), head.z + 48);
+        put(head.x, head.y - k * AR, '|', hsl(44, 70, 80), head.z + 48);
+      }
+      halo(head.x, head.y, 7, t, 0.75, 46);
+    }
+  }
+}
+
+/* ---------- gifts ---------- */
+function drawGifts(t, rot) {
+  for (var gi = 0; gi < gifts.length; gi++) {
+    var G = gifts[gi], D = G.d;
+    var p = at(t, 9.05 + gi * 0.26, 0.42);
+    if (p <= 0) continue;
+    var sc = backOut(p) * 1.35;
+    var ga = D.ang + rot;
+    var gr = D.dist * MAXR;
+    var gx = CX0 + Math.sin(ga) * gr;
+    var gz = Math.cos(ga) * gr;
+    var gy = rowFloor() + gz * tilt() * 0.9;
+    var ca = Math.cos(ga), sa = Math.sin(ga);
+    for (var i = 0; i < G.n; i++) {
+      var lx = G.px[i] * sc, ly = G.py[i] * sc, lz = G.pz[i] * sc;
+      var wx = lx * ca + lz * sa;
+      var wz = -lx * sa + lz * ca;
+      var x = gx + wx;
+      var z = gz + wz;
+      var y = gy - ly * AR * 1.4 + wz * tilt();
+      var base = G.ps[i];
+      var faceLight = base;
+      var col, ch;
+      if (G.pr[i]) {
+        col = hsl(D.rib, 70, 34 + 48 * faceLight);
+        ch = ly > D.h * sc - 0.3 ? (hash3(i, 1, 2) > 0.5 ? '#' : '=') : '|';
+      } else {
+        col = hsl(D.box[0], D.box[1], 10 + 52 * faceLight);
+        ch = ['#', '@', '%', '&', '8'][G.pg[i]];
+      }
+      put(x, y, ch, col, z + 30);
+    }
+  }
+}
+
+/* ---------- reindeer ---------- */
+function sdSeg(px, py, ax, ay, bx, by, ra, rb) {
+  var bax = bx - ax, bay = by - ay;
+  var pax = px - ax, pay = py - ay;
+  var h = clamp01((pax * bax + pay * bay) / (bax * bax + bay * bay + 1e-6));
+  var dx = pax - bax * h, dy = pay - bay * h;
+  return Math.sqrt(dx * dx + dy * dy) - (ra + (rb - ra) * h);
+}
+function sdEll(px, py, cx, cy, rx, ry, rot) {
+  var c = Math.cos(-rot), s = Math.sin(-rot);
+  var dx = px - cx, dy = py - cy;
+  var x = dx * c - dy * s, y = dx * s + dy * c;
+  var k = Math.sqrt((x / rx) * (x / rx) + (y / ry) * (y / ry));
+  return (k - 1) * Math.min(rx, ry);
+}
+function legPose(ph) {
+  var poses = [[-0.65, -0.25], [-0.08, 0.06], [0.52, 0.16], [0.18, -0.95]];
+  var x = (ph % 1 + 1) % 1 * 4;
+  var i = Math.floor(x), fr = x - i;
+  fr = smooth(fr);
+  var a = poses[i % 4], b = poses[(i + 1) % 4];
+  return [a[0] + (b[0] - a[0]) * fr, a[1] + (b[1] - a[1]) * fr];
+}
+function deerSDF(lx, ly, t) {
+  var stride = t * 1.0;
+  var bob = Math.sin(stride * Math.PI * 2 * 2) * 0.5;
+  ly -= bob;
+  var d = 1e9;
+  d = Math.min(d, sdEll(lx, ly, -5.6, -0.2, 4.9, 3.5, 0.12));
+  d = Math.min(d, sdEll(lx, ly, -0.6, 1.0, 6.6, 2.5, 0.02));
+  d = Math.min(d, sdEll(lx, ly, 4.2, -0.3, 4.8, 3.6, -0.12));
+  var hn = Math.sin(stride * Math.PI * 2) * 0.45;
+  d = Math.min(d, sdSeg(lx, ly, 6.6, -1.8, 9.6, -5.4 + hn, 2.0, 1.45));
+  d = Math.min(d, sdEll(lx, ly, 11.0, -6.6 + hn, 2.6, 1.7, -0.36));
+  d = Math.min(d, sdSeg(lx, ly, 12.3, -6.3 + hn, 14.9, -5.6 + hn, 1.05, 0.62));
+  d = Math.min(d, sdSeg(lx, ly, 10.2, -8.0 + hn, 11.1, -10.0 + hn, 0.66, 0.34));
+  var ax0 = 9.5, ay0 = -8.3 + hn;
+  for (var s = -1; s <= 1; s += 2) {
+    var tipx = ax0 + s * 1.1 + 0.6, tipy = ay0 - 6.2;
+    d = Math.min(d, sdSeg(lx, ly, ax0 + s * 0.35, ay0, tipx, tipy, 0.55, 0.3));
+    d = Math.min(d, sdSeg(lx, ly, ax0 + s * 0.35 + 0.25, ay0 - 1.9, tipx - 2.3, tipy + 1.2, 0.36, 0.22));
+    d = Math.min(d, sdSeg(lx, ly, ax0 + s * 0.35 + 0.5, ay0 - 3.7, tipx + 1.9, tipy + 1.9, 0.36, 0.22));
+    d = Math.min(d, sdSeg(lx, ly, tipx - 0.15, tipy + 1.4, tipx + 1.4, tipy - 1.2, 0.34, 0.2));
+  }
+  var tw = Math.sin(stride * Math.PI * 2 * 2) * 0.6;
+  d = Math.min(d, sdSeg(lx, ly, -9.4, -1.2, -11.6, -3.6 + tw, 0.9, 0.42));
+  var legs = [[4.6, 2.2, 0.0], [3.6, 2.2, 0.5], [-5.4, 2.0, 0.5], [-6.4, 2.0, 0.0]];
+  for (var i = 0; i < 4; i++) {
+    var L = legs[i];
+    var hind = i >= 2;
+    var p = legPose(stride + L[2]);
+    var th = p[0], sk = p[1] * (hind ? -1.6 : 1.0);
+    var hipx = L[0], hipy = L[1];
+    var l1 = 5.0, l2 = 5.4;
+    var kx = hipx + Math.sin(th) * l1, ky = hipy + Math.cos(th) * l1;
+    var fx = kx + Math.sin(th + sk) * l2, fy = ky + Math.cos(th + sk) * l2;
+    d = Math.min(d, sdSeg(lx, ly, hipx, hipy, kx, ky, 1.25, 0.8));
+    d = Math.min(d, sdSeg(lx, ly, kx, ky, fx, fy, 0.78, 0.5));
+  }
+  return d;
+}
+function drawDeer(t, info) {
+  if (t < 10.55) return;
+  var p = at(t, 10.55, 1.4);
+  var sc = backOut(p) * info.sc;
+  var cx = info.x, cy = info.y;
+  var half = Math.ceil(19 * sc);
+  for (var y = Math.floor(cy - 17 * AR * sc); y <= cy + 15 * AR * sc; y++) {
+    for (var x = Math.floor(cx - half); x <= cx + half; x++) {
+      var lx = (x - cx) / sc, ly = (y - cy) / AR / sc;
+      if (lx < -14 || lx > 17 || ly < -17 || ly > 14) continue;
+      var d = deerSDF(lx, ly, t - 10.55 + 0.4);
+      if (d > 0.35) continue;
+      if (d > -1.6) {
+        var ch = hash3(x, y, 1) > 0.72 ? (hash3(x, y, 2) > 0.5 ? '#' : '8') : '@';
+        put(x, y, ch, '#f8fbff', 600);
+      } else {
+        var tw = hash3(x * 3, y * 5, Math.floor(t * 8));
+        if (tw > 0.58) {
+          var cs = ['+', '*', 'x', ':'][Math.floor(hash3(x, y, 4) * 4)];
+          put(x, y, cs, 'hsl(208,42%,' + (56 + tw * 30).toFixed(0) + '%)', 598);
+        }
+      }
+    }
+  }
+}
+
+function drawDust(t, rot, F) {
+  if (F < 0.3) return;
+  for (var i = 0; i < ND; i++) {
+    var ph = (d_y[i] + t * d_v[i]) % 1;
+    var aa = d_a[i] + rot * 0.6 + t * 0.12;
+    var r = d_r[i] * (0.9 + 0.2 * Math.sin(t * 0.4 + i));
+    var x = CX0 + Math.sin(aa) * r;
+    var z = Math.cos(aa) * r;
+    var y = rowFloor() - ph * (treeH() + 24) + z * tilt();
+    var ch = ph > 0.7 ? '.' : ph > 0.35 ? '+' : '*';
+    put(x, y, ch, hsl(d_h[i], 45, 72 - ph * 20), z + 5);
+  }
+}
+
+/* ---------- PLAY word ---------- */
+var FONT5 = {
+  P: ['11110', '10001', '10001', '11110', '10000', '10000', '10000'],
+  L: ['10000', '10000', '10000', '10000', '10000', '10000', '11111'],
+  A: ['01110', '10001', '10001', '11111', '10001', '10001', '10001'],
+  Y: ['10001', '10001', '01010', '00100', '00100', '00100', '00100']
+};
+function drawPlay(t) {
+  var word = 'PLAY';
+  var sx = Math.round(CX0 - (word.length * 6 - 1) * 1.5 / 1);
+  var scale = 3;
+  var totalW = word.length * 6 * scale - scale;
+  var x0 = Math.round(CX0 - totalW / 2);
+  var y0 = Math.round(ROWS * 0.46);
+  for (var i = 0; i < word.length; i++) {
+    var g = FONT5[word[i]];
+    for (var r = 0; r < 7; r++) {
+      for (var c = 0; c < 5; c++) {
+        if (g[r][c] !== '1') continue;
+        for (var a = 0; a < scale; a++) {
+          for (var b = 0; b < Math.max(1, Math.round(scale * AR * 1.7)); b++) {
+            var x = x0 + (i * 6 + c) * scale + a;
+            var y = y0 + r * Math.max(1, Math.round(scale * AR * 1.7)) + b;
+            var tw = 0.72 + 0.28 * Math.sin(t * 2.2 + x * 0.3 + y * 0.5);
+            put(x, y, tw > 0.9 ? '@' : '#', hsl(44, 40, 62 + 30 * tw), 900);
+          }
+        }
+      }
+    }
+  }
+}
+
+/* ================= RENDER ================= */
+var chA = null, colA = null, dpA = null, dissThr = null;
+function ensureAux() {
+  if (chA && chA.length === SIZE) return;
+  chA = new Uint16Array(SIZE); colA = new Array(SIZE); dpA = new Float32Array(SIZE); dissThr = new Float32Array(SIZE);
+  for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS_T; x++) {
+    var dx = (x - CX0) / (COLS_T * 0.5), dy = (y - ROWS * 0.5) / (ROWS * 0.5);
+    dissThr[y * COLS_T + x] = 0.5 * hash3(x, y, 91) + 0.5 * Math.min(1, Math.sqrt(dx * dx + dy * dy));
+  }
+}
+function clearBuf() { chBuf.fill(0); dpBuf.fill(-1e9); }
+function drawTreeScene(t) {
+  var rot = t * 0.5;
+  var g = clamp01((t - 1.8) / 4.35);
+  var F = easeInOut15(g) * 1.12;
+  drawStars(t);
+  drawMoon(t);
+  drawFallingLight(t);
+  drawDisc(t, rot);
+  drawTrunk(t);
+  var deerOn = t >= 10.55;
+  var deerInfo = { x: CX0, y: rowBase() - 0.20 * treeH() - 3, sc: 1.35 };
+  drawTree(t, rot, F, deerInfo.x, deerInfo.y, deerOn);
+  drawRing(t, rot, F);
+  drawDust(t, rot, F);
+  drawStar(t);
+  drawLights(t, rot, deerInfo);
+  drawGarland(t, rot, deerOn, deerInfo);
+  drawGifts(t, rot);
+  drawDeer(t, deerInfo);
+  drawSnowman(t);
+  drawFireworks(t);
+  drawSleigh(t);
+  drawSnowballs(t);
+  drawGreeting(t);
+  drawHB(t);
+}
+function render(mode, a, b, p) {
+  ensureAux();
+  clearBuf();
+  if (mode === 'play') { drawSnow(a); drawStars(a); drawPlay(a); }
+  else if (mode === 'intro') { drawSnow(a); drawFinale(a); }
+  else if (mode === 'tree') { drawSnow(b); drawTreeScene(b); }
+  else {
+    drawSnow(b); drawFinale(a);
+    chA.set(chBuf); dpA.set(dpBuf);
+    for (var i = 0; i < SIZE; i++) colA[i] = colBuf[i];
+    clearBuf(); drawSnow(b); drawTreeScene(b);
+    var gold = hsl(46, 90, 82);
+    for (var j = 0; j < SIZE; j++) {
+      var th = dissThr[j];
+      if (th > p) { chBuf[j] = chA[j]; colBuf[j] = colA[j]; dpBuf[j] = dpA[j]; }
+      else if (th > p - 0.045) { chBuf[j] = 42; colBuf[j] = gold; }
+    }
+  }
+  composite();
+}
+function composite() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  octx.clearRect(0, 0, W, H);
+  octx.font = '700 ' + (CH * 0.95).toFixed(2) + 'px Menlo, Consolas, "DejaVu Sans Mono", monospace';
+  octx.textAlign = 'center'; octx.textBaseline = 'middle';
+  var xoff = (W - COLS_T * CW) / 2;
+  var last = null;
+  for (var y = 0; y < ROWS; y++) {
+    var row = y * COLS_T;
+    var py = y * CH + CH * 0.5;
+    for (var x = 0; x < COLS_T; x++) {
+      var i = row + x;
+      var code = chBuf[i];
+      if (code === 0) continue;
+      var col = colBuf[i];
+      if (col !== last) { octx.fillStyle = col; last = col; }
+      octx.fillText(String.fromCharCode(code), xoff + x * CW + CW * 0.5, py);
+    }
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.filter = 'none';
+  ctx.drawImage(off, 0, 0);
+  bctx.setTransform(1, 0, 0, 1, 0, 0);
+  bctx.clearRect(0, 0, bl.width, bl.height);
+  bctx.filter = 'blur(' + Math.max(0.8, PW * 0.006 * DPR / 4).toFixed(1) + 'px)';
+  bctx.drawImage(off, 0, 0, bl.width, bl.height);
+  b2ctx.setTransform(1, 0, 0, 1, 0, 0);
+  b2ctx.clearRect(0, 0, bl2.width, bl2.height);
+  b2ctx.filter = 'blur(' + Math.max(0.8, PW * 0.02 * DPR / 10).toFixed(1) + 'px)';
+  b2ctx.drawImage(off, 0, 0, bl2.width, bl2.height);
+  ctx.globalCompositeOperation = 'screen';
+  ctx.filter = 'none';
+  ctx.globalAlpha = 0.5;
+  ctx.drawImage(bl, 0, 0, cv.width, cv.height);
+  ctx.globalAlpha = 0.24;
+  ctx.drawImage(bl2, 0, 0, cv.width, cv.height);
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+/* ================= TIMELINE / LOOP ================= */
+var t0 = 0, paused = false, pauseAt = 0, prevT = 0, finished = false;
+var nextBtn = document.getElementById('nextBtn');
+var skipBtn = null;
+var muteBtn = document.getElementById('muteBtn');
+muteBtn.addEventListener('click', function (e) {
+  e.stopPropagation();
+  muted = !muted;
+  muteBtn.textContent = muted ? '🔇' : '🔊';
+  if (master) master.gain.value = muted ? 0 : 1.3;
+});
+nextBtn.textContent = NEXT_LABEL;
+
+function sound(tp, t) {
+  scheduleMusic(t);
+  cue('music', 0.42, tp, t, startMusic);
+  if (t >= FW_T0) {
+    var lastFw = Math.floor((Math.min(t, HB_T0 + 0.6) - FW_T0) / FW_GAP);
+    for (var fi = Math.max(0, lastFw - 2); fi <= lastFw; fi++) {
+      (function (fi) {
+        var fw = fwInfo(fi);
+        cue('fwL' + fi, fw.launch, tp, t, function () { glide(500, 1700, FW_RISE * 0.9, 0.025, 'sine'); });
+        cue('fwB' + fi, fw.burst, tp, t, function () {
+          var pan = (fw.x - CX0) / (COLS * 0.5);
+          glide(110, 38, 0.5, 0.18, 'sine');
+          noise(900, 160, 0.8, 0.7, 0.10, Math.max(-0.9, Math.min(0.9, pan)));
+          noise(5200, 3000, 1.5, 1.1, 0.03, -pan * 0.5, 0.18);
+        });
+      })(fi);
+    }
+  }
+  var slt = sleighPass(t);
+  if (slt >= 0) {
+    var sstep = Math.floor(slt / 0.3);
+    var skey = 'sl' + Math.floor((t - SLEIGH_T0) / SLEIGH_EVERY) + '_' + sstep;
+    if (!fired[skey]) { fired[skey] = true; if (ready()) sleigh(0, 0.05); }
+  }
+  cue('drop', 0.05, tp, t, function () {
+    glide(2400, 620, 0.34, 0.14, 'sine');
+    bell(note(12), 1.2, 0.18, 0);
+  });
+  cue('land', 0.39, tp, t, function () {
+    glide(120, 44, 0.5, 0.5, 'sine');
+    noise(300, 2600, 0.9, 1.2, 0.10, 0);
+    bell(note(-5), 3.4, 0.22, -0.3);
+    bell(note(-3), 3.2, 0.18, 0.3);
+    bell(note(10), 0.8, 0.09, -0.4, 0.26);
+    bell(note(12), 0.8, 0.09, 0.1, 0.39);
+    bell(note(14), 0.9, 0.09, 0.4, 0.52);
+  });
+  cue('trunk', 1.05, tp, t, function () {
+    for (var i = 0; i < 6; i++) {
+      glide(150 + i * 26, 90 + i * 20, 0.07, 0.16, 'triangle', i * 0.072);
+      noise(900 + i * 120, 600, 3, 0.05, 0.05, (i % 2 ? 0.2 : -0.2), i * 0.072);
+    }
+  });
+  cue('ring', 1.2, tp, t, function () {
+    noise(400, 3200, 1.2, 0.6, 0.11, 0);
+    glide(330, 990, 0.6, 0.09, 'sine');
+    bell(note(7), 1.6, 0.14, 0, 0.58);
+  });
+  if (t >= 1.8 && t <= 5.5) {
+    if (!fired.leafbed) { fired.leafbed = true; startLeafBed(); }
+    var gg = clamp01((t - 1.8) / 3.6);
+    var step = Math.floor(gg * 40);
+    if (step > growStep) {
+      growStep = step;
+      if (ready() && Math.random() < 0.75) {
+        bell(note(10 + Math.floor(Math.random() * 10)), 0.9, 0.035, (Math.random() - 0.5) * 1.6);
+      }
+    }
+    var st2 = Math.floor((t - 1.8) * 7);
+    if (st2 > leafStep) {
+      leafStep = st2;
+      if (ready() && Math.random() < 0.6) noise(2600 + Math.random() * 3600, 2200, 4, 0.06, 0.012, (Math.random() - 0.5) * 1.6);
+    }
+  }
+  cue('star', 5.27, tp, t, function () {
+    for (var i = 0; i < 5; i++) bell(note(7 + i * 2), 0.6, 0.10, 0, i * 0.065);
+    var ch = [7, 9, 12, 14];
+    for (var i = 0; i < 4; i++) bell(note(ch[i]), 2.6, 0.13, i % 2 ? 0.6 : -0.6, 0.38);
+    noise(5000, 8000, 1.4, 1.6, 0.045, 0, 0.38);
+  });
+  cue('comet', 5.95, tp, t, function () {
+    noise(3600, 500, 1.1, 0.9, 0.10, 0);
+    for (var i = 0; i < 24; i++) {
+      bell(note(16 - i), 0.8, 0.075, i % 2 ? 0.85 : -0.85, i * (3.0 / 24));
+    }
+  });
+  cue('lit', 8.95, tp, t, function () {
+    var ch = [-5, -3, 0, 2];
+    for (var i = 0; i < 4; i++) pad(note(ch[i]), 3.0, 0.075, i % 2 ? 0.35 : -0.35);
+    bell(note(7), 2.4, 0.12, 0);
+  });
+  for (var i = 0; i < 5; i++) {
+    (function (i) {
+      cue('gift' + i, 9.05 + i * 0.26, tp, t, function () {
+        var f0 = 300 + i * 40;
+        glide(f0, f0 * 3.2, 0.075, 0.13, 'sine');
+        noise(1400, 900, 3, 0.05, 0.05, 0);
+        bell(note(5 + i * 2), 1.1, 0.10, (i - 2) * 0.35, 0.09);
+      });
+    })(i);
+  }
+  if (t >= SM_T0 && t < SM_T0 + SM_WALK) {
+    var stepN = Math.floor((t - SM_T0) * 4.2);
+    if (stepN > smStep) {
+      smStep = stepN;
+      if (ready()) noise(1500 + Math.random() * 600, 700, 2.2, 0.09, 0.07, 0.4 + Math.random() * 0.3);
+    }
+  }
+  cue('hello', SM_T0 + SM_WALK + 0.15, tp, t, function () {
+    bell(note(7), 0.9, 0.12, 0.45);
+    bell(note(9), 0.9, 0.12, 0.5, 0.16);
+    bell(note(12), 1.6, 0.14, 0.55, 0.32);
+  });
+  cue('deer', 10.55, tp, t, function () {
+    for (var i = 0; i < 7; i++) bell(note(4 + i * 2), 0.9, 0.09, -0.8 + i * 0.27, i * 0.085);
+    for (var i = 0; i < 8; i++) sleigh(0.62 + i * 0.17, 0.11 * (1 - i / 10));
+  });
+}
+
+var clock = 0, lastNow = 0, phase = 'play', introT0 = 0, treeT0 = 0, outT0 = 0;
+var prevIntroT = -1, prevTreeT = -1, musicHold = false, outGone = false;
+var INTRO_END = 8.3, DISSOLVE = 1.7;
+function frame() {
+  var now = performance.now() / 1000;
+  var dt = lastNow ? Math.min(0.1, now - lastNow) : 0;
+  lastNow = now;
+  if (!paused) clock += dt;
+  if (phase === 'play') {
+    render('play', clock);
+  } else if (phase === 'intro' || phase === 'dissolve') {
+    var it = clock - introT0;
+    if (!paused) {
+      if (musicT0 < 0) startMusic();
+      scheduleMusic(0);
+      finaleSound(prevIntroT, it);
+      prevIntroT = it;
+    }
+    if (phase === 'intro' && it >= INTRO_END) { phase = 'dissolve'; treeT0 = clock; prevTreeT = -1; }
+    if (phase === 'dissolve') {
+      var tt = clock - treeT0;
+      if (!paused) { sound(prevTreeT, tt); prevTreeT = tt; }
+      render('dissolve', it, tt, smooth(clamp01(tt / DISSOLVE)) * 1.06);
+      if (tt >= DISSOLVE) phase = 'tree';
+    } else {
+      render('intro', it);
+    }
+  } else {
+    var t = clock - treeT0;
+    if (!paused) {
+      musicHold = t >= HB_T0 - 0.4;
+      sound(prevTreeT, t);
+      hbSound(prevTreeT, t);
+      prevTreeT = t;
+    }
+    render('tree', 0, t);
+    if (phase === 'tree' && t >= HB_END) { phase = 'out'; outT0 = clock; document.getElementById('fadeOut').classList.add('on'); }
+    if (phase === 'out' && clock - outT0 > 1.0 && !outGone) { outGone = true; go(); }
+  }
+  requestAnimationFrame(frame);
+}
+function resetAll() {
+  fired = {}; growStep = -1; leafStep = -1; leafBedOn = false; smStep = -1;
+  musicT0 = -1; musicHold = false; fFired = {}; chugStep = -1;
+  prevIntroT = -1; prevTreeT = -1; outGone = false;
+  document.getElementById('fadeOut').classList.remove('on');
+}
+function start() {
+  initAudio();
+  if (AC && AC.state !== 'running' && AC.resume) AC.resume();
+  if (started) return;
+  started = true;
+  resetAll();
+  phase = 'intro'; introT0 = clock;
+  muteBtn.classList.add('show');
+}
+function replay() {
+  resetAll();
+  phase = 'intro'; introT0 = clock; paused = false;
+  if (AC && AC.resume) AC.resume();
+}
+var XMAS_TRACK = 'assets/audio/jingle-bells.mp3';
+function go() {
+  try {
+    localStorage.setItem('currentTrackSrc', XMAS_TRACK);
+    localStorage.setItem('musicTime', '0');
+    localStorage.setItem('musicPlaying', muted ? 'false' : 'true');
+  } catch (e) { }
+  window.location.href = NEXT_PAGE;
+}
+function onTap(e) {
+  if (e.target === muteBtn) return;
+  if (!started) start();
+}
+window.addEventListener('pointerdown', onTap);
+window.addEventListener('keydown', function (e) {
+  if (e.code === 'Enter' || e.code === 'Space') {
+    e.preventDefault();
+    if (!started) { start(); return; }
+    if (e.code === 'Space') {
+      paused = !paused;
+      if (AC) { if (paused && AC.suspend) AC.suspend(); else if (!paused && AC.resume) AC.resume(); }
+    }
+  }
+  if (e.key === 'r' || e.key === 'R') { if (started) replay(); }
+});
+window.addEventListener('resize', function () { layout(); });
+
+layout();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

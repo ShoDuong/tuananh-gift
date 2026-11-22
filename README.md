@@ -8,7 +8,9 @@ and an OtterBooth photobooth) deployed on Netlify.
 ```
 .
 ├── index.html                  # Landing page
-├── index1.html                 # Intro / transition page
+├── index1.html                 # Intro / transition page (trang bánh sinh nhật)
+├── christmas-tree.html         # Cây thông ASCII 12s — chen giữa lá thư và trang bánh
+├── fog.html                    # Gương mờ (webcam + thổi + chụm ngón tay vẽ)
 ├── fortune.html                # Fortune letter
 ├── radio.html                  # Music radio player
 ├── photobooth.html             # OtterBooth photobooth (capture, decorate, print)
@@ -124,3 +126,25 @@ Mở `tools/frame-maker.html` (double-click là chạy, không cần server):
   Flower (19, 21, 22, pack3_14) · Sunny · Otter Party.
 - **Điện thoại** (màn hình ≤ 760px): xếp 1 cột dọc — camera + nút chụp → dải ảnh → các nút lưới 4 cột → Add Cute Text; popup hiện từ dưới lên. CSS nằm ở khối `<style id="booth-mobile">`, desktop không đổi.
 - Phóng to tổng thể bằng biến CSS `--booth-zoom` (mặc định `.8`).
+
+## Cây thông · Gương mờ · Quả cầu tuyết
+- **Luồng:** `index.html` (thư) → `christmas-tree.html` (chỉ có nút PLAY, bấm là chạy 12s, xong có nút *Vào tiệc sinh nhật* hoặc *Bỏ qua →*) → `index1.html` (bánh, giữ nguyên). Dòng chuyển trang nằm ở `js/script.js` (bản cũ: `js/script.js.bak-before-tree`).
+- **🪞 Gương Mờ** (`fog.html`): nút trong nhóm *Vui Vẻ* mở trang riêng. Giơ 1 ngón trỏ (hoặc chuột / ngón tay trên màn hình) để vẽ nét mảnh; không còn chức năng xoá — nét vẽ **tự mờ dần và biến mất hẳn** (kể cả khi đang vẽ; ~3 giây nhạt một nửa, 10 giây sau nét cuối thì sạch hẳn; nút *⏳ tự mờ: bật/tắt*), nút *🌫️ phủ mờ lại* (hoặc phím C) cho sương dâng phủ cả gương. Thổi vào mic = mờ thêm (hơi thở cũng tan dần). Nút 📸 đếm 3-2-1 rồi chụp → Tải ảnh / In ảnh. Thanh brush 2–20. Cần https/localhost. Bản trước: `fog.html.bak-before-autofog`.
+- **❄️ Quả Cầu Tuyết** (`js/snowball.js`): popup 3 giây ở photobooth; bấm quả cầu để lắc. Nút **❄️ Quả Cầu Tuyết** trong nhóm *Vui Vẻ* mở lại popup này (thay cho nút 🎄 Cây Thông). Nút 🌺 Hoa Nở Lại và mưa hoa tự động đã bỏ.
+- **⛄ Người tuyết trong phim cây thông**: khoảng giây 12 đi từ mép phải vào, đứng cạnh cây và vẫy tay; nút *Vào tiệc sinh nhật* hiện ở giây 15.6. (`js/snowman.js` là bản popup cũ, không dùng nữa.)
+- **Trang cây thông còn có:** cây to + màu sặc sỡ hơn, nhiều quả treo nhiều màu, quả cầu tuyết rơi, pháo hoa ASCII từ giây ~14.6 (có tiếng nổ), xe tuần lộc của ông già Noel bay ngang từ giây 15.2 (lặp mỗi 17 giây, có tiếng chuông xe), nhạc nền Jingle Bells tự tổng hợp (nút 🔊/🔇 góc trên trái). Nút *Vào tiệc sinh nhật* hiện ở giây 17.5. Bản trước: `christmas-tree.html.bak-before-extras`.
+- **Kiểu cây giống ảnh mẫu + màn kết:** nền đêm tối, thân cây là mảng chữ nhiều ký tự với ~30% đèn đủ màu (bật dần khi sao chổi xoắn xuống), mặt trăng ASCII góc trên trái, dòng MERRY CHRISTMAS 2026 ở dưới. Phim xong, bấm màn hình hoặc nút *Vào tiệc sinh nhật* → hộp quà hồng to bật lên, mở nắp, đường ray vàng mọc ra, đoàn tàu 5 toa quà chạy ~2 vòng rồi chạy ra ngoài → mờ dần sang `index1.html` (khoảng 9 giây). Không còn nút *Bỏ qua* hay *Quay lại Photobooth*: trang cây thông luôn đi tới trang thổi nến `index1.html`; phím R xem lại. Bản trước: `christmas-tree.html.bak-before-train`.
+- **Bản 3D:** hộp quà và đoàn tàu ở màn kết là vật thể 3D dựng bằng điểm (có ánh sáng, mặt bên tối, giấy chấm bi, ruy băng bóng, nơ 3D, nắp lật bay lên; đầu tàu có nồi hơi, ống khói, khói, đèn pha, bánh xe quay; toa quà nhiều màu/hoa văn). Ông già Noel + xe trượt + 3 tuần lộc (con đầu mũi đỏ) vẽ bằng đường nét SDF, to gấp ~2–3 lần, bay vòng quanh bầu trời mỗi 14 giây (bay qua phía trước to, vòng ra sau nhỏ và nằm sau mặt trăng). Bản trước: `christmas-tree.html.bak-before-3d`.
+- **Thứ tự cảnh (mới):** bấm PLAY → hộp quà 3D + đoàn tàu (~8 giây) → chuyển cảnh tan dần có viền kim tuyến sang phim cây thông → giây ~20.5 pháo hoa bắn lên ghép thành chữ HAPPY BIRTHDAY + nhạc Happy Birthday → chữ rơi xuống, màn hình mờ dần → `index1.html` (thổi nến). Không còn bấm để mở màn kết; Space tạm dừng, R xem lại từ đầu. Thêm dây kim tuyến vàng/bạc quấn cây, sao lấp lánh nền, quà to hơn, sàn dịu hơn, phát sáng mạnh hơn. Bản trước: `christmas-tree.html.bak-before-flow`.
+- **Gương mờ nhẹ hơn:** lớp sương tính ở 1/4 độ phân giải rồi phóng to, bắt bàn tay trên khung 480px với model nhẹ, hơi thở vẽ bằng gradient thay vì blur. Bản trước: `fog.html.bak-before-perf`.
+
+## Nhạc Giáng Sinh xuyên suốt
+- `assets/audio/jingle-bells.mp3`: bản Jingle Bells (giai điệu dân gian) thu lại từ chính nhạc tổng hợp của trang cây thông, ~54 giây, lặp liền mạch.
+- Rời trang cây thông → lưu `currentTrackSrc = jingle-bells.mp3`, `musicTime = 0`, `musicPlaying = true` vào localStorage. Trang bánh (`index1.html`) phát bài này thay cho nhạc cũ nếu đi từ cây thông; photobooth đọc `currentTrackSrc` sẵn nên phát tiếp; trang radio có thêm bài **07. 🎄 Jingle Bells — Nhạc Giáng Sinh** (được chọn sẵn), bấm bài khác trong danh sách để đổi.
+- Bản trước: `*.bak-before-xmasmusic`.
+
+## Trang bánh kem (index1.html) — theme ASCII Giáng Sinh
+- Chỉ đổi giao diện, giữ nguyên logic/ID: thêm `<style id="ascii-xmas-theme">` + lớp trang trí `#asciiXmasLayer` (script `ascii-xmas-layer`).
+- Nền đêm xanh navy giống trang cây thông, tuyết ASCII rơi, dải tuyết ASCII dưới đáy, chữ HAPPY BIRTHDAY bằng ký tự vàng lấp lánh.
+- Popup điều ước + thiệp sinh nhật: thẻ tối viền mảnh, màu nhấn theo mood (Classic = vàng, Matcha = xanh thông, Strawberry = đỏ berry), font JetBrains Mono + Playfair.
+- Bản cũ: `index1.html.bak-before-asciitheme`.

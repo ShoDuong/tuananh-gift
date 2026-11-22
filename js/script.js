@@ -599,7 +599,7 @@ function startLoveLoading() {
             clearInterval(interval);
 
             setTimeout(() => {
-                window.location.href = "index1.html";
+                window.location.href = "christmas-tree.html";
             }, 900);
         }
     }, 650);

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Gương Mờ 🪞</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪞</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:#0e1114;overflow:hidden;
+    font-family:'Nunito',system-ui,-apple-system,sans-serif;color:#eef3f8;
+    -webkit-tap-highlight-color:transparent;}
+  #stage{position:fixed;inset:0;}
+  #view{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair;}
+  video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;}
+
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:4;}
+  .pill{position:absolute;pointer-events:auto;display:flex;align-items:center;gap:10px;
+    padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.28);
+    background:rgba(255,255,255,.13);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:0 6px 24px rgba(0,0,0,.22);color:#fff;}
+  #brushPill{left:18px;bottom:18px;}
+  #brushPill span{font:600 14px 'Nunito',sans-serif;opacity:.9;letter-spacing:.4px;}
+  #brushPill input{width:120px;accent-color:#fff;}
+  #toolPill{left:18px;bottom:78px;padding:5px;gap:4px;}
+  #toolPill button{border:0;border-radius:999px;padding:7px 13px;cursor:pointer;
+    background:transparent;color:#fff;font:700 13px 'Nunito',sans-serif;}
+  #toolPill button.on{background:rgba(255,255,255,.3);}
+  #shotBtn{right:18px;bottom:18px;width:66px;height:66px;justify-content:center;
+    border-radius:50%;cursor:pointer;font-size:28px;padding:0;}
+  #refogBtn{right:96px;bottom:26px;cursor:pointer;font:700 13px 'Nunito',sans-serif;padding:10px 14px;}
+  #backLink{left:18px;top:16px;font:600 13px 'Nunito',sans-serif;text-decoration:none;cursor:pointer;}
+  #tips{position:absolute;right:18px;top:16px;pointer-events:none;text-align:right;
+    font:600 12px 'Nunito',sans-serif;color:rgba(238,243,248,.7);line-height:1.7;
+    text-shadow:0 1px 6px rgba(0,0,0,.55);}
+
+  #count{position:fixed;inset:0;z-index:7;display:none;align-items:center;justify-content:center;
+    pointer-events:none;font:800 min(32vw,220px)/1 'Nunito',sans-serif;color:#fff;
+    text-shadow:0 0 40px rgba(142,197,255,.8);}
+  #flash{position:fixed;inset:0;z-index:8;background:#fff;opacity:0;pointer-events:none;transition:opacity .45s ease;}
+
+  #preview{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;
+    padding:22px;background:rgba(8,10,14,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  #preview .card{background:#fff;border-radius:22px;padding:16px;max-width:min(92vw,760px);
+    box-shadow:0 24px 70px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:14px;}
+  #preview img{display:block;width:100%;max-height:68vh;object-fit:contain;border-radius:12px;background:#000;}
+  #preview .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+  #preview button{border:0;border-radius:999px;padding:12px 20px;cursor:pointer;
+    font:800 15px 'Nunito',sans-serif;color:#fff;background:#5d8fd6;}
+  #preview button.pink{background:linear-gradient(135deg,#ff8fab,#d94f76);}
+  #preview button.gray{background:#8792a0;}
+
+  #start{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;padding:28px;text-align:center;
+    background:radial-gradient(120% 90% at 50% 20%,#20272e 0%,#0e1114 70%);}
+  #start h1{margin:0;font:800 clamp(30px,8vw,52px)/1.1 'Nunito',sans-serif;letter-spacing:-.5px;}
+  #start p{margin:0;max-width:440px;font:600 15px/1.65 'Nunito',sans-serif;color:#aebbc7;}
+  #goBtn{margin-top:8px;padding:16px 34px;border:0;border-radius:999px;cursor:pointer;
+    background:linear-gradient(135deg,#8ec5ff,#5d8fd6);color:#0e1114;
+    font:800 18px 'Nunito',sans-serif;box-shadow:0 12px 34px rgba(93,143,214,.45);}
+  #goBtn:active{transform:scale(.97);}
+  #err{margin-top:6px;color:#ffb4b4;font:600 14px 'Nunito',sans-serif;max-width:440px;}
+  #start a{color:#8ec5ff;}
+  .hide{display:none !important;}
+
+  @media print{
+    body *{display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="view"></canvas>
+  <video id="cam" playsinline muted></video>
+</div>
+
+<div id="hud" class="hide">
+  <a id="backLink" class="pill" href="photobooth.html">← Photobooth</a>
+  <div id="tips">
+    ☝️ giơ 1 ngón trỏ để vẽ<br>⏳ nét vẽ tự mờ lại sau vài giây<br>😮 thổi vào máy để mờ thêm<br>📸 chụp · phím C phủ mờ lại
+  </div>
+  <div id="toolPill" class="pill">
+    <button type="button" id="autoBtn" class="on" title="Nét vẽ tự bị sương phủ lại sau vài giây">⏳ tự mờ: bật</button>
+  </div>
+  <div id="brushPill" class="pill">
+    <span>brush</span>
+    <input id="brush" type="range" min="2" max="20" value="4" step="1">
+  </div>
+  <button id="refogBtn" class="pill" type="button" title="Phủ mờ lại cả gương">🌫️ phủ mờ lại</button>
+  <button id="shotBtn" class="pill" type="button" title="Chụp ảnh">📸</button>
+</div>
+
+<div id="count">3</div>
+<div id="flash"></div>
+
+<div id="preview">
+  <div class="card">
+    <img id="shotImg" alt="Ảnh gương mờ">
+    <div class="row">
+      <button type="button" id="dlBtn" class="pink">💾 Tải ảnh</button>
+      <button type="button" id="printBtn">🖨️ In ảnh</button>
+      <button type="button" id="againBtn" class="gray">📸 Chụp lại</button>
+      <button type="button" id="closeBtn" class="gray">✕ Đóng</button>
+    </div>
+  </div>
+</div>
+
+<div id="start">
+  <h1>🪞 Gương Mờ</h1>
+  <p>Webcam thành cái gương vừa hấp hơi. Thổi vào máy thì hơi nước loang ra. Giơ một ngón trỏ lên rồi di là vẽ lên gương, vài giây sau hơi nước sẽ tự phủ mờ nét vẽ lại. Vẽ xong bấm 📸 để chụp lại cả gương lẫn chữ.</p>
+  <p>Mọi thứ chạy ngay trong trình duyệt của bạn. Không có hình, tiếng hay dữ liệu nào rời khỏi máy.</p>
+  <button id="goBtn" type="button">Bật camera &amp; mic</button>
+  <div id="err"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/face_detection.js" crossorigin="anonymous"></script>
+<script>
+'use strict';
+
+var DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+var view = document.getElementById('view');
+var vctx = view.getContext('2d');
+var cam = document.getElementById('cam');
+
+var fogCv = document.createElement('canvas');
+var fogCtx = fogCv.getContext('2d');
+/* fogCv = mặt nạ sương ghép lại mỗi khung hình
+   wipeCv = chỗ đã vẽ (lau sạch) — tự nhạt dần để sương phủ lại
+   breathCv = hơi thở làm mờ thêm — cũng tan dần */
+var wipeCv = document.createElement('canvas');
+var wipeCtx = wipeCv.getContext('2d');
+var breathCv = document.createElement('canvas');
+var breathCtx = breathCv.getContext('2d');
+var autoFog = true, refogAnim = 0, lastDecay = 0, lastDrawT = 0;
+var frostCv = document.createElement('canvas');
+var frostCtx = frostCv.getContext('2d');
+/* sương mờ được tính ở độ phân giải thấp (1/4) rồi phóng to — mờ nên không thấy khác, nhưng nhẹ hơn rất nhiều */
+var smallCv = document.createElement('canvas');
+var smallCtx = smallCv.getContext('2d');
+/* khung hình nhỏ đưa cho phần bắt bàn tay / khuôn mặt */
+var trackCv = document.createElement('canvas');
+trackCv.width = 480; trackCv.height = 270;
+var trackCtx = trackCv.getContext('2d');
+
+var W = 0, H = 0;
+var running = false;
+var BASE_FOG = 0.55;
+
+function px(v) { return v * DPR; }
+
+function resize() {
+  W = window.innerWidth; H = window.innerHeight;
+  var pw = Math.round(W * DPR), ph = Math.round(H * DPR);
+  var keepW = null, keepB = null;
+  if (wipeCv.width > 1 && running) {
+    keepW = document.createElement('canvas'); keepW.width = wipeCv.width; keepW.height = wipeCv.height;
+    keepW.getContext('2d').drawImage(wipeCv, 0, 0);
+    keepB = document.createElement('canvas'); keepB.width = breathCv.width; keepB.height = breathCv.height;
+    keepB.getContext('2d').drawImage(breathCv, 0, 0);
+  }
+  view.width = pw; view.height = ph;
+  view.style.width = W + 'px'; view.style.height = H + 'px';
+  fogCv.width = pw; fogCv.height = ph;
+  wipeCv.width = pw; wipeCv.height = ph;
+  breathCv.width = pw; breathCv.height = ph;
+  frostCv.width = pw; frostCv.height = ph;
+  smallCv.width = Math.max(2, Math.round(W / 4)); smallCv.height = Math.max(2, Math.round(H / 4));
+  if (keepW) { wipeCtx.drawImage(keepW, 0, 0, pw, ph); breathCtx.drawImage(keepB, 0, 0, pw, ph); }
+  else resetFog();
+}
+function resetFog() {
+  wipeCtx.globalCompositeOperation = 'source-over';
+  wipeCtx.clearRect(0, 0, wipeCv.width, wipeCv.height);
+  breathCtx.globalCompositeOperation = 'source-over';
+  breathCtx.clearRect(0, 0, breathCv.width, breathCv.height);
+  refogAnim = 0;
+}
+function fadeCanvas(c, k) {
+  c.globalCompositeOperation = 'destination-out';
+  c.fillStyle = 'rgba(0,0,0,' + k + ')';
+  c.fillRect(0, 0, c.canvas.width, c.canvas.height);
+  c.globalCompositeOperation = 'source-over';
+}
+/* bấm nút: sương dâng lên phủ lại cả gương trong ~0.5 giây */
+function startRefog() { refogAnim = 30; }
+function composeFog(busy) {
+  var nowS = performance.now() / 1000;
+  if (refogAnim > 0) {
+    fadeCanvas(wipeCtx, 0.11);
+    refogAnim--;
+    if (refogAnim === 0) wipeCtx.clearRect(0, 0, wipeCv.width, wipeCv.height);
+  } else if (autoFog && nowS - lastDecay > 0.5) {
+    lastDecay = nowS;
+    fadeCanvas(wipeCtx, 0.12);
+    fadeCanvas(breathCtx, 0.06);
+    if (nowS - lastDrawT > 10) wipeCtx.clearRect(0, 0, wipeCv.width, wipeCv.height);
+  } else if (!autoFog && nowS - lastDecay > 0.25) {
+    lastDecay = nowS;
+    fadeCanvas(breathCtx, 0.02);
+  }
+  var w = fogCv.width, h = fogCv.height;
+  fogCtx.globalCompositeOperation = 'copy';
+  fogCtx.fillStyle = 'rgba(255,255,255,' + BASE_FOG + ')';
+  fogCtx.fillRect(0, 0, w, h);
+  fogCtx.globalCompositeOperation = 'source-over';
+  fogCtx.drawImage(breathCv, 0, 0);
+  fogCtx.globalCompositeOperation = 'destination-out';
+  fogCtx.drawImage(wipeCv, 0, 0);
+  fogCtx.globalCompositeOperation = 'source-over';
+}
+
+/* ---------------- audio / breath ---------------- */
+var AC = null, analyser = null, audioData = null;
+var noiseFloor = 0.004, breathLevel = 0, lastKey = -1e9;
+
+function setupAudio(stream) {
+  var ACtor = window.AudioContext || window.webkitAudioContext;
+  if (!ACtor || !stream.getAudioTracks().length) return;
+  AC = new ACtor();
+  var src = AC.createMediaStreamSource(stream);
+  analyser = AC.createAnalyser();
+  analyser.fftSize = 1024;
+  analyser.smoothingTimeConstant = 0.25;
+  src.connect(analyser);
+  audioData = new Float32Array(analyser.fftSize);
+}
+function micLevel() {
+  if (!analyser) return 0;
+  analyser.getFloatTimeDomainData(audioData);
+  var sum = 0;
+  for (var i = 0; i < audioData.length; i++) sum += audioData[i] * audioData[i];
+  return Math.sqrt(sum / audioData.length);
+}
+
+/* ---------------- video geometry (cover + mirror) ---------------- */
+var geo = { ox: 0, oy: 0, dw: 1, dh: 1 };
+function updateGeo() {
+  var vw = cam.videoWidth || 1280, vh = cam.videoHeight || 720;
+  var s = Math.max(W / vw, H / vh);
+  geo.dw = vw * s; geo.dh = vh * s;
+  geo.ox = (W - geo.dw) / 2; geo.oy = (H - geo.dh) / 2;
+}
+function sx(lm) { return W - (geo.ox + lm.x * geo.dw); }
+function sy(lm) { return geo.oy + lm.y * geo.dh; }
+
+/* ---------------- hand state ---------------- */
+var hand = null, lastSeen = 0, releaseFrames = 0;
+var mode = 'none', candidate = 'none', candFrames = 0;
+var hasPt = false, smX = 0, smY = 0, brX = 0, brY = 0, curX = 0, curY = 0;
+var fogCx = 0, fogCy = 0, hasFace = false;
+var brushR = 4;
+var spaceFog = false;
+var frameNo = 0;
+
+function dist(a, b) {
+  var dx = a.x - b.x, dy = a.y - b.y, dz = (a.z || 0) - (b.z || 0);
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
+function handSize(lm) {
+  var a = Math.hypot(sx(lm[5]) - sx(lm[17]), sy(lm[5]) - sy(lm[17]));
+  var b = Math.hypot(sx(lm[0]) - sx(lm[9]), sy(lm[0]) - sy(lm[9]));
+  return Math.max(a, b);
+}
+function extended(lm, tip, pip) { return dist(lm[tip], lm[0]) > dist(lm[pip], lm[0]) * 1.12; }
+function curled(lm, tip, pip) { return dist(lm[tip], lm[0]) < dist(lm[pip], lm[0]) * 1.02; }
+/* ☝️ chỉ ngón trỏ duỗi, ngón giữa + áp út co lại */
+function isPointing(lm) { return extended(lm, 8, 6) && curled(lm, 12, 10) && curled(lm, 16, 14); }
+
+/* ---------------- drawing on the fog ---------------- */
+var lastMidX = 0, lastMidY = 0, hasMid = false;
+function clearDot(x, y, r) {
+  lastDrawT = performance.now() / 1000;
+  wipeCtx.globalCompositeOperation = 'source-over';
+  wipeCtx.fillStyle = 'rgba(0,0,0,1)';
+  wipeCtx.beginPath(); wipeCtx.arc(px(x), px(y), px(r), 0, Math.PI * 2); wipeCtx.fill();
+}
+function drawStroke(x0, y0, x1, y1, r) {
+  var mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+  lastDrawT = performance.now() / 1000;
+  wipeCtx.globalCompositeOperation = 'source-over';
+  wipeCtx.strokeStyle = 'rgba(0,0,0,1)';
+  wipeCtx.lineCap = 'round'; wipeCtx.lineJoin = 'round';
+  wipeCtx.lineWidth = px(r * 2);
+  wipeCtx.beginPath();
+  if (hasMid) wipeCtx.moveTo(px(lastMidX), px(lastMidY)); else wipeCtx.moveTo(px(x0), px(y0));
+  wipeCtx.quadraticCurveTo(px(x0), px(y0), px(mx), px(my));
+  wipeCtx.stroke();
+  lastMidX = mx; lastMidY = my; hasMid = true;
+}
+/* ---------------- breath fog ---------------- */
+function addFog(amount) {
+  var cx = hasFace ? fogCx : W / 2;
+  var cy = (hasFace ? fogCy : H * 0.52) + Math.min(W, H) * 0.05;
+  var reach = Math.min(W, H) * 0.43;
+  breathCtx.globalCompositeOperation = 'source-over';
+  for (var i = 0; i < 12; i++) {
+    var ang = Math.random() * Math.PI * 2;
+    var rad = Math.pow(Math.random(), 0.65) * reach;
+    var bx = cx + Math.cos(ang) * rad * 1.45, by = cy + Math.sin(ang) * rad;
+    var br = reach * (0.18 + Math.random() * 0.26);
+    var a0 = (0.36 * amount).toFixed(3);
+    var gg = breathCtx.createRadialGradient(px(bx), px(by), 0, px(bx), px(by), px(br * 1.3));
+    gg.addColorStop(0, 'rgba(255,255,255,' + a0 + ')');
+    gg.addColorStop(0.55, 'rgba(255,255,255,' + (a0 * 0.55).toFixed(3) + ')');
+    gg.addColorStop(1, 'rgba(255,255,255,0)');
+    breathCtx.fillStyle = gg;
+    breathCtx.beginPath(); breathCtx.arc(px(bx), px(by), px(br * 1.3), 0, Math.PI * 2); breathCtx.fill();
+  }
+}
+
+/* ---------------- mediapipe ---------------- */
+var hands = null, face = null, busy = false, faceBusy = false;
+function onHands(res) {
+  if (res.multiHandLandmarks && res.multiHandLandmarks.length) { hand = res.multiHandLandmarks[0]; lastSeen = performance.now(); }
+  else hand = null;
+}
+function onFace(res) {
+  if (!res.detections || !res.detections.length) return;
+  var d = res.detections[0], kp = d.landmarks || d.keypoints, mx, my;
+  if (kp && kp.length >= 4) { mx = sx(kp[3]); my = sy(kp[3]); }
+  else { var bb = d.boundingBox; mx = sx({ x: bb.xCenter }); my = sy({ y: bb.yCenter + bb.height * 0.22 }); }
+  if (!hasFace) { fogCx = mx; fogCy = my; hasFace = true; }
+  else { fogCx += (mx - fogCx) * 0.4; fogCy += (my - fogCy) * 0.4; }
+}
+
+/* ---------------- capture ---------------- */
+var captureNow = false, lastShot = null;
+
+/* ---------------- main loop ---------------- */
+function loop() {
+  if (!running) return;
+  requestAnimationFrame(loop);
+  frameNo++;
+  updateGeo();
+
+  if (cam.readyState >= 2 && (hands || face) && (!busy || (!faceBusy && frameNo % 10 === 0))) {
+    var vw0 = cam.videoWidth || 640, vh0 = cam.videoHeight || 360;
+    var tw0 = 480, th0 = Math.round(480 * vh0 / vw0);
+    if (trackCv.height !== th0) trackCv.height = th0;
+    trackCtx.drawImage(cam, 0, 0, tw0, th0);
+    if (hands && !busy) {
+      busy = true;
+      hands.send({ image: trackCv }).then(function () { busy = false; }, function () { busy = false; });
+    }
+    if (face && !faceBusy && frameNo % 10 === 0) {
+      faceBusy = true;
+      face.send({ image: trackCv }).then(function () { faceBusy = false; }, function () { faceBusy = false; });
+    }
+  }
+
+  var now = performance.now();
+  var busyHand = ptDown;
+
+  if (hand) {
+    var lm = hand, hs = handSize(lm) || 1;
+    var pinch = Math.hypot(sx(lm[4]) - sx(lm[8]), sy(lm[4]) - sy(lm[8])) / hs;
+    var want = isPointing(lm) ? 'draw' : 'none';
+
+    if (want === candidate) candFrames++; else { candidate = want; candFrames = 1; }
+    var need = (want === 'none') ? 3 : 2;
+    if (want !== mode && candFrames >= need) { mode = want; hasPt = false; hasMid = false; }
+
+    var tx, ty;
+    tx = sx(lm[8]); ty = sy(lm[8]);
+    if (!hasPt) { smX = tx; smY = ty; brX = tx; brY = ty; curX = tx; curY = ty; }
+    smX += (tx - smX) * 0.45; smY += (ty - smY) * 0.45;
+    curX += (smX - curX) * 0.55; curY += (smY - curY) * 0.55;
+    var nbx = brX + (smX - brX) * 0.22, nby = brY + (smY - brY) * 0.22;
+
+    if (mode === 'draw') {
+      if (!hasPt) clearDot(nbx, nby, brushR);
+      else if (Math.hypot(nbx - brX, nby - brY) > W * 0.0006) drawStroke(brX, brY, nbx, nby, brushR);
+      hasPt = true; busyHand = true;
+    }
+    brX = nbx; brY = nby;
+    releaseFrames = 0;
+  } else {
+    releaseFrames++;
+    if (now - lastSeen > 250 && releaseFrames >= 2) { mode = 'none'; candidate = 'none'; hasPt = false; hasMid = false; }
+  }
+
+  /* breath */
+  var lvl = micLevel();
+  if (lvl < noiseFloor) noiseFloor += (lvl - noiseFloor) * 0.05;
+  else noiseFloor += (lvl - noiseFloor) * 0.0008;
+  var strength = 0;
+  if (analyser && (now - lastKey) >= 300) {
+    strength = Math.max(0, Math.min(1, (lvl - (noiseFloor + 0.0025)) / 0.0005));
+  }
+  breathLevel += (strength - breathLevel) * 0.35;
+  var amt = spaceFog ? 1 : breathLevel;
+  if (!busyHand && amt > 0.05 && frameNo % 3 === 0) addFog(amt);
+
+  /* ---- compose ---- */
+  var pw = view.width, ph = view.height;
+  vctx.setTransform(1, 0, 0, 1, 0, 0);
+  vctx.clearRect(0, 0, pw, ph);
+  if (cam.readyState >= 2) {
+    vctx.save();
+    vctx.translate(pw, 0); vctx.scale(-1, 1);
+    vctx.drawImage(cam, px(geo.ox), px(geo.oy), px(geo.dw), px(geo.dh));
+    vctx.restore();
+
+    var sw = smallCv.width, sh = smallCv.height, q = sw / W;
+    smallCtx.setTransform(1, 0, 0, 1, 0, 0);
+    smallCtx.globalCompositeOperation = 'source-over';
+    smallCtx.save();
+    smallCtx.filter = 'blur(4.5px) brightness(1.18)';
+    smallCtx.translate(sw, 0); smallCtx.scale(-1, 1);
+    smallCtx.drawImage(cam, geo.ox * q, geo.oy * q, geo.dw * q, geo.dh * q);
+    smallCtx.restore();
+    smallCtx.filter = 'none';
+    smallCtx.fillStyle = 'rgba(242,238,231,0.30)';
+    smallCtx.fillRect(0, 0, sw, sh);
+    smallCtx.fillStyle = 'rgba(255,255,255,0.62)';
+    smallCtx.fillRect(0, 0, sw, sh);
+    frostCtx.setTransform(1, 0, 0, 1, 0, 0);
+    frostCtx.globalCompositeOperation = 'copy';
+    frostCtx.imageSmoothingEnabled = true;
+    frostCtx.drawImage(smallCv, 0, 0, pw, ph);
+    composeFog(busyHand);
+    frostCtx.globalCompositeOperation = 'destination-in';
+    frostCtx.drawImage(fogCv, 0, 0);
+    frostCtx.globalCompositeOperation = 'source-over';
+    vctx.drawImage(frostCv, 0, 0);
+  }
+
+  /* chụp đúng khung này, trước khi vẽ con trỏ */
+  if (captureNow) { captureNow = false; finishCapture(); }
+
+  if (hand && mode === 'draw') {
+    var g = vctx.createRadialGradient(px(curX), px(curY), 0, px(curX), px(curY), px(12));
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(0.35, 'rgba(220,238,255,0.45)');
+    g.addColorStop(1, 'rgba(220,238,255,0)');
+    vctx.fillStyle = g;
+    vctx.beginPath(); vctx.arc(px(curX), px(curY), px(12), 0, Math.PI * 2); vctx.fill();
+  }
+}
+
+/* ---------------- capture / save / print ---------------- */
+var countEl = document.getElementById('count');
+var flashEl = document.getElementById('flash');
+var previewEl = document.getElementById('preview');
+var shotImg = document.getElementById('shotImg');
+var counting = false;
+
+function stampDate(c) {
+  var x = c.getContext('2d');
+  var d = new Date();
+  var txt = '🪞 OtterBooth · ' + String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+  var fs = Math.max(14, Math.round(c.width / 55));
+  x.font = '700 ' + fs + 'px Nunito, system-ui, sans-serif';
+  x.textAlign = 'right'; x.textBaseline = 'bottom';
+  x.fillStyle = 'rgba(0,0,0,0.35)';
+  x.fillText(txt, c.width - fs * 0.9 + 1, c.height - fs * 0.7 + 1);
+  x.fillStyle = 'rgba(255,255,255,0.92)';
+  x.fillText(txt, c.width - fs * 0.9, c.height - fs * 0.7);
+}
+function finishCapture() {
+  var c = document.createElement('canvas');
+  c.width = view.width; c.height = view.height;
+  c.getContext('2d').drawImage(view, 0, 0);
+  stampDate(c);
+  lastShot = c.toDataURL('image/png');
+  shotImg.src = lastShot;
+  flashEl.style.transition = 'none'; flashEl.style.opacity = '0.9';
+  requestAnimationFrame(function () {
+    flashEl.style.transition = 'opacity .45s ease'; flashEl.style.opacity = '0';
+  });
+  setTimeout(function () { previewEl.style.display = 'flex'; }, 250);
+}
+function startCapture(withCount) {
+  if (!running || counting) return;
+  previewEl.style.display = 'none';
+  if (!withCount) { captureNow = true; return; }
+  counting = true;
+  var n = 3;
+  countEl.textContent = n; countEl.style.display = 'flex';
+  var iv = setInterval(function () {
+    n--;
+    if (n > 0) { countEl.textContent = n; return; }
+    clearInterval(iv);
+    countEl.style.display = 'none';
+    counting = false;
+    captureNow = true;
+  }, 1000);
+}
+function downloadShot() {
+  if (!lastShot) return;
+  var a = document.createElement('a');
+  a.download = 'guong-mo-' + Date.now() + '.png';
+  a.href = lastShot;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function printShot() {
+  if (!lastShot) return;
+  var old = document.getElementById('printFrame');
+  if (old) old.remove();
+  var f = document.createElement('iframe');
+  f.id = 'printFrame';
+  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+  document.body.appendChild(f);
+  var doc = f.contentWindow.document;
+  doc.open();
+  doc.write('<!doctype html><html><head><title>Gương Mờ</title><style>' +
+    '@page{margin:8mm}html,body{margin:0;height:100%}' +
+    'body{display:flex;align-items:center;justify-content:center}' +
+    'img{max-width:100%;max-height:100vh;object-fit:contain}</style></head>' +
+    '<body><img src="' + lastShot + '"></body></html>');
+  doc.close();
+  var img = doc.querySelector('img');
+  function go() { f.contentWindow.focus(); f.contentWindow.print(); }
+  if (img.complete) setTimeout(go, 150); else img.onload = function () { setTimeout(go, 150); };
+}
+
+document.getElementById('shotBtn').addEventListener('click', function () { startCapture(true); });
+document.getElementById('dlBtn').addEventListener('click', downloadShot);
+document.getElementById('printBtn').addEventListener('click', printShot);
+document.getElementById('againBtn').addEventListener('click', function () { startCapture(true); });
+document.getElementById('closeBtn').addEventListener('click', function () { previewEl.style.display = 'none'; });
+
+/* ---------------- mouse / touch drawing ---------------- */
+var ptDown = false, ptX = 0, ptY = 0;
+var autoBtn = document.getElementById('autoBtn');
+autoBtn.addEventListener('click', function () {
+  autoFog = !autoFog;
+  autoBtn.textContent = autoFog ? '⏳ tự mờ: bật' : '⏳ tự mờ: tắt';
+  autoBtn.classList.toggle('on', autoFog);
+});
+
+view.addEventListener('pointerdown', function (e) {
+  if (!running) return;
+  ptDown = true; ptX = e.clientX; ptY = e.clientY; hasMid = false;
+  clearDot(ptX, ptY, brushR);
+  try { view.setPointerCapture(e.pointerId); } catch (err) { }
+});
+view.addEventListener('pointermove', function (e) {
+  if (!running || !ptDown) return;
+  drawStroke(ptX, ptY, e.clientX, e.clientY, brushR);
+  ptX = e.clientX; ptY = e.clientY;
+});
+function ptUp() { ptDown = false; hasMid = false; }
+view.addEventListener('pointerup', ptUp);
+view.addEventListener('pointercancel', ptUp);
+view.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+document.getElementById('brush').addEventListener('input', function (e) { brushR = +e.target.value; });
+document.getElementById('refogBtn').addEventListener('click', startRefog);
+
+window.addEventListener('keydown', function (e) {
+  lastKey = performance.now();
+  if (e.code === 'Space') { e.preventDefault(); spaceFog = true; }
+  if (e.key === 'c' || e.key === 'C') startRefog();
+  if (e.key === 's' || e.key === 'S') startCapture(false);
+  if (e.code === 'Escape') {
+    if (previewEl.style.display === 'flex') previewEl.style.display = 'none';
+    else stopAll();
+  }
+});
+window.addEventListener('keyup', function (e) {
+  lastKey = performance.now();
+  if (e.code === 'Space') spaceFog = false;
+});
+window.addEventListener('resize', function () { if (running) resize(); });
+
+/* ---------------- start / stop ---------------- */
+var stream = null;
+var startEl = document.getElementById('start');
+var hudEl = document.getElementById('hud');
+var errEl = document.getElementById('err');
+
+function stopAll() {
+  running = false;
+  if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+  if (AC && AC.close) { AC.close(); AC = null; analyser = null; }
+  hudEl.classList.add('hide');
+  previewEl.style.display = 'none';
+  startEl.classList.remove('hide');
+  vctx.clearRect(0, 0, view.width, view.height);
+}
+
+function getStream() {
+  var v = { width: { ideal: 960 }, height: { ideal: 540 }, facingMode: 'user' };
+  var a = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
+  return navigator.mediaDevices.getUserMedia({ video: v, audio: a }).catch(function (e) {
+    if (e && e.name === 'NotAllowedError') throw e;
+    return navigator.mediaDevices.getUserMedia({ video: v, audio: false });
+  });
+}
+
+document.getElementById('goBtn').addEventListener('click', function () {
+  errEl.textContent = '';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    errEl.textContent = 'Trình duyệt này không mở được camera. Hãy mở trang bằng https (hoặc localhost).';
+    return;
+  }
+  getStream().then(function (s) {
+    stream = s;
+    cam.srcObject = s;
+    return cam.play();
+  }).then(function () {
+    setupAudio(stream);
+    running = true;
+    resize();
+    resetFog();
+    startEl.classList.add('hide');
+    hudEl.classList.remove('hide');
+
+    if (window.Hands && !hands) {
+      hands = new window.Hands({ locateFile: function (f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/' + f; } });
+      hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+      hands.onResults(onHands);
+    }
+    if (window.FaceDetection && !face) {
+      face = new window.FaceDetection({ locateFile: function (f) { return 'https://cdn.jsdelivr.net/npm/@mediapipe/face_detection@0.4.1646425229/' + f; } });
+      face.setOptions({ model: 'short', minDetectionConfidence: 0.5 });
+      face.onResults(onFace);
+    }
+    if (!window.Hands) {
+      document.getElementById('tips').innerHTML = '✋ mạng chưa tải được phần bắt bàn tay<br>👆 dùng chuột / ngón tay vẽ trên màn hình<br>⏳ nét vẽ tự mờ lại sau vài giây<br>📸 chụp · phím C phủ mờ lại';
+    }
+    requestAnimationFrame(loop);
+  }).catch(function (e) {
+    var m = (e && e.name) || '';
+    if (m === 'NotAllowedError') errEl.textContent = 'Camera bị từ chối. Hãy cho phép camera (và micro) rồi bấm lại.';
+    else if (m === 'NotFoundError') errEl.textContent = 'Không tìm thấy camera trên máy này.';
+    else errEl.textContent = 'Không mở được camera: ' + (e && e.message ? e.message : m);
+  });
+});
+</script>
+</body>
+</html>

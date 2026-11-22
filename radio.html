@@ -529,7 +529,7 @@
 <span>PLAYLIST TRONG NGĂN BÀN</span>
 <span class="text-xs">🌸</span>
 </h3>
-<span class="text-[11px] text-[#a08a7c]">6 bài hát lưu bút</span>
+<span class="text-[11px] text-[#a08a7c]">7 bài hát lưu bút</span>
 </div>
 <ul class="space-y-1.5 text-sm" id="playlist-track-list">
 <!-- Item 1 -->
@@ -565,6 +565,11 @@
 <!-- Item 6 -->
 <li class="playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors" data-artist="Hạ Cuối 12A" data-index="5" data-title="Giải Cứu Thế Giới — Bản chính thức">
 <span class="font-medium text-[#3b332e] truncate pr-2">06. Giải Cứu Thế Giới — Bản chính thức</span>
+<span class="text-[11px] text-[#998b7e] shrink-0 font-mono">local MP3</span>
+</li>
+<!-- Item 7: nhạc Giáng Sinh từ trang cây thông -->
+<li class="playlist-item border border-[#e8d7cb] bg-white/70 hover:bg-white px-4 py-2 rounded-lg flex items-center justify-between cursor-pointer transition-colors" data-artist="Otter Christmas" data-index="6" data-title="Jingle Bells 🎄">
+<span class="font-medium text-[#3b332e] truncate pr-2">07. 🎄 Jingle Bells — Nhạc Giáng Sinh</span>
 <span class="text-[11px] text-[#998b7e] shrink-0 font-mono">local MP3</span>
 </li>
 </ul>
@@ -1047,7 +1052,8 @@
     { title: "Người Im Lặng Gặp Người Hay Nói", artist: "Bàn 4 Tổ 2", src: "assets/audio/nguoi-im-lang-gap-nguoi-hay-noi.mp3" },
     { title: "IDNAT", artist: "Tình Hà Say Hi", src: "assets/audio/im-doi-nguoi-anh-thuong.mp3" },
     { title: "Giải Cứu Thế Giới — Demo", artist: "Hạ Cuối 12A", src: "assets/audio/demo-giai-cuu-the-gioi.mp3" },
-    { title: "Giải Cứu Thế Giới — Bản chính thức", artist: "Hạ Cuối 12A", src: "assets/audio/giai-cuu-the-gioi.mp3" }
+    { title: "Giải Cứu Thế Giới — Bản chính thức", artist: "Hạ Cuối 12A", src: "assets/audio/giai-cuu-the-gioi.mp3" },
+    { title: "🎄 Jingle Bells — Nhạc Giáng Sinh", artist: "Otter Christmas", src: "assets/audio/jingle-bells.mp3" }
   ];
   let selectedIndex = 0;
   const formatTime = (value) => Number.isFinite(value) ? `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, "0")}` : "0:00";

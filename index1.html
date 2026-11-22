@@ -1144,7 +1144,399 @@
     .lumina-aurora { animation: none; }
     #luminaCanvas, #butterflyStage { display: none; }
   }
-</style></head><body class="bg-surface text-on-surface flex flex-col min-h-screen">
+</style><style id="ascii-xmas-theme">
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* ==========================================================
+   ASCII Christmas theme — design layer only (no logic/IDs changed)
+   Palette shared with christmas-tree.html
+   ========================================================== */
+:root {
+  --ax-night-0: #04050a;
+  --ax-night-1: #0a0e1a;
+  --ax-night-2: #141a28;
+  --ax-ink: #f3ecdc;
+  --ax-ink-dim: rgba(232, 226, 210, .66);
+  --ax-ink-faint: rgba(232, 226, 210, .38);
+  --ax-line: rgba(255, 255, 255, .09);
+  --ax-gold: #e8c77a;
+  --ax-pine: #7fcf9f;
+  --ax-berry: #ff7d96;
+  --ax-acc: var(--ax-gold);
+  --ax-acc-rgb: 232, 199, 122;
+  --ax-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --ax-serif: "Playfair Display", Georgia, serif;
+  --ax-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+
+/* ---------- Night sky (same as tree page) ---------- */
+html, body, main {
+  background:
+    radial-gradient(ellipse 70% 45% at 50% 78%, rgba(232, 199, 122, .07), transparent 70%),
+    linear-gradient(180deg, var(--ax-night-0) 0%, var(--ax-night-1) 55%, var(--ax-night-2) 100%) fixed !important;
+}
+main .bg-gradient-to-b {
+  background:
+    radial-gradient(ellipse 46% 30% at 50% 74%, rgba(232, 199, 122, .10), transparent 72%),
+    linear-gradient(180deg, var(--ax-night-0) 0%, var(--ax-night-1) 55%, var(--ax-night-2) 100%) !important;
+}
+main { padding-top: 0 !important; }
+
+/* Cosmic layer re-toned: silver stars, golden "ornament" butterflies, navy aurora */
+#luminaAurora { opacity: .42; filter: hue-rotate(18deg) saturate(.7); }
+#luminaCanvas { filter: saturate(.18) brightness(1.08); opacity: .8; }
+#butterflyStage { filter: hue-rotate(-148deg) saturate(.85) brightness(1.05); opacity: .62; }
+#luminaVignette {
+  background: radial-gradient(ellipse at 50% 55%, transparent 0 40%, rgba(2, 3, 8, .38) 72%, rgba(1, 2, 6, .82) 100%) !important;
+}
+
+/* ---------- ASCII snow + title canvas ---------- */
+#asciiXmasLayer {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 4;
+}
+#asciiXmasCaption {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  top: var(--ax-cap-top, 120px);
+  z-index: 5; pointer-events: none; white-space: nowrap;
+  font: 500 11px/1 var(--ax-mono); letter-spacing: .42em; text-transform: uppercase;
+  color: rgba(var(--ax-acc-rgb), .72);
+  text-shadow: 0 0 12px rgba(var(--ax-acc-rgb), .35);
+  opacity: 0; animation: axFadeIn 1.6s .6s ease forwards;
+}
+#asciiXmasCaption b { color: var(--ax-ink-faint); font-weight: 400; margin: 0 .6em; letter-spacing: 0; }
+.ax-hud {
+  position: fixed; z-index: 5; pointer-events: none;
+  font: 400 10px/1.5 var(--ax-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--ax-ink-faint);
+  opacity: 0; animation: axFadeIn 1.6s 1s ease forwards;
+}
+.ax-hud.tl { top: 18px; left: 22px; }
+.ax-hud.tr { top: 18px; right: 22px; text-align: right; }
+.ax-hud.bl { bottom: 18px; left: 22px; }
+.ax-hud.br { bottom: 18px; right: 22px; text-align: right; }
+.ax-hud i { font-style: normal; color: rgba(var(--ax-acc-rgb), .8); }
+.ax-corner {
+  position: fixed; z-index: 5; pointer-events: none; width: 22px; height: 22px;
+  border: 0 solid rgba(var(--ax-acc-rgb), .38);
+}
+.ax-corner.c1 { top: 10px; left: 10px; border-top-width: 1px; border-left-width: 1px; }
+.ax-corner.c2 { top: 10px; right: 10px; border-top-width: 1px; border-right-width: 1px; }
+.ax-corner.c3 { bottom: 10px; left: 10px; border-bottom-width: 1px; border-left-width: 1px; }
+.ax-corner.c4 { bottom: 10px; right: 10px; border-bottom-width: 1px; border-right-width: 1px; }
+@media (max-width: 640px) {
+  .ax-hud.bl, .ax-hud.br { display: none; }
+  .ax-hud { font-size: 9px; letter-spacing: .18em; }
+  #asciiXmasCaption { font-size: 9.5px; letter-spacing: .3em; }
+  html body .demo-blow { font-size: 13px !important; padding: 13px 22px !important; width: max-content; }
+  html body .demo-note { font-size: 9.5px !important; letter-spacing: .04em; }
+}
+@keyframes axFadeIn { to { opacity: 1; } }
+
+/* ---------- Blow-candle CTA ---------- */
+html body .demo-blow {
+  bottom: 46px !important;
+  padding: 15px 30px 15px 26px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(var(--ax-acc-rgb), .55) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, 0)) ,
+    rgba(10, 13, 24, .78) !important;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  color: var(--ax-ink) !important;
+  font: 500 14px/1.35 var(--ax-mono) !important;
+  letter-spacing: .04em;
+  box-shadow:
+    0 0 0 4px rgba(var(--ax-acc-rgb), .06),
+    0 14px 40px rgba(0, 0, 0, .55),
+    0 0 26px rgba(var(--ax-acc-rgb), .22) !important;
+  max-width: calc(100vw - 40px);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  animation: axCtaGlow 2.8s ease-in-out infinite;
+}
+html body .demo-blow:hover {
+  transform: translateX(-50%) translateY(-2px) !important;
+  border-color: rgba(var(--ax-acc-rgb), .9) !important;
+}
+html body .demo-blow:active { transform: translateX(-50%) scale(.98) !important; }
+html body .demo-note {
+  bottom: 20px !important;
+  color: var(--ax-ink-faint) !important;
+  font: 400 10.5px/1 var(--ax-mono) !important;
+  letter-spacing: .12em;
+}
+@keyframes axCtaGlow {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(var(--ax-acc-rgb), .05), 0 14px 40px rgba(0,0,0,.55), 0 0 20px rgba(var(--ax-acc-rgb), .16); }
+  50% { box-shadow: 0 0 0 7px rgba(var(--ax-acc-rgb), .09), 0 14px 40px rgba(0,0,0,.55), 0 0 36px rgba(var(--ax-acc-rgb), .34); }
+}
+
+/* ---------- Toast (in case it's shown) ---------- */
+#studio-toast {
+  background: rgba(10, 13, 24, .9) !important;
+  border: 1px solid rgba(var(--ax-acc-rgb), .4);
+  font-family: var(--ax-mono) !important;
+}
+
+/* ==========================================================
+   Wish overlay
+   ========================================================== */
+html body .wish-overlay {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 35%, rgba(20, 26, 40, .72), rgba(4, 5, 10, .9)) !important;
+  -webkit-backdrop-filter: blur(7px) saturate(1.1); backdrop-filter: blur(7px) saturate(1.1);
+}
+html body .wish-box,
+html body .wish-box.mood-classic { --ax-acc: var(--ax-gold); --ax-acc-rgb: 232, 199, 122; }
+html body .wish-box.mood-matcha { --ax-acc: var(--ax-pine); --ax-acc-rgb: 127, 207, 159; }
+html body .wish-box.mood-strawberry { --ax-acc: var(--ax-berry); --ax-acc-rgb: 255, 125, 150; }
+
+html body .wish-box {
+  position: relative;
+  width: min(92vw, 470px) !important;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(var(--ax-acc-rgb), .09), transparent 60%),
+    linear-gradient(180deg, rgba(17, 22, 36, .97), rgba(8, 10, 18, .97)) !important;
+  border: 1px solid rgba(var(--ax-acc-rgb), .34) !important;
+  border-radius: 20px !important;
+  padding: 30px 24px 22px !important;
+  color: var(--ax-ink) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .03) inset,
+    0 40px 90px rgba(0, 0, 0, .65),
+    0 0 60px rgba(var(--ax-acc-rgb), .12) !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--ax-acc-rgb), .35) transparent;
+}
+html body .wish-box::-webkit-scrollbar { display: block; width: 6px; }
+html body .wish-box::-webkit-scrollbar-thumb { background: rgba(var(--ax-acc-rgb), .3); border-radius: 6px; }
+html body .wish-box::before {
+  content: "*  .  +  .  *  .  +  .  *";
+  display: block; margin: -6px 0 14px;
+  font: 400 11px/1 var(--ax-mono); letter-spacing: .32em; white-space: pre;
+  color: rgba(var(--ax-acc-rgb), .7);
+  text-shadow: 0 0 10px rgba(var(--ax-acc-rgb), .5);
+}
+html body .wish-box h2 {
+  font: italic 600 clamp(1.7rem, 5.4vw, 2.15rem)/1.15 var(--ax-serif) !important;
+  color: var(--ax-ink) !important;
+  letter-spacing: .005em;
+  margin: 0 0 10px !important;
+  text-shadow: 0 0 24px rgba(var(--ax-acc-rgb), .28);
+}
+html body .wish-box > p {
+  font: 400 .9rem/1.55 var(--ax-sans) !important;
+  color: var(--ax-ink-dim) !important;
+  margin: 0 auto 18px !important; max-width: 34ch;
+}
+html body .wish-box #wishInput {
+  min-height: 92px;
+  background: rgba(255, 255, 255, .03) !important;
+  border: 1px solid var(--ax-line) !important;
+  border-radius: 14px !important;
+  padding: 14px 16px !important;
+  color: var(--ax-ink) !important;
+  font: 400 .95rem/1.55 var(--ax-mono) !important;
+  caret-color: var(--ax-acc);
+  box-shadow: none !important;
+}
+html body .wish-box #wishInput::placeholder { color: var(--ax-ink-faint); }
+html body .wish-box #wishInput:focus {
+  border-color: rgba(var(--ax-acc-rgb), .7) !important;
+  background: rgba(var(--ax-acc-rgb), .04) !important;
+  box-shadow: 0 0 0 4px rgba(var(--ax-acc-rgb), .12) !important;
+}
+
+html body .wish-box .tiramisu-choice,
+html body .wish-box .fortune-card,
+html body .wish-box .sweetness-card,
+html body .wish-box .ending-card,
+html body .wish-box .tiramisu-preview-card {
+  margin-top: 14px !important;
+  padding: 16px 14px !important;
+  background: rgba(255, 255, 255, .025) !important;
+  border: 1px solid var(--ax-line) !important;
+  border-radius: 16px !important;
+  color: var(--ax-ink) !important;
+}
+html body .wish-box .tiramisu-choice > p,
+html body .wish-box .preview-title,
+html body .wish-box .fortune-title,
+html body .wish-box #endingTitle {
+  font: 500 10.5px/1.5 var(--ax-mono) !important;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(var(--ax-acc-rgb), .9) !important;
+  margin: 0 0 12px !important;
+}
+html body .wish-box .tiramisu-choice > p::before,
+html body .wish-box .preview-title::before,
+html body .wish-box .fortune-title::before,
+html body .wish-box #endingTitle::before { content: "[ "; color: var(--ax-ink-faint); }
+html body .wish-box .tiramisu-choice > p::after,
+html body .wish-box .preview-title::after,
+html body .wish-box .fortune-title::after,
+html body .wish-box #endingTitle::after { content: " ]"; color: var(--ax-ink-faint); }
+
+html body .wish-box .tiramisu-mood {
+  font: 500 .82rem/1 var(--ax-mono) !important;
+  letter-spacing: .03em;
+  padding: 10px 14px !important;
+  margin: 4px 3px !important;
+  background: rgba(255, 255, 255, .03) !important;
+  border: 1px solid rgba(255, 255, 255, .14) !important;
+  color: var(--ax-ink) !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+  transform: none !important;
+  transition: background .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease !important;
+}
+html body .wish-box .tiramisu-mood:hover {
+  border-color: rgba(var(--ax-acc-rgb), .7) !important;
+  background: rgba(var(--ax-acc-rgb), .08) !important;
+}
+html body .wish-box .tiramisu-mood.selected {
+  background: var(--ax-acc) !important;
+  border-color: var(--ax-acc) !important;
+  color: #0a0d16 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 22px rgba(var(--ax-acc-rgb), .4) !important;
+}
+
+html body .wish-box #fortuneText {
+  font: italic 500 1.08rem/1.5 var(--ax-serif) !important;
+  color: var(--ax-ink) !important;
+}
+
+html body .wish-box .tiramisu-preview {
+  border-radius: 12px !important;
+  background: #0b0e18 !important;
+  border: 1px solid var(--ax-line);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, .5) !important;
+}
+html body .wish-box .tiramisu-studio-frame { background: #0b0e18 !important; }
+html body .wish-box .decorate-status,
+html body .wish-box #sweetnessLabel,
+html body .wish-box #sweetnessPercent,
+html body .wish-box .wish-result {
+  font: 400 .8rem/1.5 var(--ax-mono) !important;
+  letter-spacing: .04em;
+  color: var(--ax-ink-dim) !important;
+}
+html body .wish-box #sweetnessPercent { color: rgba(var(--ax-acc-rgb), .95) !important; margin-top: 10px !important; }
+html body .wish-box .meter-shell {
+  height: 12px !important;
+  background: rgba(255, 255, 255, .04) !important;
+  border: 1px solid var(--ax-line) !important;
+  border-radius: 4px !important;
+  padding: 2px;
+}
+html body .wish-box .meter-fill {
+  border-radius: 2px !important;
+  background: repeating-linear-gradient(90deg, var(--ax-acc) 0 7px, transparent 7px 9px) !important;
+  filter: drop-shadow(0 0 6px rgba(var(--ax-acc-rgb), .6));
+}
+html body .wish-box .ending-card { border-color: rgba(var(--ax-acc-rgb), .45) !important; background: rgba(var(--ax-acc-rgb), .06) !important; }
+html body .wish-box #endingText { font: italic 500 1.05rem/1.5 var(--ax-serif) !important; color: var(--ax-ink) !important; }
+
+html body .wish-box .wish-btn {
+  min-height: 54px;
+  margin-top: 18px !important;
+  border-radius: 14px !important;
+  font: 700 .86rem/1 var(--ax-mono) !important;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: #0a0d16 !important;
+  text-shadow: none !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0) 55%), var(--ax-acc) !important;
+  border: 1px solid rgba(255, 255, 255, .3) !important;
+  box-shadow: 0 0 0 6px rgba(8, 10, 18, .9), 0 12px 34px rgba(var(--ax-acc-rgb), .28) !important;
+}
+html body .wish-box .wish-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 0 0 6px rgba(8, 10, 18, .9), 0 16px 40px rgba(var(--ax-acc-rgb), .42) !important; }
+html body .wish-box .wish-btn:disabled { color: #0a0d16 !important; opacity: .85 !important; }
+
+/* ==========================================================
+   Birthday note
+   ========================================================== */
+html body .birthday-note-overlay {
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(20, 26, 40, .7), rgba(4, 5, 10, .9)) !important;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+html body .birthday-note-box,
+html body .birthday-note-box.mood-classic { --ax-acc: var(--ax-gold); --ax-acc-rgb: 232, 199, 122; }
+html body .birthday-note-box.mood-matcha { --ax-acc: var(--ax-pine); --ax-acc-rgb: 127, 207, 159; }
+html body .birthday-note-box.mood-strawberry { --ax-acc: var(--ax-berry); --ax-acc-rgb: 255, 125, 150; }
+html body .birthday-note-box {
+  width: min(92vw, 480px) !important;
+  padding: 22px 30px 30px !important;
+  border-radius: 22px !important;
+  background:
+    radial-gradient(120% 70% at 50% 0%, rgba(var(--ax-acc-rgb), .13), transparent 62%),
+    linear-gradient(180deg, rgba(17, 22, 36, .96), rgba(8, 10, 18, .97)) !important;
+  border: 1px solid rgba(var(--ax-acc-rgb), .42) !important;
+  color: var(--ax-ink) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .03) inset,
+    0 40px 100px rgba(0, 0, 0, .7),
+    0 0 70px rgba(var(--ax-acc-rgb), .18);
+  animation: royalPopIn .65s cubic-bezier(.34, 1.56, .64, 1) forwards, axNoteGlow 3.6s ease-in-out infinite alternate !important;
+}
+
+html body .birthday-note-box h2,
+html body .birthday-note-box.mood-classic h2,
+html body .birthday-note-box.mood-matcha h2,
+html body .birthday-note-box.mood-strawberry h2 {
+  position: relative; z-index: 1;
+  font: italic 600 clamp(2rem, 7vw, 2.6rem)/1.1 var(--ax-serif) !important;
+  color: var(--ax-ink) !important;
+  letter-spacing: 0 !important;
+  margin: 0 0 18px !important;
+  text-shadow: 0 0 18px rgba(var(--ax-acc-rgb), .45), 0 0 40px rgba(var(--ax-acc-rgb), .2) !important;
+  animation: none !important;
+}
+html body .birthday-note-box h2::after {
+  content: "";
+  display: block; width: 56px; height: 1px; margin: 16px auto 0;
+  background: linear-gradient(90deg, transparent, var(--ax-acc), transparent);
+}
+html body .birthday-note-box .note-content { position: relative; z-index: 1; }
+html body .birthday-note-box .note-content p,
+html body .birthday-note-box.mood-classic .note-content p,
+html body .birthday-note-box.mood-matcha .note-content p,
+html body .birthday-note-box.mood-strawberry .note-content p {
+  font: 400 1rem/1.7 var(--ax-sans) !important;
+  color: rgba(240, 236, 226, .86) !important;
+  text-shadow: none !important;
+  letter-spacing: .005em !important;
+}
+html body .birthday-note-box .note-content p:first-child {
+  font: italic 500 1.12rem/1.55 var(--ax-serif) !important;
+  color: var(--ax-ink) !important;
+}
+html body .birthday-note-box .note-action-btn,
+html body .birthday-note-box.mood-classic .note-action-btn,
+html body .birthday-note-box.mood-matcha .note-action-btn,
+html body .birthday-note-box.mood-strawberry .note-action-btn {
+  position: relative; z-index: 1;
+  margin-top: 10px;
+  padding: 15px 30px !important;
+  border-radius: 14px !important;
+  font: 700 .84rem/1 var(--ax-mono) !important;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: #0a0d16 !important;
+  text-shadow: none !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0) 55%), var(--ax-acc) !important;
+  border: 1px solid rgba(255, 255, 255, .3) !important;
+  box-shadow: 0 12px 34px rgba(var(--ax-acc-rgb), .3) !important;
+}
+html body .birthday-note-box .note-action-btn::after { content: "  \2192"; }
+html body .birthday-note-box .note-action-btn:hover { box-shadow: 0 16px 42px rgba(var(--ax-acc-rgb), .48) !important; }
+@keyframes axNoteGlow {
+  from { box-shadow: 0 0 0 1px rgba(255,255,255,.03) inset, 0 40px 100px rgba(0,0,0,.7), 0 0 50px rgba(var(--ax-acc-rgb), .12); }
+  to   { box-shadow: 0 0 0 1px rgba(255,255,255,.03) inset, 0 40px 100px rgba(0,0,0,.7), 0 0 90px rgba(var(--ax-acc-rgb), .26); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body .demo-blow, html body .birthday-note-box { animation: none !important; }
+}
+</style>
+</head><body class="bg-surface text-on-surface flex flex-col min-h-screen">
 <div id="luminaBackground" aria-hidden="true">
   <div id="luminaAurora">
     <div class="lumina-aurora lumina-aurora-one"></div>
@@ -2242,9 +2634,18 @@ animate();
     let musicStarted = false;
     const savedTime = Number.parseFloat(localStorage.getItem("musicTime"));
     const wasPlaying = localStorage.getItem("musicPlaying") !== "false";
+    const savedSrc = localStorage.getItem("currentTrackSrc");
+    const srcEl = music.querySelector("source");
+    if (savedSrc && srcEl && savedSrc.indexOf("jingle-bells") >= 0) {
+      srcEl.src = savedSrc;
+      music.load();
+    }
 
     if (Number.isFinite(savedTime) && savedTime >= 0) {
       music.currentTime = savedTime;
+      music.addEventListener("loadedmetadata", () => {
+        if (Math.abs(music.currentTime - savedTime) > 1) music.currentTime = Math.min(savedTime, music.duration || savedTime);
+      }, { once: true });
     }
 
     const updateState = () => {
@@ -2467,6 +2868,134 @@ animate();
     requestAnimationFrame(animate);
   }
   requestAnimationFrame(animate);
+})();
+</script>
+<!-- ASCII Christmas layer (decorative only) -->
+<canvas id="asciiXmasLayer" aria-hidden="true"></canvas>
+<div id="asciiXmasCaption" aria-hidden="true">blow the candles<b>·</b>make a wish</div>
+<div class="ax-corner c1" aria-hidden="true"></div><div class="ax-corner c2" aria-hidden="true"></div>
+<div class="ax-corner c3" aria-hidden="true"></div><div class="ax-corner c4" aria-hidden="true"></div>
+<div class="ax-hud tl" aria-hidden="true"><i>*</i> otterbooth</div>
+<div class="ax-hud tr" aria-hidden="true">03 <i>/</i> 05</div>
+<div class="ax-hud bl" aria-hidden="true">chapter · the cake</div>
+<div class="ax-hud br" aria-hidden="true">xmas edition <i>2026</i></div>
+<script id="ascii-xmas-layer">
+(() => {
+  const cv = document.getElementById('asciiXmasLayer');
+  const cap = document.getElementById('asciiXmasCaption');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const FONT = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
+  // 5x7 dot font (same style as the HAPPY BIRTHDAY fireworks)
+  const G = {
+    H: ['10001','10001','10001','11111','10001','10001','10001'],
+    A: ['01110','10001','10001','11111','10001','10001','10001'],
+    P: ['11110','10001','10001','11110','10000','10000','10000'],
+    Y: ['10001','10001','01010','00100','00100','00100','00100'],
+    B: ['11110','10001','10001','11110','10001','10001','11110'],
+    I: ['11111','00100','00100','00100','00100','00100','11111'],
+    R: ['11110','10001','10001','11110','10100','10010','10001'],
+    T: ['11111','00100','00100','00100','00100','00100','00100'],
+    D: ['11110','10001','10001','10001','10001','10001','11110'],
+    ' ': ['00000','00000','00000','00000','00000','00000','00000']
+  };
+  let W = 0, H = 0, dpr = 1, flakes = [], title = [], cell = 8, groundCols = 0, ground = [];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function layoutTitle() {
+    title = [];
+    const lines = (W >= 820) ? ['HAPPY BIRTHDAY'] : ['HAPPY', 'BIRTHDAY'];
+    const cols = Math.max(...lines.map(l => l.length * 6 - 1));
+    const maxH = H * (lines.length > 1 ? 0.2 : 0.13);
+    cell = Math.max(5, Math.min(Math.floor((W * 0.8) / cols), Math.floor(maxH / (lines.length * 8 - 1)), 14));
+    const top = Math.max(40, H * 0.06);
+    lines.forEach((ln, li) => {
+      const w = ln.length * 6 - 1, x0 = (W - w * cell) / 2, y0 = top + li * 8 * cell;
+      [...ln].forEach((c, ci) => {
+        const g = G[c] || G[' '];
+        for (let r = 0; r < 7; r++) for (let k = 0; k < 5; k++) if (g[r][k] === '1') {
+          title.push({ x: x0 + (ci * 6 + k) * cell + cell / 2, y: y0 + r * cell + cell / 2, ph: Math.random() * 6.28, sp: rnd(1.2, 2.6), d: Math.random() * 0.8 + (ci * 6 + k) * 0.02 + li * 0.2 });
+        }
+      });
+    });
+    const bottom = top + (lines.length * 8 - 1) * cell;
+    if (cap) cap.style.setProperty('--ax-cap-top', Math.round(bottom + Math.max(14, cell * 1.6)) + 'px');
+  }
+  function layoutGround() {
+    const cw = 9; groundCols = Math.ceil(W / cw) + 1; ground = [];
+    for (let i = 0; i < groundCols; i++) ground.push(0.35 + 0.55 * Math.abs(Math.sin(i * 0.045 + 0.7)) + Math.random() * 0.2);
+  }
+  function makeFlakes() {
+    const n = Math.round(Math.min(170, Math.max(60, W * H / 9000)));
+    flakes = [];
+    for (let i = 0; i < n; i++) flakes.push(newFlake(true));
+  }
+  function newFlake(anyY) {
+    const z = Math.random();                    // depth 0 (far) .. 1 (near)
+    const ch = z > 0.82 ? '*' : z > 0.55 ? '+' : z > 0.25 ? '·' : '.';
+    return { x: rnd(0, W), y: anyY ? rnd(-H, H) : rnd(-60, -10), z, ch, vy: 14 + z * 46, sway: rnd(0.4, 1.4), ph: rnd(0, 6.28), sz: 8 + z * 9 };
+  }
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    layoutTitle(); layoutGround(); makeFlakes();
+  }
+  const RAMP = ' .·:-=+';
+  let last = performance.now(), t0 = last;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const t = (now - t0) / 1000;
+    ctx.clearRect(0, 0, W, H);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // falling ASCII snow
+    for (const f of flakes) {
+      if (!reduce) { f.y += f.vy * dt; f.x += Math.sin(t * f.sway + f.ph) * (6 + f.z * 10) * dt; }
+      if (f.y > H + 20) Object.assign(f, newFlake(false));
+      if (f.x < -20) f.x = W + 10; else if (f.x > W + 20) f.x = -10;
+      const a = 0.18 + f.z * 0.6;
+      ctx.font = `${f.sz.toFixed(0)}px ${FONT}`;
+      ctx.fillStyle = `rgba(226,236,255,${a.toFixed(2)})`;
+      if (f.z > 0.82) { ctx.shadowColor = 'rgba(200,220,255,.8)'; ctx.shadowBlur = 8; } else ctx.shadowBlur = 0;
+      ctx.fillText(f.ch, f.x, f.y);
+    }
+    ctx.shadowBlur = 0;
+    // snow bank at the bottom, drawn as an ASCII density ramp
+    const cw = 9, rows = 3;
+    ctx.font = `11px ${FONT}`;
+    for (let i = 0; i < groundCols; i++) {
+      const hgt = ground[i] * rows;
+      for (let r = 0; r < rows; r++) {
+        const v = Math.max(0, Math.min(1, hgt - r));
+        if (v <= 0.04) continue;
+        const ch = RAMP[Math.min(RAMP.length - 1, Math.round(v * (RAMP.length - 1)))];
+        ctx.fillStyle = `rgba(214,226,250,${(0.05 + v * 0.11).toFixed(3)})`;
+        ctx.fillText(ch, i * cw, H - 6 - r * 10);
+      }
+    }
+    // HAPPY BIRTHDAY in twinkling gold ASCII
+    const fs = Math.max(9, Math.round(cell * 1.5));
+    ctx.font = `700 ${fs}px ${FONT}`;
+    for (const p of title) {
+      const life = Math.max(0, Math.min(1, (t - 0.3 - p.d) / 0.6));
+      if (life <= 0) continue;
+      const tw = reduce ? 1 : 0.7 + 0.3 * Math.sin(t * p.sp + p.ph);
+      const hot = tw > 0.93;
+      const ch = hot ? '*' : tw > 0.45 ? '+' : '×';
+      const l = 64 + tw * 20;
+      ctx.fillStyle = `hsla(44,${hot ? 92 : 72}%,${l.toFixed(0)}%,${(life * (0.7 + 0.3 * tw)).toFixed(2)})`;
+      ctx.shadowColor = 'rgba(255,214,130,.85)'; ctx.shadowBlur = hot ? 14 : 6;
+      ctx.fillText(ch, p.x, p.y + (1 - life) * -10);
+    }
+    ctx.shadowBlur = 0;
+    if (!document.hidden) requestAnimationFrame(frame);
+  }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { last = performance.now(); requestAnimationFrame(frame); } });
+  window.addEventListener('resize', resize);
+  resize();
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => requestAnimationFrame(frame));
 })();
 </script>
 </body></html>

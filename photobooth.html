@@ -12,6 +12,7 @@
         <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/build/gifshot.min.js"></script>
         <!-- Frame templates (khung có sẵn, ảnh tự khớp) -->
         <script src="js/frames.js?v=tpl30"></script>
+        <script src="js/snowball.js?v=2"></script>
 
         <style>
             :root {
@@ -565,6 +566,17 @@
                 margin-bottom: 15px;
                 animation: floatOtterFlower 2s ease-in-out infinite alternate;
             }
+
+            .snowball-card { max-width: 430px; }
+            .snowball-stage {
+                border-radius: 20px;
+                overflow: hidden;
+                background: #0d1526;
+                box-shadow: inset 0 0 40px rgba(0,0,0,.6), 0 8px 24px rgba(2,18,42,.35);
+                cursor: pointer;
+                line-height: 0;
+            }
+            .snowball-stage canvas { width: 100%; display: block; }
 
             @keyframes popCardIn {
                 0% { transform: scale(0) rotate(-10deg); opacity: 0; }
@@ -2134,20 +2146,22 @@
                 6. 🍀🐳 Nên dùng máy tính để trải nghiệm tốt nhất nghen.<br>
                 7. Lia chuột vào góc và cạnh ảnh/sticker để edit tuỳ ý.<br>
                 8. 🍀🐳 Thử thách Rái Cá siêu vui, bật lên để chơi nha! 🐳<br>
-                9. 🐳🐻 Đừng quên bấm nút <strong>🌺 Hoa Nở Lại</strong> để ngắm hoa nở tung tóe nhé! 🌸<br>
+                9. 🐳🐻 Bấm nút <strong>❄️ Quả Cầu Tuyết</strong> rồi bấm vào quả cầu để lắc cho tuyết bay nhé! ⛄<br>
                 10. 🎬 Bấm <strong>BTS Reel</strong> để xem lại hậu trường từng tấm và lưu video về máy.<br>
             </p>
             <button onclick="document.getElementById('tutorialModal').style.display='none'" class="primary-btn" style="width: 100%; margin-top: 20px;" >Đã hiểu gòi! 🐾</button>
         </div>
     </div>
 
-        <!-- POP-UP OTTER FLOWER SAU 3 GIÂY -->
+        <!-- POP-UP QUẢ CẦU TUYẾT SAU 3 GIÂY -->
         <div id="flowerPopupOverlay">
-            <div class="flower-popup-card">
-                <img src="assets/stickers/fish/otter-flower.gif" alt="Otter Flower">
-                <h3 style="color: #ff1493; margin-top: 0; font-size: 1.5rem;">🌸 Vườn Hoa Rái Cá Nở Rộ! 🌸</h3>
-                <p style="color: #666; font-size: 1rem; margin-bottom: 20px;">Chúc Anh một ngày ngập tràn hoa thơm và niềm vui nhé! ✨</p>
-                <button class="primary-btn" onclick="closeFlowerPopup()" style="background-color: #ff69b4; box-shadow: 0 4px 0 #cc1166; width: 100%;">Nhận hoa thui nào! 💐</button>
+            <div class="flower-popup-card snowball-card">
+                <h3 style="color: #0e7490; margin-top: 0; font-size: 1.4rem;">❄️ Quả Cầu Tuyết ❄️</h3>
+                <div class="snowball-stage" id="snowballStage" title="Bấm để lắc">
+                    <canvas id="snowballCanvas"></canvas>
+                </div>
+                <p style="color: #36566c; font-size: .95rem; margin: 12px 0 18px;">Bấm vào quả cầu để lắc cho tuyết bay nha ✨</p>
+                <button class="primary-btn" onclick="closeFlowerPopup()" style="background-color: #ff69b4; box-shadow: 0 4px 0 #cc1166; width: 100%;">Vào chụp hình thui! 📸</button>
             </div>
         </div>
 
@@ -2213,7 +2227,8 @@
                         <button class="rail-btn booth-control" id="btsReelBtn">🎬<span>BTS Reel</span></button>
                         <button class="rail-btn booth-control" id="flipbookBtn">📖<span>Flipbook</span></button>
                         <button class="rail-btn booth-control" id="toggleChallengeBtn">🎲<span>Thử Thách: OFF</span></button>
-                        <button class="rail-btn booth-control" onclick="triggerBloomingFlowers()">🌺<span>Hoa Nở Lại</span></button>
+                        <button class="rail-btn booth-control" id="fogToggleBtn" onclick="window.open('fog.html','_blank')">🪞<span>Gương Mờ</span></button>
+                        <button class="rail-btn booth-control" id="snowballBtn" onclick="openSnowballPopup()">❄️<span>Quả Cầu Tuyết</span></button>
                         <button class="rail-btn booth-control" id="musicToggleBtn">🎵<span>Tắt Nhạc</span></button>
                     </div>
                   </div>
@@ -2468,13 +2483,23 @@
 
             function closeFlowerPopup() {
                 document.getElementById('flowerPopupOverlay').style.display = 'none';
+                if (window.stopSnowball) stopSnowball();
+            }
+
+            function openSnowballPopup() {
+                const ov = document.getElementById('flowerPopupOverlay');
+                ov.style.display = 'flex';
+                const cvs = document.getElementById('snowballCanvas');
+                if (cvs && window.startSnowball) {
+                    requestAnimationFrame(() => startSnowball(cvs));
+                }
             }
 
             window.addEventListener('load', () => {
-                setTimeout(() => {
-                    document.getElementById('flowerPopupOverlay').style.display = 'flex';
-                    triggerBloomingFlowers();
-                }, 3000);
+                const stage = document.getElementById('snowballStage');
+                if (stage) stage.addEventListener('click', () => { if (window.shakeSnowball) shakeSnowball(); });
+                window.addEventListener('resize', () => { if (window.resizeSnowball) resizeSnowball(); });
+                setTimeout(openSnowballPopup, 3000);
             });
 
             function setBoothLocked(locked) {
@@ -2768,7 +2793,7 @@
                 cv.complete = true; cv.naturalWidth = W; cv.naturalHeight = H;
                 return cv;
             }
-            const DEFAULT_TEMPLATE = 'kraftStrip';
+            const DEFAULT_TEMPLATE = 'filmStrip';   // khung mặc định 4 ảnh
             let preferredTemplate = DEFAULT_TEMPLATE;   // null = người dùng chọn "không khung"
             function clearTemplate() {
                 activeTemplate = null;
@@ -4693,6 +4718,11 @@
                     let bucket = groups.find(x => x.name === g);
                     if (!bucket) { bucket = { name: g, items: [] }; groups.push(bucket); }
                     bucket.items.push(t);
+                });
+                const GROUP_ORDER = ['🖼️ Khung 4+ Ảnh', '🎞️ Khung 2–3 Ảnh', '📸 Khung 1 Ảnh', '🦦 Khung Rái Cá'];
+                groups.sort((x, y) => {
+                    const ix = GROUP_ORDER.indexOf(x.name), iy = GROUP_ORDER.indexOf(y.name);
+                    return (ix < 0 ? 99 : ix) - (iy < 0 ? 99 : iy);
                 });
                 groups.forEach(g => {
                     const h = document.createElement('h4');
