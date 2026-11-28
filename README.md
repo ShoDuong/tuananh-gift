@@ -148,3 +148,10 @@ Mở `tools/frame-maker.html` (double-click là chạy, không cần server):
 - Nền đêm xanh navy giống trang cây thông, tuyết ASCII rơi, dải tuyết ASCII dưới đáy, chữ HAPPY BIRTHDAY bằng ký tự vàng lấp lánh.
 - Popup điều ước + thiệp sinh nhật: thẻ tối viền mảnh, màu nhấn theo mood (Classic = vàng, Matcha = xanh thông, Strawberry = đỏ berry), font JetBrains Mono + Playfair.
 - Bản cũ: `index1.html.bak-before-asciitheme`.
+
+## Photobooth — nút 💿 Single Photo
+- Nút mới trong nhóm Vui Vẻ (cạnh Quả Cầu Tuyết), gọi `openSinglePhoto()`.
+- Hai tấm màn nhung đỏ kéo vào từ hai bên → khung polaroid (camera trực tiếp, đen trắng) + đĩa CD xoay liên tục phía sau.
+- Chỉ chụp 1 tấm (đếm 3-2-1, flash). Sau đó: 💾 Tải ảnh (PNG 1600×2000 gồm cả màn, polaroid, đĩa, chú thích) hoặc ↺ Chụp lại. ✕ / Esc để đóng, màn mở ra lại.
+- Toàn bộ code nằm ở `#single-photo-style` + `#single-photo-script` cuối file, không đụng logic cũ. Bản cũ: `photobooth.html.bak-before-singlephoto`.
+- (Cập nhật) Nút 💿 Single Photo dời xuống dưới khung "Add Cute Text", kèm nút 🖼️ Frame bên cạnh (mở bảng chọn khung `frameModal`). Bản trước: `photobooth.html.bak-before-modeduo`.

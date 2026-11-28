@@ -2245,6 +2245,10 @@
                     </div>
                     <div class="ransom-preview"><canvas id="ransomPreview"></canvas><span id="ransomHint">Chữ sẽ hiện ở đây ✨</span></div>
                     </div>
+                    <div class="mode-duo" id="modeDuo">
+                        <button type="button" class="duo-btn duo-single booth-control" id="singlePhotoBtn" onclick="openSinglePhoto()"><span class="duo-ic">💿</span><span class="duo-tx"><b>Single Photo</b><small>1 tấm · màn nhung</small></span></button>
+                        <button type="button" class="duo-btn duo-frame booth-control" id="framePickBtn" onclick="document.getElementById('frameModal').style.display='flex'"><span class="duo-ic">🖼️</span><span class="duo-tx"><b>Frame</b><small>chọn khung ảnh</small></span></button>
+                    </div>
                 </aside>
 
                 <!-- ============ GIỮA: CAMERA ============ -->
@@ -5665,5 +5669,333 @@
         });
     });
     </script>
-    </body>
+    
+<!-- ===== Single Photo (màn nhung + polaroid + đĩa CD xoay) ===== -->
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Caveat:wght@500;700&family=Courier+Prime&display=swap" rel="stylesheet">
+<style id="mode-duo-style">
+    .mode-duo{ display:grid; grid-template-columns:1fr 1fr; gap:8px; flex:0 0 auto }
+    .duo-btn{ display:flex; align-items:center; gap:8px; min-height:54px; padding:9px 11px; border-radius:16px; cursor:pointer;
+        text-align:left; font-family:inherit; transition:transform .15s ease, box-shadow .2s ease, filter .2s ease }
+    .duo-btn:hover{ transform:translateY(-2px) }
+    .duo-btn:active{ transform:translateY(1px) }
+    .duo-ic{ font-size:1.35rem; line-height:1; flex:0 0 auto }
+    .duo-tx{ display:flex; flex-direction:column; line-height:1.15; min-width:0 }
+    .duo-tx b{ font-size:.9rem; font-weight:800; white-space:nowrap }
+    .duo-tx small{ font-size:.68rem; opacity:.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+    .duo-single{ color:#fff3ea; border:2px solid #7d0a12;
+        background:repeating-linear-gradient(90deg,#9c0e18 0 2px,#c3151f 2px 5px,#ad111b 5px 7px);
+        box-shadow:0 4px 0 #6a0810, inset 0 1px 0 rgba(255,255,255,.25); text-shadow:0 1px 2px rgba(0,0,0,.35) }
+    .duo-single .duo-ic{ display:inline-block; animation:duoSpin 4s linear infinite }
+    .duo-single:hover{ box-shadow:0 6px 0 #6a0810, 0 10px 22px rgba(156,14,24,.3) }
+    .duo-frame{ color:#b03a5b; border:2px solid #ffb3c9; background:linear-gradient(135deg,#fff7fa,#ffe6ee);
+        box-shadow:0 4px 0 #f6a3bd }
+    .duo-frame:hover{ box-shadow:0 6px 0 #f6a3bd, 0 10px 22px rgba(255,140,170,.25) }
+    body.night-mode .duo-frame{ background:rgba(17,83,117,.55); color:#d9fbff; border-color:rgba(102,232,255,.7); box-shadow:0 4px 0 rgba(27,139,174,.7) }
+    @keyframes duoSpin{ to{ transform:rotate(360deg) } }
+    @media (prefers-reduced-motion:reduce){ .duo-single .duo-ic{ animation:none } }
+</style>
+<style id="single-photo-style">
+#spOverlay { position: fixed; inset: 0; z-index: 100050; display: none; overflow: hidden; font-family: "Courier Prime", ui-monospace, monospace; }
+#spOverlay.on { display: block; }
+.sp-curtain {
+  position: absolute; top: 0; bottom: 0; width: 50.6%;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.45), rgba(0,0,0,0) 14%, rgba(0,0,0,0) 80%, rgba(0,0,0,.5)),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.30) 0, rgba(255,255,255,.07) 46px, rgba(0,0,0,.22) 88px, rgba(255,255,255,.04) 121px, rgba(0,0,0,.30) 150px),
+    repeating-linear-gradient(90deg, #7d0a12 0 1.5px, #c0141f 1.5px 4px, #a20f19 4px 5.5px, #cf1c27 5.5px 7px);
+  transition: transform 1.05s cubic-bezier(.7,0,.25,1);
+  will-change: transform;
+}
+.sp-curtain.l { left: 0; transform: translateX(-102%); box-shadow: inset -22px 0 30px -10px rgba(0,0,0,.55); }
+.sp-curtain.r { right: 0; transform: translateX(102%); box-shadow: inset 22px 0 30px -10px rgba(0,0,0,.55); }
+#spOverlay.closed .sp-curtain { transform: translateX(0); }
+#spOverlay.closed .sp-curtain.l { box-shadow: inset -6px 0 14px -6px rgba(0,0,0,.6); }
+#spOverlay.closed .sp-curtain.r { box-shadow: inset 6px 0 14px -6px rgba(0,0,0,.6); }
+
+.sp-stage {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .5s ease;
+}
+#spOverlay.show .sp-stage { opacity: 1; pointer-events: auto; }
+.sp-set { position: relative; width: var(--pw); --pw: min(58vw, 330px, 44vh); margin-right: calc(var(--pw) * .5); }
+.sp-disc-wrap {
+  position: absolute; z-index: 1; width: calc(var(--pw) * 1.08); aspect-ratio: 1; top: 50%; left: 50%;
+  transform: translate(-50%, -54%); transition: transform 1.1s cubic-bezier(.2,.8,.2,1) .25s;
+  filter: drop-shadow(0 18px 30px rgba(40,0,0,.45));
+}
+#spOverlay.show .sp-disc-wrap { transform: translate(-2%, -54%); }
+.sp-disc { width: 100%; height: 100%; border-radius: 50%; animation: spSpin 5.5s linear infinite; display: block; }
+.sp-sheen {
+  position: absolute; inset: 0; border-radius: 50%; pointer-events: none; mix-blend-mode: soft-light;
+  background: conic-gradient(from 20deg, rgba(255,255,255,0) 0deg, rgba(255,255,255,.75) 30deg, rgba(160,200,255,.25) 55deg, rgba(255,255,255,0) 90deg, rgba(255,255,255,0) 180deg, rgba(255,255,255,.6) 210deg, rgba(255,190,220,.25) 235deg, rgba(255,255,255,0) 270deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 9.5%, #000 10%); mask: radial-gradient(circle, transparent 0 9.5%, #000 10%);
+}
+@keyframes spSpin { to { transform: rotate(360deg); } }
+
+.sp-polaroid {
+  position: relative; z-index: 2; width: 100%; box-sizing: border-box;
+  background: #f3f0e8; padding: 7% 7% 0; border-radius: 2px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 22px 40px rgba(40,0,0,.5), 0 4px 10px rgba(0,0,0,.25);
+  transform: rotate(-1.6deg) translateY(30px) scale(.94); opacity: 0;
+  transition: transform .8s cubic-bezier(.2,.9,.25,1.15), opacity .5s ease;
+}
+#spOverlay.show .sp-polaroid { transform: rotate(-1.6deg); opacity: 1; }
+.sp-photo { position: relative; width: 100%; aspect-ratio: 4 / 5; background: #1b1b1b; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
+.sp-photo video, .sp-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sp-photo video { transform: scaleX(-1); filter: grayscale(1) contrast(1.08) brightness(1.04); }
+.sp-photo img { display: none; }
+.sp-photo.taken img { display: block; animation: spDev 1.6s ease forwards; }
+@keyframes spDev { from { filter: brightness(1.9) contrast(.5); } to { filter: none; } }
+.sp-count { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 700 clamp(48px, 14vw, 110px)/1 "Special Elite", monospace; color: #fff; text-shadow: 0 4px 20px rgba(0,0,0,.6); pointer-events: none; }
+.sp-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.sp-flash.go { animation: spFlash .7s ease-out; }
+@keyframes spFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+.sp-meta { display: flex; justify-content: space-between; align-items: center; padding: 6% 1% 6.5%; font: 400 clamp(8px, 1.9vw, 10px)/1 "Courier Prime", monospace; letter-spacing: .22em; text-transform: uppercase; color: #8d877b; }
+.sp-caption {
+  position: relative; z-index: 3; margin-top: 26px; text-align: center;
+  font: 400 clamp(13px, 3.4vw, 17px)/1.6 "Special Elite", "Courier Prime", monospace; color: #fff3ea; letter-spacing: .02em;
+  text-shadow: 0 1px 2px rgba(60,0,0,.6); transform: rotate(-1.6deg);
+  opacity: 0; transition: opacity .6s ease .6s;
+}
+#spOverlay.show .sp-caption { opacity: 1; }
+.sp-caption .sp-dash { display: block; margin: 2px auto 0; width: 70%; height: 2px; background: repeating-linear-gradient(90deg, rgba(255,243,234,.85) 0 26px, transparent 26px 34px); }
+.sp-controls { position: relative; z-index: 3; display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; justify-content: center; opacity: 0; transition: opacity .5s ease .8s; }
+#spOverlay.show .sp-controls { opacity: 1; }
+.sp-btn {
+  font: 700 13px/1 "Courier Prime", monospace; letter-spacing: .14em; text-transform: uppercase;
+  padding: 13px 20px; border-radius: 999px; cursor: pointer; border: 1px solid rgba(255,240,230,.55);
+  background: rgba(40,0,4,.35); color: #fff3ea; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: transform .15s ease, background .2s ease;
+}
+.sp-btn:hover { background: rgba(40,0,4,.55); transform: translateY(-1px); }
+.sp-btn.main { background: #f3f0e8; color: #8a0d16; border-color: #f3f0e8; box-shadow: 0 10px 26px rgba(40,0,0,.45); }
+.sp-btn[hidden] { display: none; }
+.sp-close { position: absolute; top: 16px; right: 16px; z-index: 4; width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 16px; letter-spacing: 0; opacity: 0; transition: opacity .4s ease .6s; }
+#spOverlay.show .sp-close { opacity: 1; }
+@media (max-width: 560px) { .sp-set { --pw: min(56vw, 46vh); } .sp-btn { padding: 12px 16px; font-size: 12px; } }
+</style>
+<div id="spOverlay" aria-hidden="true">
+  <div class="sp-curtain l"></div><div class="sp-curtain r"></div>
+  <div class="sp-stage">
+    <button type="button" class="sp-btn sp-close" id="spClose" title="Đóng">✕</button>
+    <div class="sp-set">
+      <div class="sp-disc-wrap"><canvas class="sp-disc" id="spDisc" width="640" height="640"></canvas><div class="sp-sheen"></div></div>
+      <div class="sp-polaroid">
+        <div class="sp-photo" id="spPhoto">
+          <video id="spVideo" autoplay playsinline muted></video>
+          <img id="spImg" alt="Ảnh vừa chụp">
+          <div class="sp-count" id="spCount"></div>
+          <div class="sp-flash" id="spFlash"></div>
+        </div>
+        <div class="sp-meta"><span>otter photobooth</span><span id="spNo">no. 01</span></div>
+      </div>
+    </div>
+    <div class="sp-caption" id="spCaption">smile, it's your birthday ♡<span class="sp-dash"></span></div>
+    <div class="sp-controls">
+      <button type="button" class="sp-btn main" id="spShoot">📸 Chụp</button>
+      <button type="button" class="sp-btn main" id="spSave" hidden>💾 Tải ảnh</button>
+      <button type="button" class="sp-btn" id="spRetake" hidden>↺ Chụp lại</button>
+    </div>
+  </div>
+</div>
+<script id="single-photo-script">
+(function () {
+  const ov = document.getElementById('spOverlay');
+  if (!ov) return;
+  const video = document.getElementById('spVideo'), img = document.getElementById('spImg'), photo = document.getElementById('spPhoto');
+  const countEl = document.getElementById('spCount'), flash = document.getElementById('spFlash');
+  const shootBtn = document.getElementById('spShoot'), saveBtn = document.getElementById('spSave'), retakeBtn = document.getElementById('spRetake');
+  const discCv = document.getElementById('spDisc'), noEl = document.getElementById('spNo');
+  let ownStream = null, shotCanvas = null, busy = false, openState = false;
+  let shotNo = 1;
+  try { shotNo = (parseInt(localStorage.getItem('singlePhotoNo') || '0', 10) || 0) + 1; } catch (e) {}
+
+  // ---------- CD texture ----------
+  function drawDisc(c, S) {
+    const x = c, R = S / 2;
+    x.save(); x.translate(R, R);
+    // printed white surface
+    const g = x.createRadialGradient(0, 0, R * .3, 0, 0, R);
+    g.addColorStop(0, '#fbfaf7'); g.addColorStop(.85, '#f2f0ec'); g.addColorStop(1, '#e4e1dc');
+    x.fillStyle = g; x.beginPath(); x.arc(0, 0, R * .995, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.12)'; x.lineWidth = S * .004; x.stroke();
+    // faint printed text lines (handwritten feel)
+    x.fillStyle = 'rgba(70,70,70,.55)';
+    x.font = `700 ${Math.round(S * .045)}px Caveat, cursive`;
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    const words = 'happy birthday ✦ otterbooth vol. 01 ✦ 2026 ✦ ';
+    const rT = R * .78; let ang = -Math.PI / 2;
+    for (const ch of words) {
+      const w = x.measureText(ch).width; ang += (w / 2) / rT;
+      x.save(); x.rotate(ang); x.translate(0, -rT); x.fillText(ch, 0, 0); x.restore();
+      ang += (w / 2) / rT + 0.006;
+    }
+    x.save(); x.rotate(.5);
+    x.font = `${Math.round(S * .03)}px "Special Elite", monospace`; x.fillStyle = 'rgba(80,80,80,.5)';
+    x.fillText('side A — for you', R * .05, R * .55);
+    for (let i = 0; i < 4; i++) { x.fillRect(-R * .55, -R * .52 + i * S * .022, R * (.5 - i * .08), S * .004); }
+    x.restore();
+    // hand-written title
+    x.save(); x.rotate(-.35); x.font = `700 ${Math.round(S * .075)}px Caveat, cursive`; x.fillStyle = 'rgba(40,40,40,.72)';
+    x.fillText('our song', R * .42, R * .3); x.restore();
+    // hub: dark ring, red ring, clear hub
+    const ring = (r, col) => { x.fillStyle = col; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill(); };
+    ring(R * .36, '#d9d6d2');
+    const dg = x.createRadialGradient(0, 0, R * .2, 0, 0, R * .34);
+    dg.addColorStop(0, '#2a2a2c'); dg.addColorStop(.6, '#3b3b3e'); dg.addColorStop(1, '#1d1d1f');
+    ring(R * .34, dg);
+    for (let i = 0; i < 10; i++) { x.strokeStyle = `rgba(255,255,255,${.03 + (i % 3) * .02})`; x.lineWidth = 1; x.beginPath(); x.arc(0, 0, R * (.22 + i * .012), 0, Math.PI * 2); x.stroke(); }
+    ring(R * .2, '#c9c5c8'); ring(R * .17, '#b4202b');
+    ring(R * .135, 'rgba(235,235,238,.9)');
+    x.globalCompositeOperation = 'destination-out'; ring(R * .095, '#000'); x.globalCompositeOperation = 'source-over';
+    x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = S * .003; x.beginPath(); x.arc(0, 0, R * .095, 0, Math.PI * 2); x.stroke();
+    x.restore();
+  }
+  const discTex = document.createElement('canvas'); discTex.width = discTex.height = 640;
+  function renderDisc() {
+    const t = discTex.getContext('2d'); t.clearRect(0, 0, 640, 640); drawDisc(t, 640);
+    const d = discCv.getContext('2d'); d.clearRect(0, 0, 640, 640); d.drawImage(discTex, 0, 0);
+  }
+  (document.fonts && document.fonts.load ? Promise.all([document.fonts.load('700 30px Caveat'), document.fonts.load('20px "Special Elite"')]).catch(() => {}) : Promise.resolve()).then(renderDisc);
+  renderDisc();
+
+  // ---------- camera ----------
+  async function attachCamera() {
+    const live = document.getElementById('liveVideo');
+    let s = live && live.srcObject;
+    if (!s || !s.getVideoTracks().some(t => t.readyState === 'live')) {
+      try { ownStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false }); s = ownStream; }
+      catch (e) { console.warn('Single photo camera', e); return; }
+    }
+    video.srcObject = s; video.play().catch(() => {});
+  }
+  function detachCamera() {
+    video.srcObject = null;
+    if (ownStream) { ownStream.getTracks().forEach(t => t.stop()); ownStream = null; }
+  }
+
+  function resetShot() {
+    shotCanvas = null; photo.classList.remove('taken'); img.removeAttribute('src');
+    shootBtn.hidden = false; saveBtn.hidden = true; retakeBtn.hidden = true;
+    noEl.textContent = 'no. ' + String(shotNo).padStart(2, '0');
+  }
+
+  window.openSinglePhoto = function () {
+    if (openState) return; openState = true;
+    resetShot();
+    ov.classList.add('on'); ov.setAttribute('aria-hidden', 'false');
+    attachCamera();
+    requestAnimationFrame(() => requestAnimationFrame(() => ov.classList.add('closed')));
+    setTimeout(() => ov.classList.add('show'), 1000);
+  };
+  function closeSingle() {
+    if (!openState) return;
+    ov.classList.remove('show');
+    setTimeout(() => ov.classList.remove('closed'), 380);
+    setTimeout(() => { ov.classList.remove('on'); ov.setAttribute('aria-hidden', 'true'); detachCamera(); openState = false; busy = false; countEl.textContent = ''; }, 1450);
+  }
+  window.closeSinglePhoto = closeSingle;
+
+  // ---------- capture (1 tấm duy nhất) ----------
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  async function shoot() {
+    if (busy || !video.videoWidth) return; busy = true; shootBtn.hidden = true;
+    for (const n of [3, 2, 1]) { countEl.textContent = n; await wait(800); if (!openState) return; }
+    countEl.textContent = '';
+    const vw = video.videoWidth, vh = video.videoHeight, W = 1080, H = 1350;
+    const sc = Math.max(W / vw, H / vh), dw = vw * sc, dh = vh * sc;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    x.translate(W, 0); x.scale(-1, 1);
+    x.drawImage(video, (W - dw) / 2, (H - dh) / 2, dw, dh);
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    // black & white with soft contrast + grain
+    const id = x.getImageData(0, 0, W, H), d = id.data;
+    for (let i = 0; i < d.length; i += 4) {
+      let v = d[i] * .3 + d[i + 1] * .59 + d[i + 2] * .11;
+      v = (v - 128) * 1.08 + 132 + (Math.random() - .5) * 14;
+      v = v < 0 ? 0 : v > 255 ? 255 : v;
+      d[i] = v + 2; d[i + 1] = v; d[i + 2] = v - 3;
+    }
+    x.putImageData(id, 0, 0);
+    shotCanvas = c;
+    flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
+    img.src = c.toDataURL('image/jpeg', .92); photo.classList.add('taken');
+    try { localStorage.setItem('singlePhotoNo', String(shotNo)); } catch (e) {}
+    saveBtn.hidden = false; retakeBtn.hidden = false; busy = false;
+  }
+
+  // ---------- export whole scene ----------
+  function currentDiscAngle() {
+    const m = getComputedStyle(discCv).transform;
+    if (!m || m === 'none') return 0;
+    const v = m.match(/matrix\(([^)]+)\)/); if (!v) return 0;
+    const p = v[1].split(',').map(Number); return Math.atan2(p[1], p[0]);
+  }
+  function exportScene() {
+    if (!shotCanvas) return;
+    const W = 1600, H = 2000, c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d');
+    // red pinstripe curtain
+    const stripes = ['#7d0a12', '#c0141f', '#a20f19', '#cf1c27'], sw = [3, 5, 3, 3];
+    for (let px = 0, k = 0; px < W; k++) { x.fillStyle = stripes[k % 4]; x.fillRect(px, 0, sw[k % 4], H); px += sw[k % 4]; }
+    for (let px = 0; px < W; px += 300) {
+      const g = x.createLinearGradient(px, 0, px + 300, 0);
+      g.addColorStop(0, 'rgba(0,0,0,.3)'); g.addColorStop(.3, 'rgba(255,255,255,.07)'); g.addColorStop(.6, 'rgba(0,0,0,.22)'); g.addColorStop(.8, 'rgba(255,255,255,.04)'); g.addColorStop(1, 'rgba(0,0,0,.3)');
+      x.fillStyle = g; x.fillRect(px, 0, 300, H);
+    }
+    const vg = x.createLinearGradient(0, 0, 0, H);
+    vg.addColorStop(0, 'rgba(0,0,0,.45)'); vg.addColorStop(.14, 'rgba(0,0,0,0)'); vg.addColorStop(.8, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.5)');
+    x.fillStyle = vg; x.fillRect(0, 0, W, H);
+
+    const pw = 660, pad = pw * .07;
+    const cx = W / 2 - 230, cy = H / 2 - 90;
+    // disc
+    const ds = pw * 1.12, dX = cx + pw * .66, dY = cy - ds * .05;
+    x.save(); x.shadowColor = 'rgba(40,0,0,.45)'; x.shadowBlur = 50; x.shadowOffsetY = 30;
+    x.translate(dX, dY); x.rotate(currentDiscAngle()); x.drawImage(discTex, -ds / 2, -ds / 2, ds, ds); x.restore();
+    if (x.createConicGradient) {
+      x.save(); x.translate(dX, dY); x.globalCompositeOperation = 'soft-light';
+      const cg = x.createConicGradient(20 * Math.PI / 180 - Math.PI / 2, 0, 0);
+      [[0, 0], [30, .75], [55, .25], [90, 0], [180, 0], [210, .6], [235, .25], [270, 0], [360, 0]].forEach(([a, o]) => cg.addColorStop(a / 360, `rgba(255,255,255,${o})`));
+      x.fillStyle = cg; x.beginPath(); x.arc(0, 0, ds / 2, 0, Math.PI * 2); x.arc(0, 0, ds * .05, 0, Math.PI * 2, true); x.fill('evenodd'); x.restore();
+    }
+    // polaroid
+    const cardW = pw + pad * 2, photoH = pw * 1.25, fullH = pad + photoH + 130;
+    x.save(); x.translate(cx, cy); x.rotate(-1.6 * Math.PI / 180);
+    x.shadowColor = 'rgba(40,0,0,.5)'; x.shadowBlur = 60; x.shadowOffsetY = 34;
+    x.fillStyle = '#f3f0e8'; x.fillRect(-cardW / 2, -fullH / 2, cardW, fullH);
+    x.shadowColor = 'transparent';
+    x.drawImage(shotCanvas, -pw / 2, -fullH / 2 + pad, pw, photoH);
+    x.fillStyle = '#8d877b'; x.font = '19px "Courier Prime", monospace'; x.textBaseline = 'middle';
+    const my = -fullH / 2 + pad + photoH + 66;
+    x.textAlign = 'left'; x.fillText('O T T E R   P H O T O B O O T H', -pw / 2, my);
+    x.textAlign = 'right'; x.fillText(noEl.textContent.toUpperCase().split('').join(' '), pw / 2, my);
+    x.restore();
+    // caption
+    const capText = (document.getElementById('spCaption').firstChild.textContent || '').trim();
+    x.save(); x.translate(W / 2, cy + fullH / 2 + 140); x.rotate(-1.6 * Math.PI / 180);
+    x.fillStyle = '#fff3ea'; x.font = '50px "Special Elite", monospace'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.shadowColor = 'rgba(60,0,0,.6)'; x.shadowBlur = 4; x.fillText(capText, 0, 0);
+    x.shadowColor = 'transparent'; x.fillStyle = 'rgba(255,243,234,.85)';
+    const lw = x.measureText(capText).width * .8; for (let px = -lw / 2; px < lw / 2; px += 74) x.fillRect(px, 44, Math.min(56, lw / 2 - px), 4);
+    x.restore();
+    const a = document.createElement('a');
+    a.download = 'otterbooth-single-' + String(shotNo).padStart(2, '0') + '.png';
+    a.href = c.toDataURL('image/png'); document.body.appendChild(a); a.click(); a.remove();
+    shotNo += 1;
+  }
+
+  shootBtn.addEventListener('click', shoot);
+  retakeBtn.addEventListener('click', resetShot);
+  saveBtn.addEventListener('click', exportScene);
+  document.getElementById('spClose').addEventListener('click', closeSingle);
+  document.addEventListener('keydown', e => {
+    if (!openState) return;
+    if (e.key === 'Escape') closeSingle();
+    else if ((e.key === ' ' || e.key === 'Enter') && !shootBtn.hidden && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); shoot(); }
+  });
+})();
+</script>
+</body>
     </html>
